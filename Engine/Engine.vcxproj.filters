@@ -93,6 +93,9 @@
     <ClCompile Include="src\engine\entity\registry\registry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\sprite\sprite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\dependencies\glm\detail\func_common.inl">
@@ -1454,6 +1457,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\entity\scriptable_entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\sprite\sprite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

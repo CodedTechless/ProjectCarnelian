@@ -6,6 +6,12 @@
 #include "texture.h"
 
 namespace Techless {
+	Texture::Texture()
+		: RendererID(0), FilePath(""), LocalBuffer(nullptr), Width(0), Height(0), BitsPerPixel(0) 
+	{
+		Allocate();
+	};
+
 	Texture::Texture(const std::string& FilePath) 
 		: RendererID(0), FilePath(FilePath), LocalBuffer(nullptr), Width(0), Height(0), BitsPerPixel(0)
 	{
@@ -44,12 +50,17 @@ namespace Techless {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	void Texture::Push(const void* Buffer)
+	{
+		glBindTexture(GL_TEXTURE_2D, RendererID);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
 	void Texture::Load(const std::string& FilePath) 
 	{
 		stbi_set_flip_vertically_on_load(1);
 		LocalBuffer = stbi_load(FilePath.c_str(), &Width, &Height, &BitsPerPixel, 4);
-
-		
 
 		glBindTexture(GL_TEXTURE_2D, RendererID);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, LocalBuffer);

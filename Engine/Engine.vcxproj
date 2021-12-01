@@ -108,6 +108,7 @@
     <ClCompile Include="src\dependencies\imgui\imgui_tables.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\dependencies\stb_image\stb_image.cpp" />
+    <ClCompile Include="src\engine\sprite\sprite.cpp" />
     <ClCompile Include="src\render\shader\shader.cpp" />
     <ClCompile Include="src\render\buffer\index.cpp" />
     <ClCompile Include="src\engine\application\application.cpp" />
@@ -565,6 +566,7 @@
     <ClInclude Include="src\dependencies\imgui\imstb_textedit.h" />
     <ClInclude Include="src\dependencies\imgui\imstb_truetype.h" />
     <ClInclude Include="src\dependencies\stb_image\stb_image.h" />
+    <ClInclude Include="src\engine\sprite\sprite.h" />
     <ClInclude Include="src\render\dep\stb_image\stb_image.h" />
     <ClInclude Include="src\render\shader\shader.h" />
     <ClInclude Include="src\render\buffer\index.h" />

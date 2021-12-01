@@ -6,11 +6,12 @@
 namespace Techless {
 	class Texture {
 	public:
-		//Texture();
+		Texture();
 		Texture(const std::string& Path);
 		~Texture();
 
 		void Load(const std::string& Path);
+		void Push(const void* Buffer);
 
 		void Bind(unsigned int Slot = 0) const;
 		void Unbind() const;

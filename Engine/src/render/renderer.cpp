@@ -81,7 +81,7 @@ namespace Techless {
 
 		GLint glMaxTextureSize;
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glMaxTextureSize);
-		MaxTextureSize = (int)glMaxTextureSize;
+		MaxTextureSize = std::min((int)glMaxTextureSize, 2048);
 
 		/*
 		GLint MaxTextureSlots;
@@ -89,7 +89,7 @@ namespace Techless {
 		Renderer::MaxTextureUnits = MaxTextureSlots;
 		RendererData.ActiveTextureSlots = MaxTextureSlots;*/
 
-		Debug::Log("GL_MAX_TEXTURE_SIZE: " + std::to_string(MaxTextureSize), "Renderer");
+		Debug::Log("MaxTextureSize: " + std::to_string(MaxTextureSize) + " (" + std::to_string(glMaxTextureSize) + ")", "Renderer");
 //		Debug::Log("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: " + std::to_string(MaxTextureSlots), "Renderer");
 
 		// Create the vertex array which will hold attribute information for our batch vertex buffer and index buffer.

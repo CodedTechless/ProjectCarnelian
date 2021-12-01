@@ -15,7 +15,7 @@ using namespace Techless;
 
 namespace DesecratedDungeons {
 
-
+    Ptr<Sprite> newSprite = nullptr;
 
 	void MainLayer::OnCreated()
 	{
@@ -45,10 +45,6 @@ namespace DesecratedDungeons {
         Transform.Position = { 50.f, 50.f };
         Transform.Scale = { 100.f, 100.f };
         */
-
-        Sprite newSprite = {};
-
-
 
         for (unsigned int iX = 0; iX < 5; ++iX)
         {
