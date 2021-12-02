@@ -26,16 +26,6 @@ namespace Techless
 		SceneRegistry.Remove<Entity>(EntityID);
 	}
 
-	void Scene::Update(const float Delta)
-	{
-		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
-
-		for (auto Script : *ScriptComponents)
-		{
-			Script.Instance->OnUpdate(Delta);
-		}
-	}
-
 	void Scene::FixedUpdate(const float Delta)
 	{
 		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
@@ -46,9 +36,15 @@ namespace Techless
 		}
 	}
 
-	void Scene::Draw()
+	void Scene::Update(const float Delta)
 	{
 		assert(ActiveCamera != nullptr);
+
+		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
+		for (auto Script : *ScriptComponents)
+		{
+			Script.Instance->OnUpdate(Delta);
+		}
 
 		auto CamProjection = ActiveCamera->GetComponent<CameraComponent>().GetProjection();
 		auto CamPosition = ActiveCamera->GetComponent<TransformComponent>().Position;
@@ -56,6 +52,11 @@ namespace Techless
 		glm::mat4 Transform = glm::translate(glm::mat4(1.f), glm::vec3(CamPosition, 0));
 		
 		Renderer::Begin(CamProjection, Transform);
+
+		for (auto Script : *ScriptComponents)
+		{
+			Script.Instance->OnDraw(Delta);
+		}
 
 		auto SpriteComponents = SceneRegistry.GetRegistrySet<SpriteComponent>();
 		auto TransformComponents = SceneRegistry.GetRegistrySet<TransformComponent>();
@@ -70,6 +71,8 @@ namespace Techless
 
 			++i;
 		}
+
+
 
 		Renderer::End();
 	}

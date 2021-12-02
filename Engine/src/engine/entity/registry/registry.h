@@ -135,6 +135,8 @@ namespace Techless
 		template <typename Type>
 		Ptr<TypedRegistrySet<Type>> GetRegistrySet()
 		{
+			Verify<Type>();
+
 			const char* InstanceName = typeid(Type).name();
 			return std::static_pointer_cast<TypedRegistrySet<Type>>(InstanceSets[InstanceName]);
 		}

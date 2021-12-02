@@ -14,7 +14,6 @@ namespace Techless
 
 		void Update(const float Delta);
 		void FixedUpdate(const float Delta);
-		void Draw();
 
 		inline void SetActiveCamera(Entity& entity) { ActiveCamera = &entity; };
 		inline Entity& GetActiveCamera() const { return *ActiveCamera; };

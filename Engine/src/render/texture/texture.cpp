@@ -50,8 +50,13 @@ namespace Techless {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	void Texture::Push(const void* Buffer)
+	void Texture::Push(unsigned char* Buffer, int TextureWidth, int TextureHeight, int BitsPerPixel)
 	{
+		LocalBuffer = Buffer;
+		
+		Width = TextureWidth;
+		Height = TextureHeight;
+
 		glBindTexture(GL_TEXTURE_2D, RendererID);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
 		glBindTexture(GL_TEXTURE_2D, 0);

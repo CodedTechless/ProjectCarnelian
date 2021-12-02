@@ -136,7 +136,7 @@ namespace Techless {
 		RendererData.TextureShader->Bind();
 
 		// Assign texture slot 1 to the white "default" texture.
-		RendererData.ActiveTextures[0] = std::make_shared<Texture>("assets/white.png");
+		RendererData.ActiveTextures[0] = std::make_shared<Texture>("assets/default.png");
 		RendererData.ActiveTextures[0]->Bind();
 		DefaultTexture = RendererData.ActiveTextures[0];
 

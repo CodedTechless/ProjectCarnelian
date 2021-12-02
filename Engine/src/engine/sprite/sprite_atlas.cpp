@@ -15,6 +15,8 @@ namespace Techless
 	std::unordered_map<std::string, std::shared_ptr<Sprite>> SpriteAtlas::SpriteCache{};
 	std::array<Ptr<Texture>, 8> SpriteAtlas::TexturePages{};
 
+	Ptr<Sprite> SpriteAtlas::MissingTexture = nullptr;
+
 	unsigned int SpriteAtlas::TexturePageIndex = 0;
 
 	// Sprite Atlas
@@ -27,7 +29,10 @@ namespace Techless
 		int Height = 0;
 		int BitsPerPixel = 0;
 
-		unsigned char* Buffer;
+		stbrp_rect* Rect = nullptr;
+		unsigned char* Buffer = nullptr;
+
+		bool Packed = false;
 	};
 
 	unsigned char* AllocateBuffer(unsigned int TextureSize)
@@ -72,8 +77,11 @@ namespace Techless
 	{
 		Debug::Log("Loading textures...", "SpriteAtlas");
 
+		auto MissingTextureTex = CreatePtr<Texture>("assets/missing_texture.png");
+		MissingTexture = CreatePtr<Sprite>(MissingTextureTex);
+
 		std::vector<TextureInfo> Textures;
-		Read(Textures, "assets");
+		Read(Textures, "assets/textures");
 		
 		auto MaxTextureSize = Renderer::GetMaxTextureSize();
 
@@ -91,7 +99,11 @@ namespace Techless
 			for (i = 0; i < TextureCount; ++i)
 			{
 				TextureInfo& Tex = Textures[i];
-				Rects[i] = { i, Tex.Width, Tex.Height };
+
+				stbrp_rect Rect = { i, Tex.Width, Tex.Height };
+				Rects[i] = Rect;
+			
+				Tex.Rect = &Rects[i];
 			}
 
 			stbrp_init_target(&NewContext, MaxTextureSize, MaxTextureSize, Nodes, TextureCount);
@@ -100,14 +112,12 @@ namespace Techless
 			Ptr<Texture> newTexture = CreatePtr<Texture>();
 			TexturePages[TexturePageIndex++] = newTexture;
 
-			for (i = 0; i < TextureCount; ++i)
+			for (auto& textureInfo : Textures)
 			{
-				auto& Rect = Rects[i];
+				auto& Rect = *textureInfo.Rect;
 				
 				if (Rect.was_packed)
 				{
-					auto& textureInfo = Textures[i];
-
 					for (int iY = 0; iY < Rect.w; ++iY)
 					{
 						for (int iX = 0; iX < Rect.h; ++iX)
@@ -122,17 +132,19 @@ namespace Techless
 						}
 					}
 
-					Ptr<Sprite> newSprite = CreatePtr<Sprite>(newTexture, glm::vec2(Rect.x / MaxTextureSize, Rect.y / MaxTextureSize), glm::vec2((Rect.x + Rect.w) / MaxTextureSize, (Rect.y + Rect.h) / MaxTextureSize ));
+					auto TopLeft = glm::vec2((float)Rect.x, (float)Rect.y);
+					auto BottomRight = glm::vec2((float)(Rect.x + Rect.w), (float)(Rect.y + Rect.h));
+
+					Ptr<Sprite> newSprite = CreatePtr<Sprite>(newTexture, TopLeft, BottomRight);
 					SpriteCache[textureInfo.Name] = newSprite;
 
-					stbi_image_free(Textures[i].Buffer);
-					Textures.erase(Textures.begin() + i);
-					
-					i--; TextureCount--;
+					stbi_image_free(textureInfo.Buffer);
+					textureInfo.Packed = true;
 				}
 			}
 
-			newTexture->Push(PageBuffer);
+			newTexture->Push(PageBuffer, MaxTextureSize, MaxTextureSize, 4);
+			delete[] PageBuffer;
 		}
 	}
 
@@ -141,6 +153,6 @@ namespace Techless
 		if (SpriteCache.find(Name) != SpriteCache.end())
 			return SpriteCache[Name];
 		
-		return nullptr;
+		return MissingTexture;
 	}
 }

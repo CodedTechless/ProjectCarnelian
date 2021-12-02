@@ -11,7 +11,7 @@ namespace Techless {
 		~Texture();
 
 		void Load(const std::string& Path);
-		void Push(const void* Buffer);
+		void Push(unsigned char* Buffer, int TextureWidth, int TextureHeight, int BitsPerPixel);
 
 		void Bind(unsigned int Slot = 0) const;
 		void Unbind() const;

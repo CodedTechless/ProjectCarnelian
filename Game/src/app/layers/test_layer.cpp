@@ -33,6 +33,21 @@ namespace DesecratedDungeons {
         
         ActiveScene->SetActiveCamera(SceneCamera);
 
+        /*
+        auto& TextureSheetEnt = ActiveScene->CreateEntity();
+        auto& TexScript = TextureSheetEnt.AddComponent<ScriptComponent>();
+        TexScript.Bind<TextureSheetDrawer>(TextureSheetEnt);
+        */
+        
+        auto& NewEntity = ActiveScene->CreateEntity();
+
+        auto& Spr = NewEntity.AddComponent<SpriteComponent>();
+        Spr.aSprite = SpriteAtlas::GetSprite("logo");
+
+        auto& Transform = NewEntity.AddComponent<TransformComponent>();
+        Transform.Position = { 50.f, 50.f };
+        Transform.Scale = { 100.f, 100.f };
+
         //Debug::Log("Done creating camera");
 
         /*
@@ -46,6 +61,7 @@ namespace DesecratedDungeons {
         Transform.Scale = { 100.f, 100.f };
         */
 
+        /*
         for (unsigned int iX = 0; iX < 5; ++iX)
         {
             for (unsigned int iY = 0; iY < 5; ++iY)
@@ -57,16 +73,16 @@ namespace DesecratedDungeons {
                 NewEntTransform.Scale = { 20.f, 20.f};
 
                 auto& NewEntSpr = Ent.AddComponent<SpriteComponent>();
-                NewEntSpr.aSprite = SpriteAtlas::GetSprite("Logo");
+                NewEntSpr.aSprite = SpriteAtlas::GetSprite("logo");
 
                 auto& NewTag = Ent.AddComponent<TagComponent>();
                 NewTag.Name = "Spinny";
 
                 /*
                 auto& NewScript = Ent.AddComponent<ScriptComponent>();
-                NewScript.Bind<Spin>(Ent);*/
+                NewScript.Bind<Spin>(Ent);
             }
-        }
+        }*/
 
         //TestSprite = SpriteAtlas::GetSprite("Logo");
 
@@ -86,7 +102,7 @@ namespace DesecratedDungeons {
 
     void MainLayer::OnUpdate(const float& Delta)
     {
-        auto TagComponents = ActiveScene->GetInstances<TagComponent>();
+        /*auto TagComponents = ActiveScene->GetInstances<TagComponent>();
         auto TransformComponents = ActiveScene->GetInstances<TransformComponent>();
         auto SpriteComponents = ActiveScene->GetInstances<SpriteComponent>();
 
@@ -105,13 +121,12 @@ namespace DesecratedDungeons {
             }
 
             i++;
-        }
+        }*/
 
-        Pos += 0.01f * Delta;
+        //Pos += 0.01f * Delta;
 
 
         ActiveScene->Update(Delta);
-        ActiveScene->Draw();
 
         UpdateRate = Delta;
     }

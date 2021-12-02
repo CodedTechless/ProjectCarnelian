@@ -37,8 +37,10 @@ namespace Techless
 	protected:
 		virtual void OnCreate() {};
 		virtual void OnDestroy() {};
-		virtual void OnUpdate(const float Delta) {};
+
 		virtual void OnFixedUpdate(const float Delta) {};
+		virtual void OnUpdate(const float Delta) {};
+		virtual void OnDraw(const float Delta) {};
 
 	private:
 		Entity* LinkedEntity;

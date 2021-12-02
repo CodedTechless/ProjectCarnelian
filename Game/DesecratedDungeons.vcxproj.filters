@@ -30,6 +30,9 @@
     <ClInclude Include="src\scripts\test\spin.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\scripts\test\draw_texture_sheet.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app\layers\test_layer.cpp">
