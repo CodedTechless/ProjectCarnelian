@@ -17,10 +17,11 @@ namespace Techless
 		
 		void Update();
 
-		glm::uvec2 Size;
 		inline GLFWwindow* GetContext() const { return aWindow; };
+
+		bool IsFocused = true;
+		glm::uvec2 Size;
 	private:
 		GLFWwindow* aWindow;
-		
 	};
 }

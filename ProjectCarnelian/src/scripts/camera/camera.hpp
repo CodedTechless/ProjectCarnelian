@@ -30,13 +30,13 @@ public:
 
 	void OnFixedUpdate(const float Delta)
 	{
-		if (Input::KeyDown(Keyboard::KeyCodes::A))
+		if (Input::KeyDown(Input::KeyCode::A))
 			PositionTo -= glm::vec2(CameraSpeed * Delta, 0);
-		if (Input::KeyDown(Keyboard::KeyCodes::D))
+		if (Input::KeyDown(Input::KeyCode::D))
 			PositionTo += glm::vec2(CameraSpeed * Delta, 0);
-		if (Input::KeyDown(Keyboard::KeyCodes::W))
+		if (Input::KeyDown(Input::KeyCode::W))
 			PositionTo -= glm::vec2(0, CameraSpeed * Delta);
-		if (Input::KeyDown(Keyboard::KeyCodes::S))
+		if (Input::KeyDown(Input::KeyCode::S))
 			PositionTo += glm::vec2(0, CameraSpeed * Delta);
 	}
 };

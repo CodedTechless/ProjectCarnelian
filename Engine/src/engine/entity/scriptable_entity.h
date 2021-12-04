@@ -2,6 +2,8 @@
 
 #include "entity.h"
 
+#include <engine/event/event.h>
+
 namespace Techless 
 {
 

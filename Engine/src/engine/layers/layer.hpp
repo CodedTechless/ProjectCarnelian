@@ -20,7 +20,7 @@ namespace Techless {
 		virtual void OnUpdateFixed(const float& Delta) {};	  // runs 60 times a second
 		virtual void OnUpdateFixedEnd(const float& Delta) {}; // runs 60 times a second, after OnUpdateFixed.
 
-		virtual void OnInputEvent(const InputEvent& inputEvent) {};
+		virtual Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed) { return Input::Filter::Ignore; };
 		virtual void OnWindowEvent(const WindowEvent& inputEvent) {};
 
 //		virtual bool OnInput(const InputObject& InputEvent) { return false; };

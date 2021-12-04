@@ -19,15 +19,15 @@ namespace Techless
 
     struct UserPointerInfo
     {
-        Application& App;
-        Window& ActiveWindow;
+        Application* App;
+        Window* ActiveWindow;
     };
 
     Window::Window(const char AppTitle[], glm::uvec2 aSize)
         : Size(aSize)
     {
         glfwSetErrorCallback(GLFWErrorCallback);
-        
+
         if (glfwInit() != GL_TRUE)
             assert(false);
 
@@ -52,46 +52,104 @@ namespace Techless
         Debug::Log("Created window context (" + std::to_string(aSize.x) + ", " + std::to_string(aSize.y) + ")", "Window");
 
         // Set up all the input callbacks.
-        UserPointerInfo userPointerInfo = { Application::GetActiveApplication(), *this };
+        UserPointerInfo* userPointerInfo = new UserPointerInfo({ &Application::GetActiveApplication(), this });
 
-        glfwSetWindowUserPointer(aWindow, (void*)&userPointerInfo);
+        glfwSetWindowUserPointer(aWindow, (void*)userPointerInfo);
 
         glfwSetWindowCloseCallback(aWindow,
             [](GLFWwindow* window)
             {
                 UserPointerInfo& PointerInfo = *(UserPointerInfo*)glfwGetWindowUserPointer(window);
-                PointerInfo.App.End();
+                PointerInfo.App->End();
             });
 
         glfwSetWindowSizeCallback(aWindow,
             [](GLFWwindow* window, int Width, int Height)
             {
                 UserPointerInfo& PointerInfo = *(UserPointerInfo*)glfwGetWindowUserPointer(window);
-                PointerInfo.ActiveWindow.Size = glm::uvec2(Width, Height);
+                PointerInfo.ActiveWindow->Size = glm::uvec2(Width, Height);
 
-                //Debug::Log("Window Resize " + std::to_string(Width) + "x" + std::to_string(Height), "GLFW");
+                WindowEvent NewEvent{};
+
+                NewEvent.Size = PointerInfo.ActiveWindow->Size;
+                NewEvent.Focused = PointerInfo.ActiveWindow->IsFocused;
+
+                PointerInfo.App->PushWindowEvent(NewEvent);
+            });
+
+        glfwSetWindowFocusCallback(aWindow,
+            [](GLFWwindow* window, int Focused) 
+            {
+                UserPointerInfo& PointerInfo = *(UserPointerInfo*)glfwGetWindowUserPointer(window);
+
+                WindowEvent NewEvent{};
+
+                NewEvent.Size = PointerInfo.ActiveWindow->Size;
+                NewEvent.Focused = (bool)Focused;
+
+                PointerInfo.App->PushWindowEvent(NewEvent);
             });
 
         glfwSetFramebufferSizeCallback(aWindow,
             [](GLFWwindow* window, int Width, int Height)
             {
                 glViewport(0, 0, Width, Height);
-
-                //Debug::Log("Framebuffer Resize " + std::to_string(Width) + "x" + std::to_string(Height), "GLFW");
             });
 
         glfwSetScrollCallback(aWindow,
             [](GLFWwindow* window, double xOffset, double yOffset)
             {
-                Application& App = *(Application*)glfwGetWindowUserPointer(window);
-                Input::OnScrollWheelInput(yOffset);
+                UserPointerInfo& PointerInfo = *(UserPointerInfo*)glfwGetWindowUserPointer(window);
+
+                InputEvent NewEvent{};
+
+                NewEvent.InputState = Input::State::Changed;
+                NewEvent.InputType = Input::Type::Scrolling;
+
+                NewEvent.Delta = glm::vec3(xOffset, yOffset, 0.0);
+
+                PointerInfo.App->PushInputEvent(NewEvent);
             });
 
         glfwSetCursorPosCallback(aWindow,
             [](GLFWwindow* window, double xPos, double yPos)
             {
-                Application& App = *(Application*)glfwGetWindowUserPointer(window);
-                Input::OnMousePositionInput({ xPos, yPos });
+                UserPointerInfo& PointerInfo = *(UserPointerInfo*)glfwGetWindowUserPointer(window);
+
+                InputEvent NewEvent{};
+
+                NewEvent.InputState = Input::State::Changed;
+                NewEvent.InputType = Input::Type::Mouse;
+
+                NewEvent.Position = glm::vec3((int)xPos, (int)yPos, 0);
+                
+                //Debug::Log(std::to_string(xPos) + " " + std::to_string(yPos));
+
+                PointerInfo.App->PushInputEvent(NewEvent);
+            });
+        
+        glfwSetMouseButtonCallback(aWindow,
+            [](GLFWwindow* window, int button, int action, int mods)
+            {
+                UserPointerInfo& PointerInfo = *(UserPointerInfo*)glfwGetWindowUserPointer(window);
+
+                InputEvent NewEvent{};
+
+                NewEvent.InputType = Input::Type::Mouse;
+                NewEvent.MouseCode = (Input::MouseCode)button;
+                
+                double X, Y;
+                glfwGetCursorPos(window, &X, &Y);
+
+                NewEvent.Position = glm::vec3((int)X, (int)Y, 0);
+
+                switch (action)
+                {
+                    case GLFW_PRESS: NewEvent.InputState = Input::State::Begin; break;
+                    case GLFW_RELEASE: NewEvent.InputState = Input::State::End; break;
+                }
+
+                PointerInfo.App->PushInputEvent(NewEvent);
             });
 	}
 

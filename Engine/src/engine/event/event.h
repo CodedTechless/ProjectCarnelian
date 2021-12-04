@@ -21,7 +21,8 @@ namespace Techless
 
 	struct WindowEvent
 	{
-
+		glm::vec2 Size = {};
+		bool Focused = true;
 	};
 
 }

@@ -38,11 +38,11 @@ namespace Techless {
 
 		inline void SetApplicationTitle(const std::string& nApplicationTitle) { ApplicationTitle = nApplicationTitle; };
 
-	private:
-		void RenderDebugImGuiElements();
-
 		void PushInputEvent(const InputEvent& inputEvent);
 		void PushWindowEvent(const WindowEvent& windowEvent);
+
+	private:
+		void RenderDebugImGuiElements();
 
 	private:
 		static Application* CurrentApplication;

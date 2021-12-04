@@ -40,18 +40,25 @@ namespace Techless {
 
     void Application::PushInputEvent(const InputEvent& inputEvent)
     {
+        bool Processed = false;
+
         for (auto i = Layers.rbegin(); i != Layers.rend(); ++i)
         {
-            bool Response = (*i)->OnInputEvent(inputEvent);
+            Input::Filter Response = (*i)->OnInputEvent(inputEvent, Processed);
 
-            if (Response)
+            if (Response == Input::Filter::Stop)
                 break;
+            else if (Response == Input::Filter::Continue)
+                Processed = true;
         }
     }
 
     void Application::PushWindowEvent(const WindowEvent& windowEvent)
     {
-
+        for (auto Layer : Layers)
+        {
+            Layer->OnWindowEvent(windowEvent);
+        }
     }
 
     void Application::AddLayer(Layer* NewLayer)

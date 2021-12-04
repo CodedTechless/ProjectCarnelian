@@ -20,16 +20,17 @@ namespace Techless
 
 		enum class State
 		{
-			None,
-			Begin,
-			Changed,
-			End
+			None = -1,
+			Begin = 1,
+			Changed = 2,
+			End = 0
 		};
 
 		enum class Type
 		{
 			None,
 			Mouse,
+			Scrolling,
 			Keyboard
 		};
 
