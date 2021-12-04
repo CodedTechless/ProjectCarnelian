@@ -40,6 +40,8 @@ namespace Techless {
 
     void Application::PushInputEvent(const InputEvent& inputEvent)
     {
+        //Debug::Log("Event " + std::to_string((int)inputEvent.InputType) + " " + std::to_string((int)inputEvent.InputState) + " " + std::to_string((int)inputEvent.KeyCode) + " " + std::to_string((int)inputEvent.MouseCode) + " (" + std::to_string(inputEvent.Delta.x) + ", " + std::to_string(inputEvent.Delta.y) + ") (" + std::to_string(inputEvent.Position.x) + ", " + std::to_string(inputEvent.Position.y) + ")", "Application");
+
         bool Processed = false;
 
         for (auto i = Layers.rbegin(); i != Layers.rend(); ++i)

@@ -14,6 +14,9 @@ namespace Carnelian {
 		void OnUpdate(const float& Delta);
 		void OnUpdateFixed(const float& Delta);
 
+	public:
+		Entity& CreatePlayer();
+
 	private:
 		std::shared_ptr<Scene> ActiveScene;
 

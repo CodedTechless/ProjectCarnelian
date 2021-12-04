@@ -1456,7 +1456,10 @@
     <ClInclude Include="src\engine\sprite\sprite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\event\event.h">
+    <ClInclude Include="src\engine\application\event.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\maths\colour.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

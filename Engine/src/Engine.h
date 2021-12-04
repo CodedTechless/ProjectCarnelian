@@ -2,11 +2,13 @@
 
 // application
 #include <engine/application/application.h>
+#include <engine/application/event.h>
+
+// layers
 #include <engine/layers/layer_set.h>
 
 // input
 #include <engine/input/input.h>
-#include <engine/event/event.h>
 
 // sprites
 #include <engine/sprite/sprite_atlas.h>

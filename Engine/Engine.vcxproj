@@ -564,6 +564,7 @@
     <ClInclude Include="src\dependencies\imgui\imstb_textedit.h" />
     <ClInclude Include="src\dependencies\imgui\imstb_truetype.h" />
     <ClInclude Include="src\dependencies\stb_image\stb_image.h" />
+    <ClInclude Include="src\engine\maths\colour.hpp" />
     <ClInclude Include="src\engine\sprite\sprite.h" />
     <ClInclude Include="src\render\dep\stb_image\stb_image.h" />
     <ClInclude Include="src\render\shader\shader.h" />
@@ -575,7 +576,7 @@
     <ClInclude Include="src\engine\application\window.h" />
     <ClInclude Include="src\engine\watchdog\watchdog.h" />
     <ClInclude Include="src\engine\sprite\sprite_atlas.h" />
-    <ClInclude Include="src\engine\event\event.h" />
+    <ClInclude Include="src\engine\application\event.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

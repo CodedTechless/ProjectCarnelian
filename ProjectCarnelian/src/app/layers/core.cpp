@@ -25,6 +25,8 @@ namespace Carnelian {
         ActiveScene->SetActiveCamera(SceneCamera);
 
         Renderer::SetClearColour(glm::vec4(0.1f, 0.1f, 0.1f, 1.f));
+
+        CreatePlayer();
 	}
 
     void Core::OnUpdateFixed(const float& Delta)
@@ -39,5 +41,15 @@ namespace Carnelian {
         ActiveScene->Update(Delta);
 
         UpdateRate = Delta;
+    }
+
+    Entity& Core::CreatePlayer()
+    {
+        auto& PlayerEntity = ActiveScene->CreateEntity();
+
+        auto& Script = PlayerEntity.AddComponent<ScriptComponent>();
+        Script.Bind<Player>(PlayerEntity);
+
+        return PlayerEntity;
     }
 }

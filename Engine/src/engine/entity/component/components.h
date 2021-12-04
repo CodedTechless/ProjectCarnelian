@@ -12,21 +12,72 @@ namespace Techless
 	
 	struct TransformComponent
 	{
+
 		glm::vec2 Position{ 0.f, 0.f };
 		glm::vec2 Scale{ 1.f, 1.f };
 		float Angle = 0.f;
 
 		float Depth = 0.f;
+
+	public:
+		~TransformComponent()
+		{
+			for (auto* Child : Children)
+			{
+				Child->Parent = nullptr;
+			}
+
+			if (Parent)
+				Parent->RemoveChild(this);
+		}
+
+		inline void SetParent(TransformComponent* Transform)
+		{
+			if (Parent != nullptr)
+				Parent->RemoveChild(this);
+
+			Parent = Transform;
+			
+			if (Transform != nullptr)
+				Transform->AddChild(this);
+		}
+
+		inline TransformComponent* GetParent() const { return Parent; };
+		inline std::vector<TransformComponent*> GetChildren() const { return Children; }
+
+	private:
+		void AddChild(TransformComponent* Transform)
+		{
+			Children.push_back(Transform);
+		}
+
+		void RemoveChild(TransformComponent* Transform)
+		{
+			auto it = std::find(Children.begin(), Children.end(), Transform);
+			if (it != Children.end())
+			{
+				Children.erase(it);
+			}
+		}
+
+		TransformComponent* Parent = nullptr;
+		std::vector<TransformComponent*> Children{};
 	};
 
 	struct SpriteComponent
 	{
 		Ptr<Sprite> aSprite;
 
+		glm::vec3 Offset{ 0.f, 0.f, 0.f };
 		glm::vec3 Colour{ 1.f, 1.f, 1.f };
 		float Alpha = 1.f;
 
-		glm::vec3 GetColour() { 
+		void SetRGBColour(glm::vec3 Colour)
+		{
+
+		}
+
+		glm::vec3 GetRGBColour() { 
 			return Colour * 255.f;
 		};
 	};

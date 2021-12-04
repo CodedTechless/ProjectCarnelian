@@ -16,8 +16,6 @@ public:
 	void OnCreate()
 	{
 		PositionTo = GetComponent<TransformComponent>().Position;
-
-		Debug::Log("Hello!!");
 	}
 
 

@@ -151,6 +151,25 @@ namespace Techless
 
                 PointerInfo.App->PushInputEvent(NewEvent);
             });
+
+        glfwSetKeyCallback(aWindow,
+            [](GLFWwindow* window, int key, int scancode, int action, int mods)
+            {
+                UserPointerInfo& PointerInfo = *(UserPointerInfo*)glfwGetWindowUserPointer(window);
+
+                InputEvent NewEvent{};
+
+                NewEvent.InputType = Input::Type::Keyboard;
+                NewEvent.KeyCode = (Input::KeyCode)key;
+
+                switch (action)
+                {
+                case GLFW_PRESS: NewEvent.InputState = Input::State::Begin; break;
+                case GLFW_RELEASE: NewEvent.InputState = Input::State::End; break;
+                }
+
+                PointerInfo.App->PushInputEvent(NewEvent);
+            });
 	}
 
     void Window::SetVsyncEnabled(bool Enabled)

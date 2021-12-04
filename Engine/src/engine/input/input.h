@@ -5,8 +5,6 @@
 namespace Techless
 {
 
-
-
 	class Input
 	{
 	public:
