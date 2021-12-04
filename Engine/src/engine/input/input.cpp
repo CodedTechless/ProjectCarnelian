@@ -6,7 +6,7 @@
 
 namespace Techless
 {
-	bool Input::KeyDown(const Keyboard::KeyCodes Key) 
+	bool Input::KeyDown(const Input::KeyCode Key)
 	{
 		auto Window = Application::GetActiveApplication().GetActiveWindow()->GetContext();
 		auto State = glfwGetKey(Window, (int)Key);
@@ -14,7 +14,7 @@ namespace Techless
 		return State == GLFW_PRESS || State == GLFW_REPEAT;
 	}
 	
-	bool Input::MouseButtonDown(const Mouse::MouseCodes Button)
+	bool Input::MouseButtonDown(const Input::MouseCode Button)
 	{
 		auto Window = Application::GetActiveApplication().GetActiveWindow()->GetContext();
 		auto State = glfwGetMouseButton(Window, (int)Button);

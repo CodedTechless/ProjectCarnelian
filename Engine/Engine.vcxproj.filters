@@ -1423,13 +1423,7 @@
     <ClInclude Include="src\engine\sprite\sprite_atlas.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\input\key_codes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\engine\input\input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\input\mouse_codes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\dependencies\json\json.hpp">
@@ -1460,6 +1454,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\sprite\sprite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\event\event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

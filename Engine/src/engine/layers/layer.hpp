@@ -1,7 +1,8 @@
 #pragma once
 
-#include "engine/input/input.h"
 #include <engineincl.h>
+
+#include <engine/event/event.h>
 
 namespace Techless {
 	class Layer {
@@ -19,7 +20,10 @@ namespace Techless {
 		virtual void OnUpdateFixed(const float& Delta) {};	  // runs 60 times a second
 		virtual void OnUpdateFixedEnd(const float& Delta) {}; // runs 60 times a second, after OnUpdateFixed.
 
-		virtual bool OnInput(const InputObject& InputEvent) { return false; };
+		virtual void OnInputEvent(const InputEvent& inputEvent) {};
+		virtual void OnWindowEvent(const WindowEvent& inputEvent) {};
+
+//		virtual bool OnInput(const InputObject& InputEvent) { return false; };
 	private:
 		std::string Name;
 	};

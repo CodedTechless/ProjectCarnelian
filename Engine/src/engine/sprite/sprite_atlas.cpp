@@ -40,7 +40,7 @@ namespace Techless
 		const unsigned int BlockSize = TextureSize * TextureSize * 4;
 
 		unsigned char* Tex = new unsigned char[BlockSize];
-		memset(Tex, 255, BlockSize);
+		memset(Tex, 0, BlockSize);
 
 		Debug::Log("Allocated a " + std::to_string(TextureSize) + "x" + std::to_string(TextureSize) + " texture page", "SpriteAtlas");
 

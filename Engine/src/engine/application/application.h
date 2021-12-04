@@ -1,8 +1,8 @@
 #pragma once
 
-#include "engine/layers/layer_set.h"
-
-#include "engine/application/window.h"
+#include <engine/layers/layer_set.h>
+#include <engine/application/window.h>
+#include <engine/event/event.h>
 
 namespace Techless {
 
@@ -10,6 +10,9 @@ namespace Techless {
 	{
 		unsigned int Framerate = 0;
 		unsigned int UpdateRate = 0;
+
+		float UpdateTime = 0;
+		float FixedUpdateTime = 0;
 	};
 
 	class Application {
@@ -19,8 +22,6 @@ namespace Techless {
 
 		void AddLayer(Layer* NewLayer);
 		void AddOverlay(Layer* NewOverlay);
-
-		void PushEvent(const InputObject& InputEvent);
 
 		void Init();
 		void Run();
@@ -38,6 +39,12 @@ namespace Techless {
 		inline void SetApplicationTitle(const std::string& nApplicationTitle) { ApplicationTitle = nApplicationTitle; };
 
 	private:
+		void RenderDebugImGuiElements();
+
+		void PushInputEvent(const InputEvent& inputEvent);
+		void PushWindowEvent(const WindowEvent& windowEvent);
+
+	private:
 		static Application* CurrentApplication;
 		static RuntimeInfo RuntimeData;
 
@@ -45,6 +52,8 @@ namespace Techless {
 
 		Window* aWindow;
 		bool Running;
+
+		friend class Window;
 	};
 
 }

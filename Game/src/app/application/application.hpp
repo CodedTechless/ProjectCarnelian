@@ -8,7 +8,7 @@
 
 using namespace Techless;
 
-namespace DesecratedDungeons
+namespace Sandbox
 {
 
 	class DesecratedDungeons : public Application

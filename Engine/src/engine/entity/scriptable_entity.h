@@ -42,6 +42,9 @@ namespace Techless
 		virtual void OnUpdate(const float Delta) {};
 		virtual void OnDraw(const float Delta) {};
 
+		virtual void OnInputEvent(const InputEvent& inputEvent) {};
+		virtual void OnWindowEvent(const WindowEvent& inputEvent) {};
+
 	private:
 		Entity* LinkedEntity;
 

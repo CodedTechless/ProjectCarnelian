@@ -50,6 +50,7 @@ namespace Techless {
 
 	static RendererDataSet RendererData;
 	RendererDebug Renderer::DebugInfo = {};
+
 	int Renderer::MaxTextureSize = 1024;
 	std::shared_ptr<Texture> Renderer::DefaultTexture = nullptr;
 
@@ -170,38 +171,9 @@ namespace Techless {
 	/////////////
 	// Sprites //
 	/////////////
-	
-	// Draw a sprite with vector2 position and scale and a z-depth.
-	void Renderer::DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size, float Depth)
-	{
-		auto Texture = sprite->GetTexture();
-		auto SpriteBounds = sprite->GetBounds();
-		auto TextureSize = Texture->GetDimensions();
-
-		auto TopLeft = SpriteBounds.TopLeft / TextureSize;
-		auto BottomRight = SpriteBounds.BottomRight / TextureSize;
-
-		glm::vec2 TexCoords[4] = { { TopLeft.x, TopLeft.y }, { BottomRight.x, TopLeft.y }, { BottomRight.x, BottomRight.y }, {TopLeft.x, BottomRight.y} };
-		DrawQuad(Texture, TexCoords, glm::vec3(Position, Depth), Size);
-	}
-
-	// Draw a sprite with vector2 position and scale, z-depth and an angle.
-
-	void Renderer::DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size, float Depth, float Angle)
-	{
-		auto Texture = sprite->GetTexture();
-		auto SpriteBounds = sprite->GetBounds();
-		auto TextureSize = Texture->GetDimensions();
-
-		auto TopLeft = SpriteBounds.TopLeft / TextureSize;
-		auto BottomRight = SpriteBounds.BottomRight / TextureSize;
-
-		glm::vec2 TexCoords[4] = { { TopLeft.x, TopLeft.y }, { BottomRight.x, TopLeft.y }, { BottomRight.x, BottomRight.y }, {TopLeft.x, BottomRight.y} };
-		DrawQuad(Texture, TexCoords, glm::vec3(Position, Depth), Size, Angle);
-	}
 
 	// Draw a sprite with vector2 position and scale, colour, transparency, z-depth and an angle.
-	void Renderer::DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size, float Depth, float Angle, const glm::vec3& Colour, float Transparency)
+	void Renderer::DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size, float Depth, float Angle, const glm::vec3& Colour, float Alpha)
 	{
 		auto Texture = sprite->GetTexture();
 		auto SpriteBounds = sprite->GetBounds();
@@ -211,7 +183,7 @@ namespace Techless {
 		auto BottomRight = SpriteBounds.BottomRight / TextureSize;
 
 		glm::vec2 TexCoords[4] = { { TopLeft.x, TopLeft.y }, { BottomRight.x, TopLeft.y }, { BottomRight.x, BottomRight.y }, {TopLeft.x, BottomRight.y} };
-		DrawQuad(Texture, TexCoords, glm::vec3(Position, Depth), Size, glm::vec4(Colour, Transparency), Angle);
+		DrawQuad(Texture, TexCoords, glm::vec3(Position, Depth), Size, glm::vec4(Colour, Alpha), Angle);
 	}
 
 	////////////////////
@@ -220,45 +192,13 @@ namespace Techless {
 
 	void Renderer::DrawBlankQuad(const glm::vec3& Position, const glm::vec2& Size, const glm::vec4& Colour, float Angle)
 	{
-		glm::mat4 Transform =
-			glm::translate(glm::mat4(1.0f), Position)
-			* glm::rotate(glm::mat4(1.0f), glm::radians(Angle), glm::vec3(0, 0, 1))
-			* glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1));
-
-		glm::vec2 TexCoords[] = { { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f } };
-		DrawQuad(RendererData.ActiveTextures[0], TexCoords, Transform, Colour);
-	}
-	
-	// Draw a quad with a blank texture (forces renderer to texture slot 0)
-	void Renderer::DrawBlankQuad(const glm::vec3& Position, const glm::vec2& Size, const glm::vec4& Colour)
-	{
-		glm::mat4 Transform =
-			glm::translate(glm::mat4(1.0f), Position)
-			* glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1));
-
-		glm::vec2 TexCoords[] = { { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f } };
-		DrawQuad(RendererData.ActiveTextures[0], TexCoords, Transform, Colour);
-	}
-	
-	// Draw a quad using vector coordinates
-	void Renderer::DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::vec3& Position, const glm::vec2& Size)
-	{
-		glm::mat4 Transform = 
-			  glm::translate(glm::mat4(1.0f), Position) 
-		    * glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1));
-
-		DrawQuad(Tex, TexCoords, Transform, glm::vec4(1.f, 1.f, 1.f, 1.f));
-	}
-
-	// Draw a quad using vector coordinates with an angle
-	void Renderer::DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::vec3& Position, const glm::vec2& Size, float Angle)
-	{
-		glm::mat4 Transform =
-			  glm::translate(glm::mat4(1.0f), Position)
-			* glm::rotate(glm::mat4(1.0f), glm::radians(Angle), glm::vec3(0, 0, 1))
-			* glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1));
+		glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Position);
 		
-		DrawQuad(Tex, TexCoords, Transform, glm::vec4(1.f, 1.f, 1.f, 1.f));
+		if (Angle != 0) Transform *= glm::rotate(glm::mat4(1.0f), glm::radians(Angle), glm::vec3(0, 0, 1));
+		if (Size != glm::vec2(1.f, 1.f)) Transform *= glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1));
+
+		glm::vec2 TexCoords[] = { { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f } };
+		DrawQuad(RendererData.ActiveTextures[0], TexCoords, Transform, Colour);
 	}
 
 	// Draw a quad using vector coordinates with a colour and an angle
@@ -314,6 +254,56 @@ namespace Techless {
 		}
 
 		RendererData.CurrentVertexIndex += 6;
+	}
+
+	void Renderer::DrawQuadArray(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], Quad* QuadArray, unsigned int Count)
+	{
+		if (RendererData.CurrentVertexIndex >= RendererDataSet::MaxInds)
+		{
+			ForceReset();
+		}
+
+		float TexIndex = 0.f;
+		for (auto i = 0; i < RendererDataSet::ActiveTextureSlots; i++)
+		{
+			if (RendererData.ActiveTextures[i] == Tex)
+			{
+				TexIndex = i;
+			}
+		}
+
+		if (TexIndex == 0.f)
+		{
+			if (RendererData.NextTextureSlot > RendererDataSet::ActiveTextureSlots)
+			{
+				ForceReset();
+			}
+
+			RendererData.ActiveTextures[RendererData.NextTextureSlot] = Tex;
+			RendererData.NextTextureSlot++;
+		}
+
+		for (size_t iQ = 0; iQ < Count; iQ++)
+		{
+			auto& NextQuad = QuadArray[iQ];
+
+			for (size_t i = 0; i < 4; i++)
+			{
+				RendererData.QuadArrayPointer->Position = NextQuad.Transform * RendererData.VertexDefault[i];
+				RendererData.QuadArrayPointer->Colour = NextQuad.Colour;
+				RendererData.QuadArrayPointer->TexCoords = TexCoords[i];
+				RendererData.QuadArrayPointer->TexIndex = TexIndex;
+
+				//std::cout << "X: " << RendererData.QuadArrayPointer->Position.x << " Y: " << RendererData.QuadArrayPointer->Position.y << " Z: " << RendererData.QuadArrayPointer->Position.z << " TexCoords: " << TexCoords[i].x << " " << TexCoords[i].y << std::endl;
+
+				RendererData.QuadArrayPointer++;
+				DebugInfo.VertexCount++;
+			}
+
+			RendererData.CurrentVertexIndex += 6;
+		}
+
+		delete[] QuadArray;
 	}
 
 

@@ -19,24 +19,26 @@ namespace Techless {
 		unsigned int VertexCount = 0;
 	};
 
+	struct Quad
+	{
+		glm::mat4 Transform;
+		glm::vec4 Colour;
+	};
+
 	class Renderer {
 	public:
 		static void Init();
 		static void Stop();
 
-		static void DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size, float Depth);
-		static void DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size, float Depth, float Angle);
-		//static void DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size, float Depth, const glm::vec3& Colour, float Transparency);
-		static void DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size, float Depth, float Angle, const glm::vec3& Colour, float Transparency);
+		static void DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size = glm::vec2(1.f, 1.f), float Depth = 0, float Angle = 0, const glm::vec3& Colour = glm::vec3(1.f, 1.f, 1.f), float Alpha = 1.f);
 
-		static void DrawBlankQuad(const glm::vec3& Position, const glm::vec2& Size, const glm::vec4& Colour);
-		static void DrawBlankQuad(const glm::vec3& Position, const glm::vec2& Size, const glm::vec4& Colour, float Angle);
-
-		static void DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::vec3& Position, const glm::vec2& Size);
-		static void DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::vec3& Position, const glm::vec2& Size, float Angle);
-		static void DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::vec3& Position, const glm::vec2& Size, const glm::vec4& Colour, float Angle);
+		static void DrawBlankQuad(const glm::vec3& Position, const glm::vec2& Size = { 1.f, 1.f }, const glm::vec4& Colour = { 1.f, 1.f, 1.f, 1.f }, float Angle = 0);
+		static void DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::vec3& Position, const glm::vec2& Size = glm::vec2(1.f, 1.f), const glm::vec4& Colour = glm::vec4(1.f, 1.f, 1.f, 1.f), float Angle = 0);
 		static void DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::mat4& Transform, const glm::vec4& Colour);
 
+		static void DrawQuadArray(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], Quad* QuadArray, unsigned int Count);
+
+	public:
 		static void Begin(glm::mat4 Projection, glm::mat4 Transform);
 		static void End();
 
@@ -59,7 +61,5 @@ namespace Techless {
 
 	private:
 		static int MaxTextureSize;
-//		static int MaxTextureUnits;
-		//static glm::vec2* GetTexCoords(const std::shared_ptr<Sprite> sprite);
 	};
 }

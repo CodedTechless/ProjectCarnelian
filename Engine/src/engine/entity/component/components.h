@@ -24,7 +24,7 @@ namespace Techless
 		Ptr<Sprite> aSprite;
 
 		glm::vec3 Colour{ 1.f, 1.f, 1.f };
-		float Transparency = 1.f;
+		float Alpha = 1.f;
 
 		glm::vec3 GetColour() { 
 			return Colour * 255.f;

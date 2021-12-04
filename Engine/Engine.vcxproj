@@ -270,8 +270,6 @@
     <ClInclude Include="src\engine\entity\scriptable_entity.h" />
     <ClInclude Include="src\engine\input\input.h" />
     <ClInclude Include="src\engine\entity\scene.h" />
-    <ClInclude Include="src\engine\input\key_codes.h" />
-    <ClInclude Include="src\engine\input\mouse_codes.h" />
     <ClInclude Include="src\engine\layers\layer_set.h" />
     <ClInclude Include="src\engine\layers\layer.hpp" />
     <ClInclude Include="src\engine\application\application.h" />
@@ -577,6 +575,7 @@
     <ClInclude Include="src\engine\application\window.h" />
     <ClInclude Include="src\engine\watchdog\watchdog.h" />
     <ClInclude Include="src\engine\sprite\sprite_atlas.h" />
+    <ClInclude Include="src\engine\event\event.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

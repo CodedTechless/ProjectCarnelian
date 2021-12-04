@@ -13,7 +13,7 @@
 
 using namespace Techless;
 
-namespace DesecratedDungeons {
+namespace Sandbox {
 
     Ptr<Sprite> newSprite = nullptr;
 
@@ -133,44 +133,6 @@ namespace DesecratedDungeons {
 
 	void MainLayer::OnUpdateEnd(const float& Delta)
 	{
-        auto Runtime = Application::GetRuntimeData();
-        auto DebugInfo = Renderer::GetDebugInfo();
 
-		{
-			ImGui::Begin("Render Debug");
-
-            if (ImGui::CollapsingHeader("Performance"))
-            {
-                ImGui::Columns(2, "performance_table");
-
-                std::string PerformanceLabels = "FPS\nUpdate Rate\nLast fixed update took\nLast update took";
-                ImGui::Text(PerformanceLabels.c_str());
-
-                ImGui::NextColumn();
-
-                std::string PerformanceData = std::to_string(Runtime.Framerate) + "\n" + std::to_string(Runtime.UpdateRate) + "\n" + std::to_string(FixedUpdateRate) + "\n" + std::to_string(Delta) + "ms";
-                ImGui::Text(PerformanceData.c_str());
-
-                ImGui::Columns();
-            }
-
-            if (ImGui::CollapsingHeader("Renderer Information"))
-            {
-                
-                ImGui::Columns(2, "renderer_info_table");
-
-                std::string RendererLabels = "Draw calls last frame\nVertex count last frame";
-                ImGui::Text(RendererLabels.c_str());
-
-                ImGui::NextColumn();
-
-                std::string RendererData = std::to_string(DebugInfo.DrawCalls) + " calls\n" + std::to_string(DebugInfo.VertexCount) + " verticies";
-                ImGui::Text(RendererData.c_str());
-
-                ImGui::Columns();
-            }
-
-			ImGui::End();
-		}
 	}
 }

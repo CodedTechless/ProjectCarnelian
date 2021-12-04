@@ -4,15 +4,15 @@
 
 using namespace Techless;
 
-namespace Sandbox {
-	class MainLayer : public Layer {
+namespace Carnelian {
+
+	class Core : public Layer 
+	{
 	public:
 		void OnCreated();
 
-		void OnUpdateFixed(const float& Delta);
-
 		void OnUpdate(const float& Delta);
-		void OnUpdateEnd(const float& Delta);
+		void OnUpdateFixed(const float& Delta);
 
 	private:
 		std::shared_ptr<Scene> ActiveScene;
@@ -20,4 +20,5 @@ namespace Sandbox {
 		float UpdateRate;
 		float FixedUpdateRate;
 	};
+
 }

@@ -45,7 +45,7 @@ namespace Techless {
 
 	// Buffer Layout
 	VertexBufferLayout::VertexBufferLayout(std::initializer_list<LayoutElement> Init)
-		: bStride(0), Elements(Init) 
+		: bStride(0), Elements(Init)
 	{
 		for (auto& Element : Elements) {
 			bStride += LayoutElement::GetSize(Element.Type) * Element.Count;

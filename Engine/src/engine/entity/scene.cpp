@@ -67,12 +67,10 @@ namespace Techless
 			auto EntityID = SpriteComponents->GetIDAtIndex(i);
 			auto& Transform = TransformComponents->Get(EntityID);
 
-			Renderer::DrawSprite(Sprite.aSprite, Transform.Position, Transform.Scale, Transform.Depth, Transform.Angle, Sprite.Colour, Sprite.Transparency);
+			Renderer::DrawSprite(Sprite.aSprite, Transform.Position, Transform.Scale, Transform.Depth, Transform.Angle, Sprite.Colour, Sprite.Alpha);
 
 			++i;
 		}
-
-
 
 		Renderer::End();
 	}
