@@ -14,6 +14,9 @@ namespace Carnelian {
 		void OnUpdate(const float& Delta);
 		void OnUpdateFixed(const float& Delta);
 
+		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
+		void OnWindowEvent(const WindowEvent& windowEvent);
+
 	public:
 		Entity& CreatePlayer();
 

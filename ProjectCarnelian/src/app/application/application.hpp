@@ -21,6 +21,8 @@ namespace Carnelian
 
 			auto Main = new Core();
 			Layers.PushLayer(Main);
+
+			Run();
 		}
 	};
 

@@ -20,16 +20,7 @@ namespace Techless {
 		Application() = default;
 		virtual ~Application() = default;
 
-		void AddLayer(Layer* NewLayer);
-		void AddOverlay(Layer* NewOverlay);
-
-		void Init();
-		void Run();
-		void End();
-
 	public:
-		LayerSet Layers;
-
 		inline bool IsRunning() const { return Running; };
 		inline Window* GetActiveWindow() const { return aWindow; };
 	
@@ -38,8 +29,18 @@ namespace Techless {
 
 		inline void SetApplicationTitle(const std::string& nApplicationTitle) { ApplicationTitle = nApplicationTitle; };
 
+	protected:
+		void AddLayer(Layer* NewLayer);
+		void AddOverlay(Layer* NewOverlay);
+
+		void Init();
+		void Run();
+		void End();
+
 		void PushInputEvent(const InputEvent& inputEvent);
 		void PushWindowEvent(const WindowEvent& windowEvent);
+
+		LayerSet Layers;
 
 	private:
 		void RenderDebugImGuiElements();

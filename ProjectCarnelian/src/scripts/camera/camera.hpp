@@ -8,33 +8,63 @@ class Camera : public ScriptableEntity
 {
 public:
 
-	float CameraSpeed = 10.f;
+	// Movement
+	float CameraSpeed = 15.f;
 	float CameraDiffMultiplier = 0.4f;
 
 	glm::vec2 PositionTo = {};
+
+	// Zooming
+	float ZoomLevel = 1.f;
+	float ZoomLevelTo = 1.f;
+	
+	float ZoomSpeed = 0.1f;
+
+	// Z-Plane
+	float Near = -100.f;
+	float Far = 100.f;
 
 	void OnCreate()
 	{
 		PositionTo = GetComponent<TransformComponent>().Position;
 	}
 
-
 	void OnUpdate(const float Delta)
 	{
 		auto& Transform = GetComponent<TransformComponent>();
-
 		Transform.Position += (PositionTo - Transform.Position) * 0.2f * Delta;
+	
+		auto WindowSize = Application::GetActiveApplication().GetActiveWindow()->Size;
+
+		auto& CameraComp = GetComponent<CameraComponent>();
+		CameraComp.SetProjection((glm::vec2)WindowSize * ZoomLevel, Near, Far);
+
+		ZoomLevel += (ZoomLevelTo - ZoomLevel) * 0.3f * Delta;
 	}
 
 	void OnFixedUpdate(const float Delta)
 	{
-		if (Input::KeyDown(Input::KeyCode::A))
-			PositionTo -= glm::vec2(CameraSpeed * Delta, 0);
-		if (Input::KeyDown(Input::KeyCode::D))
-			PositionTo += glm::vec2(CameraSpeed * Delta, 0);
-		if (Input::KeyDown(Input::KeyCode::W))
-			PositionTo -= glm::vec2(0, CameraSpeed * Delta);
-		if (Input::KeyDown(Input::KeyCode::S))
-			PositionTo += glm::vec2(0, CameraSpeed * Delta);
+		auto Horizontal = (int)Input::KeyDown(Input::KeyCode::D) - (int)Input::KeyDown(Input::KeyCode::A);
+		auto Vertical = (int)Input::KeyDown(Input::KeyCode::S) - (int)Input::KeyDown(Input::KeyCode::W);
+
+		PositionTo += glm::vec2(Horizontal, Vertical) * CameraSpeed * ZoomLevel * Delta;
+	}
+
+	Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed)
+	{
+		if (inputEvent.InputType == Input::Type::Scrolling)
+		{
+			ZoomLevelTo += -inputEvent.Delta.y * ZoomSpeed * ZoomLevelTo;
+		
+			return Input::Filter::Continue;
+		}
+
+		return Input::Filter::Ignore;
+	}
+
+	void OnWindowEvent(const WindowEvent& windowEvent)
+	{
+		auto& CameraComp = GetComponent<CameraComponent>();
+		CameraComp.SetProjection(windowEvent.Size * ZoomLevel, Near, Far);
 	}
 };

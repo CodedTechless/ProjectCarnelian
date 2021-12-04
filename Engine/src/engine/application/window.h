@@ -21,6 +21,7 @@ namespace Techless
 
 		bool IsFocused = true;
 		glm::uvec2 Size;
+
 	private:
 		GLFWwindow* aWindow;
 	};

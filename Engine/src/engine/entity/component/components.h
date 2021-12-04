@@ -89,14 +89,30 @@ namespace Techless
 
 	struct CameraComponent
 	{
-		void SetProjection(glm::vec2 Size, float Near, float Far)
+		// Builds orthographic matrix for the rendering API to use.
+		void SetProjection(glm::vec2 Size, float pNear, float pFar)
 		{
-			Projection = glm::ortho(0.f, Size.x, Size.y, 0.f, Near, Far);
+			Projection = glm::ortho(0.f, Size.x, Size.y, 0.f, pNear, pFar);
+
+			ViewportResolution = Size;
+			Near = pNear;
+			Far = pFar;
 		}
 
-		glm::mat4 GetProjection() { return Projection; };
+		inline glm::mat4 GetProjection() const { return Projection; };
+		inline std::pair<float, float> GetZPlane() const{ return { Near, Far }; }; // First is Near, second is Far
+		
+		inline glm::vec2 GetViewportSize() const { return ViewportSize; };
+		inline glm::vec2 GetViewportResolution() const { return ViewportResolution; };
 
 	private:
+
+		glm::vec2 ViewportSize = { 0.f, 0.f }; // [currently unused] to-do: add support for multiple viewports??
+		glm::vec2 ViewportResolution = { 1280.f, 720.f };
+
+		float Near = -100.f;
+		float Far = 100.f;
+
 		glm::mat4 Projection = glm::ortho(0.f, 1280.f, 720.f, 0.f, -100.f, 100.f);
 	};
 

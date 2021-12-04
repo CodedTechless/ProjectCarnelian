@@ -1,6 +1,7 @@
 #pragma once
 
 #include <engine/entity/registry/registry.h>
+#include <engine/application/event.h>
 
 namespace Techless 
 {
@@ -23,6 +24,9 @@ namespace Techless
 		{
 			return SceneRegistry.GetRegistrySet<Type>();
 		}
+
+		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
+		void OnWindowEvent(const WindowEvent& windowEvent);
 
 	private:
 		Registry SceneRegistry;

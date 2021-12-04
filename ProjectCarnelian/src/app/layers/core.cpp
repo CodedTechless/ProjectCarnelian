@@ -43,6 +43,16 @@ namespace Carnelian {
         UpdateRate = Delta;
     }
 
+    Input::Filter Core::OnInputEvent(const InputEvent& inputEvent, bool Processed)
+    {
+        return ActiveScene->OnInputEvent(inputEvent, Processed);
+    }
+
+    void Core::OnWindowEvent(const WindowEvent& windowEvent)
+    {
+        ActiveScene->OnWindowEvent(windowEvent);
+    }
+
     Entity& Core::CreatePlayer()
     {
         auto& PlayerEntity = ActiveScene->CreateEntity();

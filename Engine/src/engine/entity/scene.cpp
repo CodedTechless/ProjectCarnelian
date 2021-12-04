@@ -26,6 +26,43 @@ namespace Techless
 		SceneRegistry.Remove<Entity>(EntityID);
 	}
 
+	Input::Filter Scene::OnInputEvent(const InputEvent& inputEvent, bool Processed)
+	{
+		/*
+			to-do:
+			 - make it so inputs propagate from positive to negative depths
+			 - do it efficiently (don't sort on z-depth every input because that's really fucking inefficient bitch)
+		*/
+
+		auto FinalFilter = Input::Filter::Ignore;
+		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
+
+		for (auto Script : *ScriptComponents)
+		{
+			auto Response = Script.Instance->OnInputEvent(inputEvent, Processed);
+
+			if (Response != Input::Filter::Ignore)
+				FinalFilter = Response;
+
+			if (Response == Input::Filter::Stop)
+				break;
+			else if (Response == Input::Filter::Continue)
+				Processed = true;
+		}
+
+		return FinalFilter;
+	}
+
+	void Scene::OnWindowEvent(const WindowEvent& windowEvent)
+	{
+		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
+
+		for (auto Script : *ScriptComponents)
+		{
+			Script.Instance->OnWindowEvent(windowEvent);
+		}
+	}
+
 	void Scene::FixedUpdate(const float Delta)
 	{
 		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
@@ -46,10 +83,13 @@ namespace Techless
 			Script.Instance->OnUpdate(Delta);
 		}
 
-		auto CamProjection = ActiveCamera->GetComponent<CameraComponent>().GetProjection();
+		auto& CameraComp = ActiveCamera->GetComponent<CameraComponent>();
+		auto CamProjection = CameraComp.GetProjection();
+		auto CamRes = CameraComp.GetViewportResolution();
+
 		auto CamPosition = ActiveCamera->GetComponent<TransformComponent>().Position;
 		
-		glm::mat4 Transform = glm::translate(glm::mat4(1.f), glm::vec3(CamPosition, 0));
+		glm::mat4 Transform = glm::translate(glm::mat4(1.f), glm::vec3(CamPosition - (CamRes / 2.f), 0.f));
 		
 		Renderer::Begin(CamProjection, Transform);
 

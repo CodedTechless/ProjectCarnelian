@@ -2,6 +2,7 @@
 
 #include "entity.h"
 
+#include <engine/input/input.h>
 #include <engine/application/event.h>
 
 namespace Techless 
@@ -44,7 +45,7 @@ namespace Techless
 		virtual void OnUpdate(const float Delta) {};
 		virtual void OnDraw(const float Delta) {};
 
-		virtual void OnInputEvent(const InputEvent& inputEvent) {};
+		virtual Input::Filter OnInputEvent(const InputEvent& inputEvent, const bool Processed) { return Input::Filter::Ignore; };
 		virtual void OnWindowEvent(const WindowEvent& inputEvent) {};
 
 	private:
