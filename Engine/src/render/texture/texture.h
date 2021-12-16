@@ -6,28 +6,27 @@
 namespace Techless {
 	class Texture {
 	public:
-		Texture();
+		Texture(const glm::i32vec2& dimensions, int bitsPerPixel);
 		Texture(const std::string& Path);
 		~Texture();
 
 		void Load(const std::string& Path);
-		void Push(unsigned char* Buffer, int TextureWidth, int TextureHeight, int BitsPerPixel);
+		void Push(unsigned char* Buffer);
 
 		void Bind(unsigned int Slot = 0) const;
 		void Unbind() const;
 
-		inline glm::vec2 GetDimensions() const { return glm::vec2(Width, Height); };
+		inline glm::i32vec2 GetDimensions() const { return Dimensions; };
 		inline std::string GetFilePath() const { return FilePath; };
 	private:
 		void Allocate();
 	private:
-		unsigned int RendererID;
-		std::string FilePath;
-		unsigned char* LocalBuffer;
+		unsigned int RendererID = 0;
+		std::string FilePath = "";
+		unsigned char* LocalBuffer = nullptr;
 
 		// matt-eta
-		int Width;
-		int Height;
-		int BitsPerPixel;
+		glm::i32vec2 Dimensions = { 0, 0 };
+		int BitsPerPixel = 0;
 	};
 }

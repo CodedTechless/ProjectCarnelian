@@ -7,6 +7,7 @@ namespace Techless
 
 	class Colour
 	{
+	public:
 		Colour() = default;
 
 		Colour(float r, float g, float b, float a = 1.f)
@@ -15,9 +16,9 @@ namespace Techless
 		Colour(int r, int g, int b, int a = 255)
 			: R((float)r / 255.f), G((float)g / 255.f), B((float)b / 255.f), A((float)a / 255.f) {};
 
-		float R = 0.f;
-		float G = 0.f;
-		float B = 0.f;
+		float R = 1.f;
+		float G = 1.f;
+		float B = 1.f;
 		float A = 1.f;
 
 		inline void SetRGBColour(int r, int g, int b) {

@@ -7,12 +7,15 @@ using namespace Techless;
 class Camera : public ScriptableEntity
 {
 public:
+	// Settings
+	bool FreeCamera = false;
+	TransformComponent* Subject = nullptr;
 
 	// Movement
 	float CameraSpeed = 15.f;
 	float CameraDiffMultiplier = 0.4f;
 
-	glm::vec2 PositionTo = {};
+	glm::vec3 PositionTo = {};
 
 	// Zooming
 	float ZoomLevel = 1.f;
@@ -26,13 +29,13 @@ public:
 
 	void OnCreate()
 	{
-		PositionTo = GetComponent<TransformComponent>().Position;
+		PositionTo = GetComponent<TransformComponent>().GetLocalPosition();
 	}
 
 	void OnUpdate(const float Delta)
 	{
 		auto& Transform = GetComponent<TransformComponent>();
-		Transform.Position += (PositionTo - Transform.Position) * 0.2f * Delta;
+		Transform += (PositionTo - Transform.GetLocalPosition()) * 0.2f * Delta;
 	
 		auto WindowSize = Application::GetActiveApplication().GetActiveWindow()->Size;
 
@@ -44,10 +47,17 @@ public:
 
 	void OnFixedUpdate(const float Delta)
 	{
-		auto Horizontal = (int)Input::KeyDown(Input::KeyCode::D) - (int)Input::KeyDown(Input::KeyCode::A);
-		auto Vertical = (int)Input::KeyDown(Input::KeyCode::S) - (int)Input::KeyDown(Input::KeyCode::W);
+		if (FreeCamera)
+		{
+			auto Horizontal = (int)Input::KeyDown(Input::KeyCode::D) - (int)Input::KeyDown(Input::KeyCode::A);
+			auto Vertical = (int)Input::KeyDown(Input::KeyCode::S) - (int)Input::KeyDown(Input::KeyCode::W);
 
-		PositionTo += glm::vec2(Horizontal, Vertical) * CameraSpeed * ZoomLevel * Delta;
+			PositionTo += glm::vec3(Horizontal, Vertical, 0) * CameraSpeed * ZoomLevel * Delta;
+		}
+		else if (Subject)
+		{
+			PositionTo = Subject->GetLocalPosition();
+		}
 	}
 
 	Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed)

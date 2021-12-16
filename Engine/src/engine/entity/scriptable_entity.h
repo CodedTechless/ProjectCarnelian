@@ -37,6 +37,11 @@ namespace Techless
 			return LinkedEntity->HasComponent<Component>();
 		}
 
+		inline Scene& GetScene() const
+		{
+			return *LinkedEntity->GetScene();
+		}
+
 	protected:
 		virtual void OnCreate() {};
 		virtual void OnDestroy() {};

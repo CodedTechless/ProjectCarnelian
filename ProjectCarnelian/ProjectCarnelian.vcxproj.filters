@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\shaders\basic.shader" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="src\app\application\application.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

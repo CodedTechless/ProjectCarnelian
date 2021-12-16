@@ -1,4 +1,6 @@
 
+#include "renderer.h"
+
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 
@@ -9,9 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "engine/watchdog/watchdog.h"
-
-#include "renderer.h"
+#include <engine/watchdog/watchdog.h>
 
 // {0.f, 0.f}, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f }
 
@@ -167,41 +167,22 @@ namespace Techless {
 		Debug::Log("Started renderer. (OpenGL " + std::string((const char*)e) + ")", "Renderer");
 	}
 
-
-	/////////////
-	// Sprites //
-	/////////////
-
-	// Draw a sprite with vector2 position and scale, colour, transparency, z-depth and an angle.
-	void Renderer::DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size, float Depth, float Angle, const glm::vec3& Colour, float Alpha)
-	{
-		auto Texture = sprite->GetTexture();
-		auto SpriteBounds = sprite->GetBounds();
-		auto TextureSize = Texture->GetDimensions();
-
-		auto TopLeft = SpriteBounds.TopLeft / TextureSize;
-		auto BottomRight = SpriteBounds.BottomRight / TextureSize;
-
-		glm::vec2 TexCoords[4] = { { TopLeft.x, TopLeft.y }, { BottomRight.x, TopLeft.y }, { BottomRight.x, BottomRight.y }, {TopLeft.x, BottomRight.y} };
-		DrawQuad(Texture, TexCoords, glm::vec3(Position, Depth), Size, glm::vec4(Colour, Alpha), Angle);
-	}
-
 	////////////////////
 	// Quad Rendering //
 	////////////////////
 
-	void Renderer::DrawBlankQuad(const glm::vec3& Position, const glm::vec2& Size, const glm::vec4& Colour, float Angle)
+	void Renderer::DrawQuad(const glm::vec3& Position, const glm::vec2& Scale, float Orientation, const Colour& colour)
 	{
 		glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Position);
 		
-		if (Angle != 0) Transform *= glm::rotate(glm::mat4(1.0f), glm::radians(Angle), glm::vec3(0, 0, 1));
-		if (Size != glm::vec2(1.f, 1.f)) Transform *= glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1));
+		if (Orientation != 0) Transform *= glm::rotate(glm::mat4(1.0f), glm::radians(Orientation), glm::vec3(0.f, 0.f, 1.f));
+		if (Scale != glm::vec2(1.f, 1.f)) Transform *= glm::scale(glm::mat4(1.0f), glm::vec3(Scale.x, Scale.y, 1));
 
 		glm::vec2 TexCoords[] = { { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f } };
-		DrawQuad(RendererData.ActiveTextures[0], TexCoords, Transform, Colour);
+		DrawTexturedQuad(RendererData.ActiveTextures[0], TexCoords, Transform, colour);
 	}
 
-	// Draw a quad using vector coordinates with a colour and an angle
+/*	// Draw a quad using vector coordinates with a colour and an angle
 	void Renderer::DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::vec3& Position, const glm::vec2& Size, const glm::vec4& Colour, float Angle)
 	{
 		glm::mat4 Transform =
@@ -210,10 +191,23 @@ namespace Techless {
 			* glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1));
 
 		DrawQuad(Tex, TexCoords, Transform, Colour);
+	}*/
+
+	void Renderer::DrawSprite(const Ptr<Sprite> sprite, const glm::mat4& Transform, const Colour& colour)
+	{
+		auto texture = sprite->GetTexture();
+		auto SpriteBounds = sprite->GetAbsoluteBounds();
+
+		glm::vec2 TopLeft = SpriteBounds.TopLeft;
+		glm::vec2 BottomRight = SpriteBounds.BottomRight;
+
+		glm::vec2 TexCoords[4] = { { TopLeft.x, TopLeft.y }, { BottomRight.x, TopLeft.y }, { BottomRight.x, BottomRight.y }, {TopLeft.x, BottomRight.y} };
+
+		DrawTexturedQuad(texture, TexCoords, Transform, colour);
 	}
 
 	// Draw a quad using matricies
-	void Renderer::DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::mat4& Transform, const glm::vec4& Colour)
+	void Renderer::DrawTexturedQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::mat4& Transform, const glm::vec4& Colour)
 	{
 		if (RendererData.CurrentVertexIndex >= RendererDataSet::MaxInds)
 		{

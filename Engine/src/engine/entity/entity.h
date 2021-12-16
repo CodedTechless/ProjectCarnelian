@@ -39,7 +39,8 @@ namespace Techless
 			return ActiveScene->SceneRegistry.Has<ComponentType>(EntityID);
 		}
 
-		inline std::string& GetID() { return EntityID; };
+		inline std::string GetID() const { return EntityID; };
+		inline Scene* GetScene() const { return ActiveScene; };
 
 	private:
 		std::string EntityID;

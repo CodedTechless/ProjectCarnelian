@@ -1,3 +1,5 @@
 /.vs
 /bin
 /lib
+/old
+/local-backups

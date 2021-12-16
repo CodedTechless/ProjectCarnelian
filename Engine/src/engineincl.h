@@ -1,5 +1,10 @@
 #pragma once
 
+#define _USE_MATH_DEFINES
+#define MaxEntities 5000
+
+#include <cmath>
+
 #include <memory>
 #include <filesystem>
 
@@ -19,8 +24,6 @@
 
 #include <ctime>
 
-#define MaxEntities 5000
-
 namespace Techless
 {
 	template <typename T>
@@ -30,5 +33,10 @@ namespace Techless
 	constexpr Ptr<T> CreatePtr(Args&& ...args)
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
+	}
+
+	template <typename T>
+	constexpr int sign(T val) {
+		return (T(0) < val) - (val < T(0));
 	}
 }

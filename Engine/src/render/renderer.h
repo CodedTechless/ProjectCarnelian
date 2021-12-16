@@ -2,13 +2,15 @@
 
 #include <engineincl.h>
 
+#include <engine/maths/colour.hpp>
+#include <engine/sprite/sprite_atlas.h>
+
 #include "buffer/index.h"
 #include "buffer/vertex.h"
 #include "array/vertex_array.h"
 #include "shader/shader.h"
 #include "texture/texture.h"
 
-#include "engine/sprite/sprite_atlas.h"
 
 namespace Techless {
 
@@ -30,11 +32,9 @@ namespace Techless {
 		static void Init();
 		static void Stop();
 
-		static void DrawSprite(const std::shared_ptr<Sprite> sprite, const glm::vec2& Position, const glm::vec2& Size = glm::vec2(1.f, 1.f), float Depth = 0, float Angle = 0, const glm::vec3& Colour = glm::vec3(1.f, 1.f, 1.f), float Alpha = 1.f);
-
-		static void DrawBlankQuad(const glm::vec3& Position, const glm::vec2& Size = { 1.f, 1.f }, const glm::vec4& Colour = { 1.f, 1.f, 1.f, 1.f }, float Angle = 0);
-		static void DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::vec3& Position, const glm::vec2& Size = glm::vec2(1.f, 1.f), const glm::vec4& Colour = glm::vec4(1.f, 1.f, 1.f, 1.f), float Angle = 0);
-		static void DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::mat4& Transform, const glm::vec4& Colour);
+		static void DrawQuad(const glm::vec3& Position, const glm::vec2& Scale, float Orientation = 1.f, const Colour& colour = {});
+		static void DrawSprite(const Ptr<Sprite> sprite, const glm::mat4& Transform, const Colour& colour = {});
+		static void DrawTexturedQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::mat4& Transform, const glm::vec4& Colour = {});
 
 		static void DrawQuadArray(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], Quad* QuadArray, unsigned int Count);
 

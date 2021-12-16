@@ -6,14 +6,13 @@
 #include "texture.h"
 
 namespace Techless {
-	Texture::Texture()
-		: RendererID(0), FilePath(""), LocalBuffer(nullptr), Width(0), Height(0), BitsPerPixel(0) 
+	Texture::Texture(const glm::i32vec2& dimensions, int bitsPerPixel)
+		: Dimensions(dimensions), BitsPerPixel(bitsPerPixel)
 	{
 		Allocate();
 	};
 
-	Texture::Texture(const std::string& FilePath) 
-		: RendererID(0), FilePath(FilePath), LocalBuffer(nullptr), Width(0), Height(0), BitsPerPixel(0)
+	Texture::Texture(const std::string& filePath)
 	{
 		Allocate();
 		Load(FilePath);
@@ -45,30 +44,27 @@ namespace Techless {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // horizontal clamping
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // horizontal clamping
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Dimensions.x, Dimensions.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	void Texture::Push(unsigned char* Buffer, int TextureWidth, int TextureHeight, int BitsPerPixel)
+	void Texture::Push(unsigned char* Buffer)
 	{
 		LocalBuffer = Buffer;
-		
-		Width = TextureWidth;
-		Height = TextureHeight;
 
 		glBindTexture(GL_TEXTURE_2D, RendererID);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Dimensions.x, Dimensions.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	void Texture::Load(const std::string& FilePath) 
 	{
 		stbi_set_flip_vertically_on_load(1);
-		LocalBuffer = stbi_load(FilePath.c_str(), &Width, &Height, &BitsPerPixel, 4);
+		LocalBuffer = stbi_load(FilePath.c_str(), &Dimensions.x, &Dimensions.y, &BitsPerPixel, 4);
 
 		glBindTexture(GL_TEXTURE_2D, RendererID);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, LocalBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Dimensions.x, Dimensions.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, LocalBuffer);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		if (LocalBuffer) {

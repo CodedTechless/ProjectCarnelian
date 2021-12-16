@@ -7,17 +7,39 @@ namespace Techless
 	Sprite::Sprite(std::shared_ptr<Texture> Tex)
 		: BaseTexture(Tex)
 	{
-		auto d = Tex->GetDimensions();
-
-		TopLeft = { 0, 0 };
-		BottomRight = { d.x, d.y };
-
-		//Debug::Log("Created Sprite");
+		SetBounds();
 	}
 
 	Sprite::Sprite(std::shared_ptr<Texture> Tex, const glm::vec2& topLeft, const glm::vec2& bottomRight)
-		: BaseTexture(Tex), TopLeft(topLeft), BottomRight(bottomRight)
+		: BaseTexture(Tex)
 	{
-		//Debug::Log("Created Sprite");
+		SetBounds(topLeft, bottomRight);
 	};
+
+	void Sprite::SetBounds()
+	{
+		auto TextureSize = BaseTexture->GetDimensions();
+
+		TopLeft = { 0, 0 };
+		BottomRight = { TextureSize.x, TextureSize.y };
+
+		AbsoluteTopLeft = TopLeft / (glm::vec2)TextureSize;
+		AbsoluteBottomRight = BottomRight / (glm::vec2)TextureSize;
+	}
+
+	void Sprite::SetBounds(glm::vec2 topLeft, glm::vec2 bottomRight)
+	{
+		TopLeft = topLeft;
+		BottomRight = bottomRight;
+		
+		UpdateAbsoluteBounds();
+	}
+
+	void Sprite::UpdateAbsoluteBounds()
+	{
+		auto TextureSize = BaseTexture->GetDimensions();
+
+		AbsoluteTopLeft = TopLeft / (glm::vec2)TextureSize;
+		AbsoluteBottomRight = BottomRight / (glm::vec2)TextureSize;
+	}
 }

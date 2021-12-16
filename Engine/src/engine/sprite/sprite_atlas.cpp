@@ -109,7 +109,7 @@ namespace Techless
 			stbrp_init_target(&NewContext, MaxTextureSize, MaxTextureSize, Nodes, TextureCount);
 			Success = stbrp_pack_rects(&NewContext, Rects, TextureCount);
 
-			Ptr<Texture> newTexture = CreatePtr<Texture>();
+			Ptr<Texture> newTexture = CreatePtr<Texture>(glm::i32vec2(MaxTextureSize, MaxTextureSize), 4);
 			TexturePages[TexturePageIndex++] = newTexture;
 
 			for (auto& textureInfo : Textures)
@@ -143,7 +143,7 @@ namespace Techless
 				}
 			}
 
-			newTexture->Push(PageBuffer, MaxTextureSize, MaxTextureSize, 4);
+			newTexture->Push(PageBuffer);
 			delete[] PageBuffer;
 		}
 	}
