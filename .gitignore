@@ -3,3 +3,4 @@
 /lib
 /old
 /local-backups
+*.ini

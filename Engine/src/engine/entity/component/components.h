@@ -47,17 +47,15 @@ namespace Techless
 		inline glm::vec2 GetGlobalScale() const { return GlobalScale; };
 		inline float GetGlobalOrientation() const { return GlobalOrientation; };
 
-		inline glm::mat4 GetGlobalTransform() { RecalculateTransforms(); return GlobalTransform; };
-
 		inline void operator+= (glm::vec3 Position) { LocalPosition += Position; MarkAsDirty(this); };
 		inline void operator-= (glm::vec3 Position) { LocalPosition -= Position; MarkAsDirty(this); };
 		inline void operator*= (glm::vec3 Position) { LocalPosition *= Position; MarkAsDirty(this); };
 		inline void operator/= (glm::vec3 Position) { LocalPosition /= Position; MarkAsDirty(this); };
 		inline void operator=  (glm::vec3 Position) { LocalPosition = Position; MarkAsDirty(this); };
 
-		inline void operator+= (glm::vec2 Scale) { LocalScale /= Scale; MarkAsDirty(this); };
-		inline void operator-= (glm::vec2 Scale) { LocalScale /= Scale; MarkAsDirty(this); };
-		inline void operator*= (glm::vec2 Scale) { LocalScale /= Scale; MarkAsDirty(this); };
+		inline void operator+= (glm::vec2 Scale) { LocalScale += Scale; MarkAsDirty(this); };
+		inline void operator-= (glm::vec2 Scale) { LocalScale -= Scale; MarkAsDirty(this); };
+		inline void operator*= (glm::vec2 Scale) { LocalScale *= Scale; MarkAsDirty(this); };
 		inline void operator/= (glm::vec2 Scale) { LocalScale /= Scale; MarkAsDirty(this); };
 		inline void operator=  (glm::vec2 Scale) { LocalScale = Scale; MarkAsDirty(this); };
 
@@ -86,29 +84,34 @@ namespace Techless
 		inline TransformComponent* GetParent() const { return Parent; };
 		inline std::vector<TransformComponent*>& GetChildren() { return Children; };
 
-	protected:
-		glm::vec3 LocalPosition{ 0.f, 0.f, 0.f };
-		glm::vec2 LocalScale{ 1.f, 1.f };
-		float LocalOrientation = 0.f;
+	public:
+		/*
+			This is mainly used by the renderer, as scripts don't really have a need for messing directly
+			with transformations (as of right now but that might change)
+		*/
 
-		glm::vec3 GlobalPosition{ 0.f, 0.f, 0.f };
-		glm::vec2 GlobalScale{ 1.f, 1.f };
-		float GlobalOrientation = 0.f;
-
-		glm::mat4 GlobalTransform{ 1.f };
-
-	private:
-		void RecalculateTransforms()
+		void RecalculateTransform()
 		{
 			if (FLAG_TransformDirty)
 			{
 				if (Parent)
 				{
+					if (Parent->FLAG_TransformDirty)
+					{
+						Parent->RecalculateTransform();
+					}
+
 					GlobalScale = LocalScale * Parent->GlobalScale;
 					GlobalOrientation = LocalOrientation + Parent->GlobalOrientation;
 					
-					auto GlobalScaledPosition = LocalPosition * glm::vec3(Parent->GlobalScale, 1.f);
-					GlobalPosition = glm::vec3(std::cos(GlobalOrientation * M_PI) * GlobalScaledPosition.x, std::sin(GlobalOrientation * M_PI) * GlobalScaledPosition.y, GlobalPosition.z);
+					auto rad = GlobalOrientation * M_PI / 180;
+					auto c = cos(rad);
+					auto s = sin(rad);
+					
+					auto ParentGlobalPosition = Parent->GlobalPosition;
+					auto ScaledPosition = LocalPosition * glm::vec3(Parent->GlobalScale, 0.f);
+
+					GlobalPosition = ParentGlobalPosition + glm::vec3(ScaledPosition.x * c - ScaledPosition.y * s , ScaledPosition.x * s + ScaledPosition.y * c, LocalPosition.z);
 				}
 				else
 				{
@@ -120,8 +123,23 @@ namespace Techless
 				GlobalTransform = glm::translate(glm::mat4(1.f), GlobalPosition)
 					* glm::rotate(glm::mat4(1.f), glm::radians(GlobalOrientation), glm::vec3(0.f, 0.f, 1.f))
 					* glm::scale(glm::mat4(1.f), glm::vec3(GlobalScale, 1.f));
+
+				FLAG_TransformDirty = false;
 			}
 		}
+
+		inline glm::mat4 GetGlobalTransform(const glm::vec2& QuadSize = glm::vec2(1.f, 1.f)) { RecalculateTransform(); return GlobalTransform; }
+
+	protected:
+		glm::vec3 LocalPosition{ 0.f, 0.f, 0.f };
+		glm::vec2 LocalScale{ 1.f, 1.f };
+		float LocalOrientation = 0.f;
+
+		glm::vec3 GlobalPosition{ 0.f, 0.f, 0.f };
+		glm::vec2 GlobalScale{ 1.f, 1.f };
+		float GlobalOrientation = 0.f;
+
+		glm::mat4 GlobalTransform{ 1.f };
 
 	private:
 		void AddChild(TransformComponent* Transform)
@@ -142,9 +160,9 @@ namespace Techless
 		std::vector<TransformComponent*> Children{};
 		
 	private:
-
 		static void MarkAsDirty(TransformComponent* Component)
 		{
+			Component->FLAG_TransformComponentsDirty = true;
 			Component->FLAG_TransformDirty = true;
 
 			for (auto* Transform : Component->GetChildren())
@@ -153,12 +171,20 @@ namespace Techless
 			}
 		}
 
-		bool FLAG_TransformDirty = false;
+		bool FLAG_TransformComponentsDirty = true;
+		bool FLAG_TransformDirty = true;
 
 		friend class Scene;
 	};
 
 	struct RigidBodyComponent
+	{
+		float Velocity = 0.f;
+
+		float Friction = 100.f;
+	};
+
+	struct CollisionMeshComponent
 	{
 
 	};
@@ -170,14 +196,15 @@ namespace Techless
 
 	struct SpriteComponent
 	{
-		Ptr<Sprite> aSprite;
-
 		Colour SpriteColour{ 1.f, 1.f, 1.f };
-		glm::vec3 Offset{ 0.f, 0.f, 0.f };
 
 		inline void SetSprite(const std::string& NewSprite) { aSprite = SpriteAtlas::GetSprite(NewSprite); };
+		inline Ptr<Sprite> GetSprite() const { return aSprite; };
 
 		void SetRGBColour(const Colour& colour) { SpriteColour = colour; };
+		
+	private:
+		Ptr<Sprite> aSprite;
 	};
 
 	struct AnimationComponent
@@ -199,6 +226,11 @@ namespace Techless
 			ViewportResolution = Size;
 			Near = pNear;
 			Far = pFar;
+		}
+
+		inline glm::mat4 GetTransform(const glm::vec3& Position) const
+		{
+			return glm::translate(glm::mat4(1.f), Position - (glm::vec3(GetViewportResolution(), 0.f) / 2.f));
 		}
 
 		inline glm::mat4 GetProjection() const { return Projection; };

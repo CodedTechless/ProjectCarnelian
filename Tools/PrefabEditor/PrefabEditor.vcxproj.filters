@@ -18,31 +18,25 @@
     <ClInclude Include="src\app\application\application.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\app\layers\test_layer.h">
+    <ClInclude Include="src\app\layers\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\scripts\camera\camera.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\scripts\player\player.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\scriptindex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scripts\test\spin.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scripts\test\draw_texture_sheet.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\app\layers\test_layer.cpp">
+    <ClCompile Include="src\app\layers\core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\app\entry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assets\shaders\basic.shader" />
   </ItemGroup>
 </Project>

@@ -171,12 +171,12 @@ namespace Techless {
 	// Quad Rendering //
 	////////////////////
 
-	void Renderer::DrawQuad(const glm::vec3& Position, const glm::vec2& Scale, float Orientation, const Colour& colour)
+	void Renderer::DrawQuad(const glm::vec3& Position, const glm::vec2& Size, float Orientation, const Colour& colour)
 	{
 		glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Position);
 		
 		if (Orientation != 0) Transform *= glm::rotate(glm::mat4(1.0f), glm::radians(Orientation), glm::vec3(0.f, 0.f, 1.f));
-		if (Scale != glm::vec2(1.f, 1.f)) Transform *= glm::scale(glm::mat4(1.0f), glm::vec3(Scale.x, Scale.y, 1));
+		if (Size != glm::vec2(1.f, 1.f)) Transform *= glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1.f));
 
 		glm::vec2 TexCoords[] = { { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f } };
 		DrawTexturedQuad(RendererData.ActiveTextures[0], TexCoords, Transform, colour);
@@ -203,7 +203,7 @@ namespace Techless {
 
 		glm::vec2 TexCoords[4] = { { TopLeft.x, TopLeft.y }, { BottomRight.x, TopLeft.y }, { BottomRight.x, BottomRight.y }, {TopLeft.x, BottomRight.y} };
 
-		DrawTexturedQuad(texture, TexCoords, Transform, colour);
+		DrawTexturedQuad(texture, TexCoords, Transform * glm::scale(glm::mat4(1.f), glm::vec3(sprite->GetSize(), 1.f)), colour);
 	}
 
 	// Draw a quad using matricies
@@ -314,7 +314,7 @@ namespace Techless {
 
 		glm::mat4 Proj = Projection * glm::inverse(Transform);
 		RendererData.TextureShader->Bind();
-		RendererData.TextureShader->SetUniformMat4f("u_Proj", Proj);
+		RendererData.TextureShader->SetUniformMat4f("CameraProjection", Proj);
 
 		DebugInfo.DrawCalls = 0;
 		DebugInfo.VertexCount = 0;

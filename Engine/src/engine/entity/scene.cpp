@@ -75,41 +75,49 @@ namespace Techless
 
 	void Scene::Update(const float Delta)
 	{
-		assert(ActiveCamera != nullptr);
-
 		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
-		for (auto Script : *ScriptComponents)
+
 		{
-			Script.Instance->OnUpdate(Delta);
+			for (auto& Script : *ScriptComponents)
+			{
+				Script.Instance->OnUpdate(Delta);
+			}
 		}
+
+		// Sprite Rendering
+		
+		if (!ActiveCamera) return;
 
 		auto& CameraComp = ActiveCamera->GetComponent<CameraComponent>();
-		auto CamProjection = CameraComp.GetProjection();
-		auto CamRes = CameraComp.GetViewportResolution();
-
-		auto CamPosition = ActiveCamera->GetComponent<TransformComponent>().GetGlobalPosition();
+		auto CameraPosition = ActiveCamera->GetComponent<TransformComponent>().GetGlobalPosition();
 		
-		glm::mat4 Transform = glm::translate(glm::mat4(1.f), glm::vec3(glm::vec2(CamPosition) - (CamRes / 2.f), 0.f));
+		glm::mat4 CameraProjection = CameraComp.GetProjection();
+		glm::mat4 CameraTransform = CameraComp.GetTransform(CameraPosition);
 		
-		Renderer::Begin(CamProjection, Transform);
+		Renderer::Begin(CameraProjection, CameraTransform);
 
-		for (auto Script : *ScriptComponents)
 		{
-			Script.Instance->OnDraw(Delta);
+			for (auto& Script : *ScriptComponents)
+			{
+				Script.Instance->OnDraw(Delta);
+			}
 		}
 
-		auto SpriteComponents = SceneRegistry.GetRegistrySet<SpriteComponent>();
-		auto TransformComponents = SceneRegistry.GetRegistrySet<TransformComponent>();
-
-		unsigned int i = 0;
-		for (auto Sprite : *SpriteComponents)
 		{
-			auto EntityID = SpriteComponents->GetIDAtIndex(i);
-			auto& Transform = TransformComponents->Get(EntityID);
+			auto SpriteComponents = SceneRegistry.GetRegistrySet<SpriteComponent>();
+			auto TransformComponents = SceneRegistry.GetRegistrySet<TransformComponent>();
 
-			Renderer::DrawSprite(Sprite.aSprite, Transform.GetGlobalTransform(), Sprite.SpriteColour);
+			unsigned int i = 0;
+			for (auto& Sprite : *SpriteComponents)
+			{
+				auto EntityID = SpriteComponents->GetIDAtIndex(i);
+				auto& Transform = TransformComponents->Get(EntityID);
 
-			++i;
+				auto aSprite = Sprite.GetSprite();
+				Renderer::DrawSprite(aSprite, Transform.GetGlobalTransform(), Sprite.SpriteColour);
+
+				++i;
+			}
 		}
 
 		Renderer::End();

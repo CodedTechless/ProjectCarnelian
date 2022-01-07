@@ -37,9 +37,9 @@ namespace Techless
 			return LinkedEntity->HasComponent<Component>();
 		}
 
-		inline Scene& GetScene() const
+		inline Scene* GetScene() const
 		{
-			return *LinkedEntity->GetScene();
+			return LinkedEntity->GetScene();
 		}
 
 	protected:

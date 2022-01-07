@@ -54,9 +54,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\int\</IntDir>
-    <TargetName>techless</TargetName>
-    <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\main\</OutDir>
+    <IntDir>$(SolutionDir)lib\$(Configuration)\int\</IntDir>
+    <TargetName>engine</TargetName>
+    <OutDir>$(SolutionDir)lib\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -81,6 +81,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>DEBUG;GLEW_STATIC;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

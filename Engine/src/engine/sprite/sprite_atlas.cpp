@@ -42,7 +42,7 @@ namespace Techless
 		unsigned char* Tex = new unsigned char[BlockSize];
 		memset(Tex, 0, BlockSize);
 
-		Debug::Log("Allocated a " + std::to_string(TextureSize) + "x" + std::to_string(TextureSize) + " texture page", "SpriteAtlas");
+		Debug::Log("Allocated a " + std::to_string(TextureSize) + "x" + std::to_string(TextureSize) + " texture page (" + std::to_string(BlockSize) + " bytes)", "SpriteAtlas");
 
 		return Tex;
 	}
@@ -118,9 +118,9 @@ namespace Techless
 				
 				if (Rect.was_packed)
 				{
-					for (int iY = 0; iY < Rect.w; ++iY)
+					for (int iY = 0; iY < Rect.h; ++iY)
 					{
-						for (int iX = 0; iX < Rect.h; ++iX)
+						for (int iX = 0; iX < Rect.w; ++iX)
 						{
 							int From = (iY * Rect.w * 4) + (iX * 4);
 							int To = ((Rect.y + iY) * MaxTextureSize * 4) + ((Rect.x + iX) * 4);
