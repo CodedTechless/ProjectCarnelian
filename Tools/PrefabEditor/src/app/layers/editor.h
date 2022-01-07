@@ -6,19 +6,17 @@ using namespace Techless;
 
 namespace Carnelian {
 
-	class Core : public Layer 
+	class Editor : public Layer 
 	{
 	public:
 		void OnCreated();
 
 		void OnUpdate(const float& Delta);
+		void OnUpdateEnd(const float& Delta);
 		void OnUpdateFixed(const float& Delta);
 
 		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
 		void OnWindowEvent(const WindowEvent& windowEvent);
-
-	public:
-		Entity& CreatePlayer();
 
 	private:
 		std::shared_ptr<Scene> ActiveScene;

@@ -3,7 +3,7 @@
 
 #include <Engine.h>
 
-#include <app/layers/core.h>
+#include <app/layers/editor.h>
 
 using namespace Techless;
 
@@ -15,11 +15,11 @@ namespace Carnelian
 	public:
 		Carnelian()
 		{
-			SetApplicationTitle("Project Carnelian");
+			SetApplicationTitle("Prefab Editor");
 
 			Init();
 
-			auto Main = new Core();
+			auto Main = new Editor();
 			Layers.PushLayer(Main);
 
 			Run();

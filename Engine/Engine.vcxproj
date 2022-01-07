@@ -81,7 +81,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>DEBUG;GLEW_STATIC;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -93,6 +92,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\dependencies\imgui\imgui.cpp" />
+    <ClCompile Include="src\dependencies\imgui\imgui_demo.cpp" />
+    <ClCompile Include="src\dependencies\imgui\imgui_draw.cpp" />
+    <ClCompile Include="src\dependencies\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\dependencies\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\dependencies\imgui\imgui_tables.cpp" />
+    <ClCompile Include="src\dependencies\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\dependencies\stb_rect_pack\stb_rect_pack.cpp" />
     <ClCompile Include="src\engine\entity\entity.cpp" />
     <ClCompile Include="src\engineincl.cpp" />
@@ -101,13 +107,6 @@
     <ClCompile Include="src\engine\entity\scene.cpp" />
     <ClCompile Include="src\engine\layers\layer_set.cpp" />
     <ClCompile Include="src\dependencies\glm\detail\glm.cpp" />
-    <ClCompile Include="src\dependencies\imgui\imgui.cpp" />
-    <ClCompile Include="src\dependencies\imgui\imgui_demo.cpp" />
-    <ClCompile Include="src\dependencies\imgui\imgui_draw.cpp" />
-    <ClCompile Include="src\dependencies\imgui\imgui_impl_glfw.cpp" />
-    <ClCompile Include="src\dependencies\imgui\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="src\dependencies\imgui\imgui_tables.cpp" />
-    <ClCompile Include="src\dependencies\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\dependencies\stb_image\stb_image.cpp" />
     <ClCompile Include="src\engine\sprite\sprite.cpp" />
     <ClCompile Include="src\render\shader\shader.cpp" />
@@ -260,6 +259,15 @@
     <None Include="src\dependencies\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\dependencies\imgui\imconfig.h" />
+    <ClInclude Include="src\dependencies\imgui\imgui.h" />
+    <ClInclude Include="src\dependencies\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="src\dependencies\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="src\dependencies\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="src\dependencies\imgui\imgui_internal.h" />
+    <ClInclude Include="src\dependencies\imgui\imstb_rectpack.h" />
+    <ClInclude Include="src\dependencies\imgui\imstb_textedit.h" />
+    <ClInclude Include="src\dependencies\imgui\imstb_truetype.h" />
     <ClInclude Include="src\dependencies\stb_rect_pack\stb_rect_pack.h" />
     <ClInclude Include="src\dependencies\uuid\uuid.hpp" />
     <ClInclude Include="src\engine\entity\registry\registry.h" />
@@ -556,14 +564,6 @@
     <ClInclude Include="src\dependencies\glm\vec3.hpp" />
     <ClInclude Include="src\dependencies\glm\vec4.hpp" />
     <ClInclude Include="src\dependencies\glm\vector_relational.hpp" />
-    <ClInclude Include="src\dependencies\imgui\imconfig.h" />
-    <ClInclude Include="src\dependencies\imgui\imgui.h" />
-    <ClInclude Include="src\dependencies\imgui\imgui_impl_glfw.h" />
-    <ClInclude Include="src\dependencies\imgui\imgui_impl_opengl3.h" />
-    <ClInclude Include="src\dependencies\imgui\imgui_internal.h" />
-    <ClInclude Include="src\dependencies\imgui\imstb_rectpack.h" />
-    <ClInclude Include="src\dependencies\imgui\imstb_textedit.h" />
-    <ClInclude Include="src\dependencies\imgui\imstb_truetype.h" />
     <ClInclude Include="src\dependencies\stb_image\stb_image.h" />
     <ClInclude Include="src\engine\maths\colour.hpp" />
     <ClInclude Include="src\engine\sprite\sprite.h" />

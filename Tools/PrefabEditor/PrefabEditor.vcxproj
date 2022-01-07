@@ -82,14 +82,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\app\application\application.hpp" />
-    <ClInclude Include="src\app\layers\core.h" />
+    <ClInclude Include="src\app\layers\editor.h" />
     <ClInclude Include="src\scriptindex.h" />
     <ClInclude Include="src\scripts\camera\camera.hpp" />
-    <ClInclude Include="src\scripts\player\player.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app\entry.cpp" />
-    <ClCompile Include="src\app\layers\core.cpp" />
+    <ClCompile Include="src\app\layers\editor.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
