@@ -9,10 +9,17 @@
 namespace Techless
 {
 
-	Entity& Scene::CreateEntity()
+	Entity& Scene::CreateEntity(const std::string& TagName)
 	{
 		std::string NewUUID = UUID::Generate();
-		return SceneRegistry.Add<Entity>(NewUUID, this, NewUUID);
+
+		auto& Ent = SceneRegistry.Add<Entity>(NewUUID, this, NewUUID);
+		Ent.AddComponent<TransformComponent>();
+
+		auto& Tag = Ent.AddComponent<TagComponent>();
+		Tag.Name = TagName;
+
+		return Ent;
 	}
 
 	void Scene::DestroyEntity(const std::string& EntityID)
@@ -73,10 +80,11 @@ namespace Techless
 		}
 	}
 
-	void Scene::Update(const float Delta)
+	void Scene::Update(const float Delta, bool AllowScriptRuntime)
 	{
 		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
 
+		if (AllowScriptRuntime)
 		{
 			for (auto& Script : *ScriptComponents)
 			{
@@ -96,6 +104,7 @@ namespace Techless
 		
 		Renderer::Begin(CameraProjection, CameraTransform);
 
+		if (AllowScriptRuntime)
 		{
 			for (auto& Script : *ScriptComponents)
 			{
@@ -121,5 +130,32 @@ namespace Techless
 		}
 
 		Renderer::End();
+	}
+
+	void Scene::Serialise(const std::string& FilePath)
+	{
+		JSON j_SerialisedScene = {
+			{"Entities", JSON::array()},
+			{"Components", JSON::object()}
+		};
+
+		JSON& j_Entities = j_SerialisedScene.at("Entities");
+		JSON& j_Components = j_SerialisedScene.at("Components");
+
+		auto Entities = SceneRegistry.GetRegistrySet<Entity>();
+
+		for (auto& entity : *Entities)
+			j_Entities += entity;
+
+		PushSerialisedComponent<TagComponent>		(j_Components, "Tag");
+		PushSerialisedComponent<TransformComponent>	(j_Components, "Transform");
+		PushSerialisedComponent<RigidBodyComponent>	(j_Components, "RigidBody");
+		PushSerialisedComponent<SpriteComponent>	(j_Components, "Sprite");
+		//PushSerialisedComponent<AnimatorComponent>	(j_Components, "Animator");
+		PushSerialisedComponent<CameraComponent>	(j_Components, "Camera");
+		//PushSerialisedComponent<ScriptComponent>	(j_Components, "Script");
+
+		std::ofstream o(FilePath);
+		o << j_SerialisedScene << std::endl;
 	}
 }

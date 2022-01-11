@@ -1,8 +1,11 @@
 #pragma once
 
 #include <engineincl.h>
+#include <json/json.hpp>
 
 #include <engine/entity/scene.h>
+
+using JSON = nlohmann::json;
 
 namespace Techless
 {
@@ -46,5 +49,19 @@ namespace Techless
 		std::string EntityID;
 
 		Scene* ActiveScene = nullptr;
+	
+	public:
+
+		inline friend void to_json(JSON& json, const Entity& entity)
+		{
+			json = JSON{
+				{"EntityID", entity.EntityID}
+			};
+		}
+
+		inline friend void from_json(const JSON& json, Entity& entity)
+		{
+			json.at("EntityID").get_to(entity.EntityID);
+		}
 	};
 }

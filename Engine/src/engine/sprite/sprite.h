@@ -16,7 +16,7 @@ namespace Techless
 	class Sprite
 	{
 	public:
-		Sprite(std::shared_ptr<Texture> Tex, const glm::vec2& topLeft = { 0, 0 }, const glm::vec2& bottomRight = { INFINITY, INFINITY });
+		Sprite(std::shared_ptr<Texture> Tex, const glm::vec2& topLeft = { 0, 0 }, const glm::vec2& bottomRight = { INFINITY, INFINITY }, const std::string& Name = "Sprite");
 
 		void SetBounds(glm::vec2 topLeft, glm::vec2 bottomRight);
 
@@ -25,6 +25,8 @@ namespace Techless
 		
 		inline std::shared_ptr<Texture> GetTexture() const { return BaseTexture; };
 		inline glm::vec2 GetSize() const { return Size; };
+
+		inline std::string GetName() const { return Name; };
 
 	private:
 		std::shared_ptr<Texture> BaseTexture;
@@ -36,5 +38,7 @@ namespace Techless
 
 		glm::vec2 AbsoluteTopLeft;
 		glm::vec2 AbsoluteBottomRight;
+
+		std::string Name;
 	};
 }

@@ -96,6 +96,9 @@
     <ClCompile Include="src\dependencies\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\buffer\frame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\dependencies\glm\detail\func_common.inl">
@@ -1463,6 +1466,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\dependencies\imgui\imgui_impl_opengl3_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\buffer\frame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

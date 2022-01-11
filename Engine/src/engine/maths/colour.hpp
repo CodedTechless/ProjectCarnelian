@@ -2,6 +2,10 @@
 
 #include <glm/glm.hpp>
 
+#include <json/json.hpp>
+
+using JSON = nlohmann::json;
+
 namespace Techless
 {
 
@@ -32,6 +36,26 @@ namespace Techless
 
 		// Returns a new colour where each component is multiplied by each other component.
 		Colour operator*(Colour colour) const { return Colour(R * colour.R, G * colour.G, B * colour.B, A * colour.A); };
+
+	public:
+
+		inline friend void to_json(JSON& json, const Colour& colour)
+		{
+			json = JSON{
+				{"R", colour.R},
+				{"G", colour.G},
+				{"B", colour.B},
+				{"A", colour.A}
+			};
+		}
+
+		inline friend void from_json(const JSON& json, Colour& colour)
+		{
+			json.at("R").get_to(colour.R);
+			json.at("G").get_to(colour.G);
+			json.at("B").get_to(colour.B);
+			json.at("A").get_to(colour.A);
+		}
 	};
 
 }

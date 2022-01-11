@@ -34,12 +34,15 @@ namespace Techless {
 
 		unsigned int CurrentVertexIndex = 0;
 
-		std::shared_ptr<VertexArray> QuadVertexArray;
+		Ptr<VertexArray> QuadVertexArray;
 
-		std::shared_ptr<VertexBuffer> BatchVertexBuffer;
-		std::shared_ptr<IndexBuffer> BatchIndBuffer;
+		Ptr<VertexBuffer> BatchVertexBuffer;
+		Ptr<IndexBuffer> BatchIndBuffer;
 
-		std::shared_ptr<Shader> TextureShader;
+		Ptr<Shader> DefaultTextureShader;
+
+		Ptr<Shader> ActiveShader;
+		Ptr<FrameBuffer> ActiveFrameBuffer;
 
 		unsigned int NextTextureSlot = 1;
 		static const int ActiveTextureSlots = 16;
@@ -84,14 +87,7 @@ namespace Techless {
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glMaxTextureSize);
 		MaxTextureSize = std::min((int)glMaxTextureSize, 2048);
 
-		/*
-		GLint MaxTextureSlots;
-		glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &MaxTextureSlots);
-		Renderer::MaxTextureUnits = MaxTextureSlots;
-		RendererData.ActiveTextureSlots = MaxTextureSlots;*/
-
 		Debug::Log("MaxTextureSize: " + std::to_string(MaxTextureSize) + " (" + std::to_string(glMaxTextureSize) + ")", "Renderer");
-//		Debug::Log("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: " + std::to_string(MaxTextureSlots), "Renderer");
 
 		// Create the vertex array which will hold attribute information for our batch vertex buffer and index buffer.
 		RendererData.QuadVertexArray = std::make_shared<VertexArray>();
@@ -132,9 +128,9 @@ namespace Techless {
 		RendererData.QuadVertexArray->SetIndexBuffer(RendererData.BatchIndBuffer);
 
 		// Initialise the texture shader and import the basic shader.
-		RendererData.TextureShader = std::make_shared<Shader>();
-		RendererData.TextureShader->ImportShader("assets/shaders/basic.shader");
-		RendererData.TextureShader->Bind();
+		RendererData.DefaultTextureShader = std::make_shared<Shader>();
+		RendererData.DefaultTextureShader->ImportShader("assets/shaders/basic.shader");
+		RendererData.DefaultTextureShader->Bind();
 
 		// Assign texture slot 1 to the white "default" texture.
 		RendererData.ActiveTextures[0] = std::make_shared<Texture>("assets/default.png");
@@ -148,7 +144,7 @@ namespace Techless {
 			Samplers[i] = i;
 		}
 
-		RendererData.TextureShader->SetUniform1iv("Samplers", Samplers, RendererDataSet::ActiveTextureSlots);
+		RendererData.DefaultTextureShader->SetUniform1iv("Samplers", Samplers, RendererDataSet::ActiveTextureSlots);
 
 		// Set the default vertex positions (verticies are centred by default.)
 		RendererData.VertexDefault[0] = { -0.5f,  0.5f, 0.f, 1.f };
@@ -304,8 +300,7 @@ namespace Techless {
 	///////////
 	// Scene //
 	///////////
-
-	void Renderer::Begin(glm::mat4 Projection, glm::mat4 Transform)
+	void Renderer::Begin(glm::mat4 Projection, glm::mat4 Transform, Ptr<Shader> shader, Ptr<FrameBuffer> frameBuffer)
 	{	
 		// begins a new scene
 		RendererData.NextTextureSlot = 1;
@@ -313,12 +308,20 @@ namespace Techless {
 		RendererData.QuadArrayPointer = RendererData.QuadArray;
 
 		glm::mat4 Proj = Projection * glm::inverse(Transform);
-		RendererData.TextureShader->Bind();
-		RendererData.TextureShader->SetUniformMat4f("CameraProjection", Proj);
+
+		RendererData.ActiveShader = shader ? shader : RendererData.DefaultTextureShader;
+
+		RendererData.ActiveShader->Bind();
+		RendererData.ActiveShader->SetUniformMat4f("CameraProjection", Proj);
+
+		if (frameBuffer)
+		{
+			RendererData.ActiveFrameBuffer = frameBuffer;
+			RendererData.ActiveFrameBuffer->Bind();
+		}
 
 		DebugInfo.DrawCalls = 0;
 		DebugInfo.VertexCount = 0;
-
 	}
 
 	void Renderer::End()
@@ -328,12 +331,18 @@ namespace Techless {
 		
 		RendererData.BatchVertexBuffer->Set(RendererData.QuadArray, Size);
 
-		for (auto i = 0; i < RendererData.NextTextureSlot; i++)
+		for (unsigned int i = 0; i < RendererData.NextTextureSlot; i++)
 		{
 			RendererData.ActiveTextures[i]->Bind(i);
 		}
 
 		Flush();
+		
+		if (RendererData.ActiveFrameBuffer)
+		{
+			RendererData.ActiveFrameBuffer->Unbind();
+			RendererData.ActiveFrameBuffer = nullptr;
+		}
 	}
 
 	void Renderer::Flush()

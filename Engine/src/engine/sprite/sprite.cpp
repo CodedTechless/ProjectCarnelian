@@ -5,8 +5,8 @@
 namespace Techless
 {
 
-	Sprite::Sprite(std::shared_ptr<Texture> Tex, const glm::vec2& topLeft, const glm::vec2& bottomRight)
-		: BaseTexture(Tex)
+	Sprite::Sprite(std::shared_ptr<Texture> Tex, const glm::vec2& topLeft, const glm::vec2& bottomRight, const std::string& name)
+		: BaseTexture(Tex), Name(name)
 	{
 		SetBounds(topLeft, bottomRight);
 	};

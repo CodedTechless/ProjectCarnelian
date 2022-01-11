@@ -5,8 +5,12 @@
 #include <engine/entity/scriptable_entity.h>
 #include <engine/maths/colour.hpp>
 
+#include <json/json.hpp>
+
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+
+using JSON = nlohmann::json;
 
 namespace Techless
 {
@@ -18,6 +22,9 @@ namespace Techless
 	struct TagComponent
 	{
 		std::string Name = "Tag";
+
+	public:
+		NLOHMANN_DEFINE_TYPE_INTRUSIVE(TagComponent, Name);
 	};
 
 
@@ -46,6 +53,10 @@ namespace Techless
 		inline glm::vec3 GetGlobalPosition() const { return GlobalPosition; };
 		inline glm::vec2 GetGlobalScale() const { return GlobalScale; };
 		inline float GetGlobalOrientation() const { return GlobalOrientation; };
+		
+		/*
+			to-do: find a nicer way to do this please, this is disgusting.
+		*/
 
 		inline void operator+= (glm::vec3 Position) { LocalPosition += Position; MarkAsDirty(this); };
 		inline void operator-= (glm::vec3 Position) { LocalPosition -= Position; MarkAsDirty(this); };
@@ -88,6 +99,8 @@ namespace Techless
 		/*
 			This is mainly used by the renderer, as scripts don't really have a need for messing directly
 			with transformations (as of right now but that might change)
+
+			Recalculates the transform based on parents positions
 		*/
 
 		void RecalculateTransform()
@@ -160,9 +173,13 @@ namespace Techless
 		std::vector<TransformComponent*> Children{};
 		
 	private:
+		// using a dirty flag to signify when a global position/scale/orientation does not match up with its parents position or with its own local position.
+
 		static void MarkAsDirty(TransformComponent* Component)
 		{
-			Component->FLAG_TransformComponentsDirty = true;
+			if (Component->FLAG_TransformDirty)
+				return;
+
 			Component->FLAG_TransformDirty = true;
 
 			for (auto* Transform : Component->GetChildren())
@@ -171,24 +188,65 @@ namespace Techless
 			}
 		}
 
-		bool FLAG_TransformComponentsDirty = true;
 		bool FLAG_TransformDirty = true;
 
 		friend class Scene;
+
+	public:
+
+		// json serialisation
+
+		inline friend void to_json(JSON& json, const TransformComponent& component)
+		{
+			// we have no access to entities here, therefore the Parent can only be serialised by a separate part of the program
+
+			json = JSON{
+				{"LocalPosition", {
+					{"x", component.LocalPosition.x},
+					{"y", component.LocalPosition.y},
+					{"z", component.LocalPosition.z}
+				}},
+				{"LocalScale", {
+					{"x", component.LocalScale.x},
+					{"y", component.LocalScale.y}
+				}},
+				{"LocalOrientation", component.LocalOrientation},
+				{"Parent", nullptr}
+			};
+		}
+
+		inline friend void from_json(const JSON& json, TransformComponent& component)
+		{
+			auto& LocalPosition = json.at("LocalPosition");
+			component.LocalPosition = glm::vec3(LocalPosition["x"].get<float>(), LocalPosition["y"].get<float>(), LocalPosition["z"].get<float>());
+
+			auto& LocalScale = json.at("LocalScale");
+			component.LocalScale = glm::vec2(LocalScale["x"].get<float>(), LocalScale["y"].get<float>());
+
+			json.at("LocalOrientation").get_to(component.LocalOrientation);
+
+			MarkAsDirty(&component);
+		}
 	};
 
 	struct RigidBodyComponent
 	{
 		float Velocity = 0.f;
-
 		float Friction = 100.f;
+
+	public:
+
+		// json serialisation
+
+		NLOHMANN_DEFINE_TYPE_INTRUSIVE(RigidBodyComponent, Velocity, Friction);
 	};
 
+	/*
 	struct CollisionMeshComponent
 	{
 
 	};
-
+	*/
 
 	////////////////////
 	// Sprite-related //
@@ -205,11 +263,42 @@ namespace Techless
 		
 	private:
 		Ptr<Sprite> aSprite;
+
+	public:
+
+		// json serialisation
+
+		inline friend void to_json(JSON& json, const SpriteComponent& component)
+		{
+			json = JSON{
+				{"SpriteColour", component.SpriteColour}, // warning: if you get an error related to json it's probably this
+				{"SpriteName", component.aSprite->GetName()}
+			};
+		}
+
+		inline friend void from_json(const JSON& json, SpriteComponent& component)
+		{
+			json.at("SpriteColour").get_to(component.SpriteColour);
+			
+			auto SpriteName = json.at("SpriteName").get<std::string>();
+			component.SetSprite(SpriteName);
+		}
 	};
 
-	struct AnimationComponent
+	struct AnimatorComponent
 	{
+		/*
+	public:
 
+		inline friend void to_json(JSON& json, const AnimatorComponent& component)
+		{
+
+		}
+
+		inline friend void from_json(const JSON& json, AnimatorComponent& component)
+		{
+
+		}*/
 	};
 
 	//////////////////////
@@ -248,6 +337,36 @@ namespace Techless
 		float Far = 100.f;
 
 		glm::mat4 Projection = glm::ortho(0.f, 1280.f, 720.f, 0.f, -100.f, 100.f);
+
+	public:
+
+		// json serialisation
+
+		inline friend void to_json(JSON& json, const CameraComponent& component)
+		{
+			json = JSON{
+				{"ViewportResolution", {
+					{"x", component.ViewportResolution.x},
+					{"y", component.ViewportResolution.y},
+				}},
+				{"zPlane", {
+					{"Near", component.Near},
+					{"Far", component.Far}
+				}}
+			};
+		}
+
+		inline friend void from_json(const JSON& json, CameraComponent& component)
+		{
+			auto& ViewportResolution = json.at("ViewportResolution");
+			auto j_ViewportResolution = glm::vec2(ViewportResolution.at("x").get<float>(), ViewportResolution.at("y").get<float>());
+
+			auto& zPlane = json.at("zPlane");
+			auto j_Near = zPlane.at("Near").get<float>();
+			auto j_Far = zPlane.at("Far").get<float>();
+
+			component.SetProjection(j_ViewportResolution, j_Near, j_Far);
+		}
 	};
 
 
@@ -281,5 +400,18 @@ namespace Techless
 		bool Loaded = false;
 
 		friend class Scene;
+
+	public:
+
+		/*
+		inline friend void to_json(JSON& json, const ScriptComponent& component)
+		{
+
+		}
+
+		inline friend void from_json(const JSON& json, ScriptComponent& component)
+		{
+
+		}*/
 	};
 }

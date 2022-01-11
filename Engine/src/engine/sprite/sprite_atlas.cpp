@@ -135,7 +135,7 @@ namespace Techless
 					auto TopLeft = glm::vec2((float)Rect.x, (float)Rect.y);
 					auto BottomRight = glm::vec2((float)(Rect.x + Rect.w), (float)(Rect.y + Rect.h));
 
-					Ptr<Sprite> newSprite = CreatePtr<Sprite>(newTexture, TopLeft, BottomRight);
+					Ptr<Sprite> newSprite = CreatePtr<Sprite>(newTexture, TopLeft, BottomRight, textureInfo.Name);
 					SpriteCache[textureInfo.Name] = newSprite;
 
 					stbi_image_free(textureInfo.Buffer);

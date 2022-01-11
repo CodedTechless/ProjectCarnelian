@@ -3,6 +3,10 @@
 #include <engine/entity/registry/registry.h>
 #include <engine/application/event.h>
 
+#include <json/json.hpp>
+
+using JSON = nlohmann::json;
+
 namespace Techless 
 {
 	class Entity;
@@ -10,11 +14,14 @@ namespace Techless
 	class Scene
 	{
 	public:
-		Entity& CreateEntity();
+		Entity& CreateEntity(const std::string& TagName = "Entity");
 		void DestroyEntity(const std::string& EntityID);
+//		Entity& Instantiate();
 
-		void Update(const float Delta);
+		void Update(const float Delta, bool AllowScriptRuntime = true);
 		void FixedUpdate(const float Delta);
+
+		void Serialise(const std::string& FilePath);
 
 		inline void SetActiveCamera(Entity& entity) { ActiveCamera = &entity; };
 		inline Entity& GetActiveCamera() const { return *ActiveCamera; };
@@ -29,11 +36,26 @@ namespace Techless
 		void OnWindowEvent(const WindowEvent& windowEvent);
 
 	private:
-		Registry SceneRegistry;
-		
-	private:
-		Entity* ActiveCamera;
+		Entity* ActiveCamera = nullptr;
 
 		friend class Entity;
+
+	private:
+		Registry SceneRegistry;
+
+		template<typename Component>
+		void PushSerialisedComponent(JSON& j_ComponentSet, const std::string& EntryName)
+		{
+			j_ComponentSet[EntryName] = JSON::array();
+
+			if (!SceneRegistry.HasRegistrySet<Component>())
+				return;
+
+			auto Set = SceneRegistry.GetRegistrySet<Component>();
+			for (auto component : *Set)
+			{
+				j_ComponentSet.at(EntryName).emplace_back(component);
+			}
+		}
 	};
 }

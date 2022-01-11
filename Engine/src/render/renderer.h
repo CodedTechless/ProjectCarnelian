@@ -7,6 +7,7 @@
 
 #include "buffer/index.h"
 #include "buffer/vertex.h"
+#include "buffer/frame.h"
 #include "array/vertex_array.h"
 #include "shader/shader.h"
 #include "texture/texture.h"
@@ -39,7 +40,7 @@ namespace Techless {
 		static void DrawQuadArray(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], Quad* QuadArray, unsigned int Count);
 
 	public:
-		static void Begin(glm::mat4 Projection, glm::mat4 Transform);
+		static void Begin(glm::mat4 Projection, glm::mat4 Transform, Ptr<Shader> shader = nullptr, Ptr<FrameBuffer> frameBuffer = nullptr);
 		static void End();
 
 		static void Flush();

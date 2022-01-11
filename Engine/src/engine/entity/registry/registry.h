@@ -59,10 +59,10 @@ namespace Techless
 				auto LastEntity = IndexID[LastIndex];
 				IDIndex[LastEntity] = RemovedIndex;
 				IndexID[RemovedIndex] = LastEntity;
-
-				IDIndex.erase(ID);
-				IndexID.erase(LastIndex);
 			}
+
+			IDIndex.erase(ID);
+			IndexID.erase(LastIndex);
 
 			Index--;
 		}
@@ -130,6 +130,12 @@ namespace Techless
 		void Remove(const std::string& ID)
 		{
 			GetRegistrySet<Type>()->Remove(ID);
+		}
+
+		template <typename Type>
+		bool HasRegistrySet()
+		{
+			return InstanceSets.find(typeid(Type).name()) != InstanceSets.end();
 		}
 
 		template <typename Type>

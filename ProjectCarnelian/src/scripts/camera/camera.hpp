@@ -53,6 +53,8 @@ public:
 			auto Vertical = (int)Input::KeyDown(Input::KeyCode::S) - (int)Input::KeyDown(Input::KeyCode::W);
 
 			PositionTo += glm::vec3(Horizontal, Vertical, 0) * CameraSpeed * ZoomLevel * Delta;
+
+			//Debug::Log(std::to_string(PositionTo.x) + " " + std::to_string(PositionTo.y) + " " + std::to_string(PositionTo.z));
 		}
 		else if (Subject)
 		{

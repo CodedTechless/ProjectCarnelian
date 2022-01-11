@@ -1,0 +1,18 @@
+
+GLEW 			- © 2008-2016, Nigel Stewart <nigels[]users sourceforge net>
+				  © 2002-2008, Milan Ikits <milan ikits[]ieee org>
+				  © 2002-2008, Marcelo E. Magallon <mmagallo[]debian org>
+				  © 2002, Lev Povalahev
+
+Mesa 3D GL		- © 1999-2007 Brian Paul - All Rights Reserved.
+
+OpenGL			- © 2022 The Khronos Group Inc.
+
+GLFW 			- © 2002-2006 Marcus Geelnard
+				  © 2006-2019 Camilla Löwy
+
+GLM OpenGL Math - © 2005-2014 G-Truc Creation
+ImGui 			- © 2014-2022 Omar Cornut
+Nlohmanns JSON 	- © 2013-2022 Niels Lohmann
+
+STB				- © 2017 Sean Barrett

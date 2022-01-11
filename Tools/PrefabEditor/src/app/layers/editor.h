@@ -16,10 +16,22 @@ namespace Carnelian {
 		void OnUpdateFixed(const float& Delta);
 
 		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
-		void OnWindowEvent(const WindowEvent& windowEvent);
+		//void OnWindowEvent(const WindowEvent& windowEvent);
 
 	private:
-		std::shared_ptr<Scene> ActiveScene;
+		
+		void RenderViewport();
+		void RenderSceneHierarchy();
+		void RenderProperties();
+		void RenderAssetManager();
+
+	private:
+		Ptr<Scene> ActiveScene;
+		Ptr<FrameBuffer> ActiveFrameBuffer;
+
+		glm::u32vec2 ViewportSize;
+
+		Entity* SelectedEntity = nullptr;
 
 		float UpdateRate;
 		float FixedUpdateRate;

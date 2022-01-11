@@ -92,6 +92,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\render\buffer\frame.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui_demo.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui_draw.cpp" />
@@ -259,6 +260,7 @@
     <None Include="src\dependencies\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\render\buffer\frame.h" />
     <ClInclude Include="src\dependencies\imgui\imconfig.h" />
     <ClInclude Include="src\dependencies\imgui\imgui.h" />
     <ClInclude Include="src\dependencies\imgui\imgui_impl_glfw.h" />
