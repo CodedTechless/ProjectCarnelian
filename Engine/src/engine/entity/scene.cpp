@@ -96,8 +96,9 @@ namespace Techless
 		
 		if (!ActiveCamera) return;
 
-		auto& CameraComp = ActiveCamera->GetComponent<CameraComponent>();
-		auto CameraPosition = ActiveCamera->GetComponent<TransformComponent>().GetGlobalPosition();
+		CameraComponent& CameraComp = ActiveCamera->GetComponent<CameraComponent>();
+		TransformComponent& CameraTransformComp = ActiveCamera->GetComponent<TransformComponent>();
+		glm::vec3 CameraPosition = CameraTransformComp.GetGlobalPosition();
 		
 		glm::mat4 CameraProjection = CameraComp.GetProjection();
 		glm::mat4 CameraTransform = CameraComp.GetTransform(CameraPosition);
@@ -142,17 +143,25 @@ namespace Techless
 		JSON& j_Entities = j_SerialisedScene.at("Entities");
 		JSON& j_Components = j_SerialisedScene.at("Components");
 
+		std::unordered_map<std::string, bool> ArchivableIndex = {};
+
 		auto Entities = SceneRegistry.GetRegistrySet<Entity>();
-
 		for (auto& entity : *Entities)
-			j_Entities += entity;
+		{
+			ArchivableIndex[entity.GetID()] = entity.Archivable;
 
-		PushSerialisedComponent<TagComponent>		(j_Components, "Tag");
-		PushSerialisedComponent<TransformComponent>	(j_Components, "Transform");
-		PushSerialisedComponent<RigidBodyComponent>	(j_Components, "RigidBody");
-		PushSerialisedComponent<SpriteComponent>	(j_Components, "Sprite");
+			if (!entity.Archivable)
+				continue;
+
+			j_Entities += entity;
+		}
+
+		PushSerialisedComponent<TagComponent>		(j_Components, ArchivableIndex, "Tag");
+		PushSerialisedComponent<TransformComponent>	(j_Components, ArchivableIndex, "Transform");
+		PushSerialisedComponent<RigidBodyComponent>	(j_Components, ArchivableIndex, "RigidBody");
+		PushSerialisedComponent<SpriteComponent>	(j_Components, ArchivableIndex, "Sprite");
 		//PushSerialisedComponent<AnimatorComponent>	(j_Components, "Animator");
-		PushSerialisedComponent<CameraComponent>	(j_Components, "Camera");
+		PushSerialisedComponent<CameraComponent>	(j_Components, ArchivableIndex, "Camera");
 		//PushSerialisedComponent<ScriptComponent>	(j_Components, "Script");
 
 		std::ofstream o(FilePath);

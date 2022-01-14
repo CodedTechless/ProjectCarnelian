@@ -7,13 +7,13 @@
 
 using namespace Techless;
 
-namespace Carnelian
+namespace PrefabEditor
 {
 
-	class Carnelian : public Application
+	class PrefabEditor : public Application
 	{
 	public:
-		Carnelian()
+		PrefabEditor()
 		{
 			SetApplicationTitle("Prefab Editor");
 

@@ -15,12 +15,12 @@ namespace Techless
 			return format == FrameBufferTextureFormat::DEPTH24STENCIL8;
 		}
 
-		static GLenum GetSamplingTarget(unsigned int Samples)
+		static GLenum GetSamplingTarget(int Samples)
 		{
 			return Samples > 1 ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
 		}
 
-		static void AttachColourTexture(unsigned int ID, int Samples, GLenum InternalFormat, GLenum Format, glm::u32vec2 Size, int Index)
+		static void AttachColourTexture(uint32_t ID, int Samples, GLenum InternalFormat, GLenum Format, const glm::u32vec2& Size, int Index)
 		{
 			bool MultisamplingEnabled = Samples > 1;
 			if (MultisamplingEnabled)
@@ -41,7 +41,7 @@ namespace Techless
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + Index, GetSamplingTarget(Samples), ID, 0);
 		}
 
-		static void AttachDepthTexture(unsigned int ID, int Samples, GLenum Format, GLenum AttachmentType, glm::u32vec2 Size)
+		static void AttachDepthTexture(uint32_t ID, int Samples, GLenum Format, GLenum AttachmentType, const glm::u32vec2& Size)
 		{
 			bool MultisamplingEnabled = Samples > 1;
 			if (MultisamplingEnabled)
@@ -61,6 +61,16 @@ namespace Techless
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, AttachmentType, GetSamplingTarget(Samples), ID, 0);
 		}
+
+		static void CreateTextures(int Samples, int Count, uint32_t* DataStream)
+		{
+			glCreateTextures(GetSamplingTarget(Samples), Count, DataStream);
+		}
+		
+		static void BindTexture(int Samples, uint32_t TextureID)
+		{
+			glBindTexture(GetSamplingTarget(Samples), TextureID);
+		}
 	}
 
 	FrameBuffer::FrameBuffer(const FrameBufferSpecification& spec)
@@ -78,32 +88,40 @@ namespace Techless
 		Invalidate();
 	}
 
+	FrameBuffer::~FrameBuffer()
+	{
+		Clear();
+	}
+
+	void FrameBuffer::Clear()
+	{
+		glDeleteFramebuffers(1, &RendererID);
+		glDeleteTextures(ColourRenderAttachments.size(), ColourRenderAttachments.data());
+		glDeleteTextures(1, &DepthRenderAttachment);
+
+		ColourRenderAttachments.clear();
+		DepthRenderAttachment = 0;
+		RendererID = 0;
+	}
+
 	void FrameBuffer::Invalidate()
 	{
 		if (RendererID)
-		{
-			glDeleteFramebuffers(1, &RendererID);
-			glDeleteTextures(ColourRenderAttachments.size(), ColourRenderAttachments.data());
-			glDeleteTextures(1, &DepthRenderAttachment);
-
-			ColourRenderAttachments.clear();
-			DepthRenderAttachment = 0;
-		}
+			Clear();
 
 		glCreateFramebuffers(1, &RendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, RendererID);
 
 		bool MultisamplingEnabled = Specification.Samples > 1;
-		GLenum TextureType = MultisamplingEnabled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
 
 		if (ColourAttachmentSpecifications.size())
 		{
 			ColourRenderAttachments.resize(ColourAttachmentSpecifications.size());
-			glCreateTextures(TextureType, ColourRenderAttachments.size(), ColourRenderAttachments.data());
+			FrameBufferUtil::CreateTextures(Specification.Samples, ColourRenderAttachments.size(), ColourRenderAttachments.data());
 
 			for (size_t i = 0; i < ColourRenderAttachments.size(); ++i)
 			{
-				glBindTexture(TextureType, ColourRenderAttachments[i]);
+				FrameBufferUtil::BindTexture(Specification.Samples, ColourRenderAttachments[i]);
 
 				switch (ColourAttachmentSpecifications[i].TextureFormat)
 				{
@@ -116,8 +134,8 @@ namespace Techless
 
 		if (DepthAttachmentSpecification.TextureFormat != FrameBufferTextureFormat::None)
 		{
-			glCreateTextures(TextureType, 1, &DepthRenderAttachment);
-			glBindTexture(TextureType, DepthRenderAttachment);
+			FrameBufferUtil::CreateTextures(Specification.Samples, 1, &DepthRenderAttachment);
+			FrameBufferUtil::BindTexture(Specification.Samples, DepthRenderAttachment);
 
 			switch (DepthAttachmentSpecification.TextureFormat)
 			{
@@ -157,7 +175,7 @@ namespace Techless
 
 	void FrameBuffer::Resize(const glm::u32vec2& Size)
 	{
-		Debug::Log("Resized Frame Buffer: " + std::to_string(Specification.Size.x) + ", " + std::to_string(Specification.Size.y));
+		//Debug::Log("Resized Frame Buffer: " + std::to_string(Specification.Size.x) + ", " + std::to_string(Specification.Size.y));
 
 		Specification.Size = Size;
 

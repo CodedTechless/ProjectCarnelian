@@ -18,6 +18,7 @@ namespace Techless {
 
 		inline glm::i32vec2 GetDimensions() const { return Dimensions; };
 		inline std::string GetFilePath() const { return FilePath; };
+		inline unsigned int GetRendererID() const { return RendererID; };
 	private:
 		void Allocate();
 	private:

@@ -7,8 +7,8 @@
 namespace Techless {
 	class Layer {
 	public:
-		Layer(const std::string& LayerName = "Layer")
-			: Name(LayerName) {};
+		Layer() = default;
+		Layer(const std::string& layerName);
 		virtual ~Layer() = default;
 
 		virtual void OnCreated() {};
@@ -24,7 +24,7 @@ namespace Techless {
 		virtual void OnWindowEvent(const WindowEvent& inputEvent) {};
 
 //		virtual bool OnInput(const InputObject& InputEvent) { return false; };
-	private:
-		std::string Name;
+	protected:
+		std::string LayerName = "Layer";
 	};
 }

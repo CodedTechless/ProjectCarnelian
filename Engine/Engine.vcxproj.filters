@@ -99,6 +99,18 @@
     <ClCompile Include="src\render\buffer\frame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\layers\imgui\imgui_layer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\layers\layer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\entity\prefabs\prefab_atlas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\entity\prefabs\prefab.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\dependencies\glm\detail\func_common.inl">
@@ -1384,7 +1396,7 @@
     <ClInclude Include="src\engine\application\application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\layers\layer.hpp">
+    <ClInclude Include="src\engine\layers\layer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\layers\layer_set.h">
@@ -1469,6 +1481,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\render\buffer\frame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\layers\imgui\imgui_layer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\entity\prefabs\prefab_atlas.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\entity\prefabs\prefab.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

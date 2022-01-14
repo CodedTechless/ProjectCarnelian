@@ -1,10 +1,8 @@
 #pragma once
 
-// creds to cherno :)
+#include "layer.h"
 
 #include <engineincl.h>
-
-#include "layer.hpp"
 
 namespace Techless {
 	class LayerSet {

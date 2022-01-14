@@ -53,7 +53,9 @@ namespace Techless
 	{
 	public:
 		FrameBuffer(const FrameBufferSpecification& spec);
+		~FrameBuffer();
 
+		void Clear();
 		void Invalidate();
 		void Resize(const glm::u32vec2& Size);
 
@@ -61,16 +63,16 @@ namespace Techless
 		void Unbind();
 
 		inline FrameBufferSpecification& GetSpecification() { return Specification; };
-		inline unsigned int GetColourAttachmentRendererID(unsigned int index = 0) { return ColourRenderAttachments[index]; };
+		inline unsigned int GetColourAttachmentRendererID(size_t index = 0) { return ColourRenderAttachments[index]; };
 
 	private:
 		std::vector<FrameBufferFormatSpecification> ColourAttachmentSpecifications;
-		std::vector<unsigned int> ColourRenderAttachments = {};
+		std::vector<uint32_t> ColourRenderAttachments = {};
 
 		FrameBufferFormatSpecification DepthAttachmentSpecification = FrameBufferTextureFormat::None;
-		unsigned int DepthRenderAttachment = 0;
+		uint32_t DepthRenderAttachment = 0;
 
-		unsigned int RendererID = 0;
+		uint32_t RendererID = 0;
 
 		FrameBufferSpecification Specification;
 	};

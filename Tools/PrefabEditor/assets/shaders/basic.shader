@@ -17,7 +17,7 @@ void main() {
     QuadTextureCoordinate = TextureCoordinate;
     QuadTextureSlot = TextureSlot;
 
-    gl_Position = CameraProjection * vec4(Position.x, Position.y, Position.z, 1.0);
+    gl_Position = CameraProjection * vec4(Position, 1.0);
     
 };
 

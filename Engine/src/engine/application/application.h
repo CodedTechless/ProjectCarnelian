@@ -1,7 +1,10 @@
 #pragma once
 
 #include <engine/layers/layer_set.h>
+#include <engine/layers/imgui/imgui_layer.h>
 #include <engine/application/window.h>
+
+
 #include "event.h"
 
 namespace Techless {
@@ -19,40 +22,40 @@ namespace Techless {
 	public:
 		Application() = default;
 		virtual ~Application() = default;
-
-	public:
-		inline bool IsRunning() const { return Running; };
-		inline Window* GetActiveWindow() const { return aWindow; };
-	
+		
 		static Application& GetActiveApplication() { return *CurrentApplication; };
 		static RuntimeInfo& GetRuntimeData() { return RuntimeData; }
 
+		inline bool IsRunning() const { return Running; };
+		inline Window* GetActiveWindow() const { return aWindow; };
 		inline void SetApplicationTitle(const std::string& nApplicationTitle) { ApplicationTitle = nApplicationTitle; };
 
-	protected:
+		void RenderDebugImGuiElements();
+
 		void AddLayer(Layer* NewLayer);
 		void AddOverlay(Layer* NewOverlay);
 
+	protected:
 		void Init();
 		void Run();
 		void End();
 
-		void PushInputEvent(const InputEvent& inputEvent);
-		void PushWindowEvent(const WindowEvent& windowEvent);
-
 		LayerSet Layers;
 
 	private:
-		void RenderDebugImGuiElements();
+		void PushInputEvent(const InputEvent& inputEvent);
+		void PushWindowEvent(const WindowEvent& windowEvent);
+
+		ImGuiLayer* a_ImGuiLayer = nullptr;
 
 	private:
 		static Application* CurrentApplication;
 		static RuntimeInfo RuntimeData;
 
-		static std::string ApplicationTitle;
+		std::string ApplicationTitle;
 
-		Window* aWindow;
-		bool Running;
+		Window* aWindow = nullptr;
+		bool Running = false;
 
 		friend class Window;
 	};

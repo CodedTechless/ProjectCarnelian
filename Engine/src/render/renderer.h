@@ -31,7 +31,7 @@ namespace Techless {
 	class Renderer {
 	public:
 		static void Init();
-		static void Stop();
+		static void InitOpenGL();
 
 		static void DrawQuad(const glm::vec3& Position, const glm::vec2& Scale, float Orientation = 1.f, const Colour& colour = {});
 		static void DrawSprite(const Ptr<Sprite> sprite, const glm::mat4& Transform, const Colour& colour = {});
@@ -43,13 +43,16 @@ namespace Techless {
 		static void Begin(glm::mat4 Projection, glm::mat4 Transform, Ptr<Shader> shader = nullptr, Ptr<FrameBuffer> frameBuffer = nullptr);
 		static void End();
 
+		static void BeginBatch();
+		static void ResetBatch();
+
 		static void Flush();
-		static void ForceReset();
 
 		static void SetClearColour(glm::vec4 Colour);
 		static void Clear();
 
-		static void RenderImGuiElements();
+	public:
+		static void ShowRuntimeStatsWindow();
 
 		static RendererDebug& GetDebugInfo() { return DebugInfo; };
 		static std::shared_ptr<Texture> GetDefaultTexture() { return DefaultTexture; };
@@ -57,10 +60,7 @@ namespace Techless {
 
 	private:
 		static std::shared_ptr<Texture> DefaultTexture;
-
 		static RendererDebug DebugInfo;
-
-	private:
 		static int MaxTextureSize;
 	};
 }

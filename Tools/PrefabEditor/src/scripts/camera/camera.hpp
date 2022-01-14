@@ -4,9 +4,8 @@
 
 using namespace Techless;
 
-namespace NativeScripts
+namespace NativeScript
 {
-
 	namespace Core
 	{
 
@@ -14,8 +13,10 @@ namespace NativeScripts
 		{
 		public:
 			// Settings
-			bool FreeCamera = false;
+			bool FreeCamera = true;
 			TransformComponent* Subject = nullptr;
+
+			bool AcceptingInput = true;
 
 			// Movement
 			float CameraSpeed = 15.f;
@@ -29,6 +30,8 @@ namespace NativeScripts
 
 			float ZoomSpeed = 0.1f;
 
+			glm::vec2 ViewportSize = {};
+
 			// Z-Plane
 			float Near = -100.f;
 			float Far = 100.f;
@@ -36,6 +39,8 @@ namespace NativeScripts
 			void OnCreate()
 			{
 				PositionTo = GetComponent<TransformComponent>().GetLocalPosition();
+
+				ViewportSize = Application::GetActiveApplication().GetActiveWindow()->Size;
 			}
 
 			void OnUpdate(const float Delta)
@@ -43,10 +48,11 @@ namespace NativeScripts
 				auto& Transform = GetComponent<TransformComponent>();
 				Transform += (PositionTo - Transform.GetLocalPosition()) * 0.2f * Delta;
 
-				auto WindowSize = Application::GetActiveApplication().GetActiveWindow()->Size;
+				auto Pos = Transform.GetLocalPosition();
+				//Debug::Log(std::to_string(Pos.x) + " " + std::to_string(Pos.y));
 
 				auto& CameraComp = GetComponent<CameraComponent>();
-				CameraComp.SetProjection((glm::vec2)WindowSize * ZoomLevel, Near, Far);
+				CameraComp.SetProjection(ViewportSize * ZoomLevel, Near, Far);
 
 				ZoomLevel += (ZoomLevelTo - ZoomLevel) * 0.3f * Delta;
 			}
@@ -55,8 +61,14 @@ namespace NativeScripts
 			{
 				if (FreeCamera)
 				{
-					auto Horizontal = (int)Input::KeyDown(Input::KeyCode::D) - (int)Input::KeyDown(Input::KeyCode::A);
-					auto Vertical = (int)Input::KeyDown(Input::KeyCode::S) - (int)Input::KeyDown(Input::KeyCode::W);
+					int Horizontal = 0;
+					int Vertical = 0;
+
+					if (AcceptingInput)
+					{
+						Horizontal = (int)Input::KeyDown(Input::KeyCode::D) - (int)Input::KeyDown(Input::KeyCode::A);
+						Vertical = (int)Input::KeyDown(Input::KeyCode::S) - (int)Input::KeyDown(Input::KeyCode::W);
+					}
 
 					PositionTo += glm::vec3(Horizontal, Vertical, 0) * CameraSpeed * ZoomLevel * Delta;
 				}
@@ -80,8 +92,10 @@ namespace NativeScripts
 
 			void OnWindowEvent(const WindowEvent& windowEvent)
 			{
+				ViewportSize = windowEvent.Size;
+
 				auto& CameraComp = GetComponent<CameraComponent>();
-				CameraComp.SetProjection(windowEvent.Size * ZoomLevel, Near, Far);
+				CameraComp.SetProjection(ViewportSize * ZoomLevel, Near, Far);
 			}
 		};
 

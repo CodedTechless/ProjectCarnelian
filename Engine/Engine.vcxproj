@@ -92,6 +92,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\entity\prefabs\prefab.cpp" />
+    <ClCompile Include="src\engine\entity\prefabs\prefab_atlas.cpp" />
+    <ClCompile Include="src\engine\layers\imgui\imgui_layer.cpp" />
+    <ClCompile Include="src\engine\layers\layer.cpp" />
     <ClCompile Include="src\render\buffer\frame.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui_demo.cpp" />
@@ -260,6 +264,9 @@
     <None Include="src\dependencies\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\entity\prefabs\prefab.h" />
+    <ClInclude Include="src\engine\entity\prefabs\prefab_atlas.h" />
+    <ClInclude Include="src\engine\layers\imgui\imgui_layer.h" />
     <ClInclude Include="src\render\buffer\frame.h" />
     <ClInclude Include="src\dependencies\imgui\imconfig.h" />
     <ClInclude Include="src\dependencies\imgui\imgui.h" />
@@ -282,7 +289,7 @@
     <ClInclude Include="src\engine\input\input.h" />
     <ClInclude Include="src\engine\entity\scene.h" />
     <ClInclude Include="src\engine\layers\layer_set.h" />
-    <ClInclude Include="src\engine\layers\layer.hpp" />
+    <ClInclude Include="src\engine\layers\layer.h" />
     <ClInclude Include="src\engine\application\application.h" />
     <ClInclude Include="src\dependencies\glm\common.hpp" />
     <ClInclude Include="src\dependencies\glm\detail\compute_common.hpp" />

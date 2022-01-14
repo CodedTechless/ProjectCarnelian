@@ -90,12 +90,6 @@ namespace Techless
                 PointerInfo.App->PushWindowEvent(NewEvent);
             });
 
-        glfwSetFramebufferSizeCallback(aWindow,
-            [](GLFWwindow* window, int Width, int Height)
-            {
-                glViewport(0, 0, Width, Height);
-            });
-
         glfwSetScrollCallback(aWindow,
             [](GLFWwindow* window, double xOffset, double yOffset)
             {
@@ -193,8 +187,6 @@ namespace Techless
 
     void Window::Update()
     {
-        Renderer::RenderImGuiElements();
-
         glfwSwapBuffers(aWindow);
         glfwPollEvents();
     }

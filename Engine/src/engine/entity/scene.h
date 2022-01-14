@@ -44,7 +44,7 @@ namespace Techless
 		Registry SceneRegistry;
 
 		template<typename Component>
-		void PushSerialisedComponent(JSON& j_ComponentSet, const std::string& EntryName)
+		void PushSerialisedComponent(JSON& j_ComponentSet, const std::unordered_map<std::string, bool>& ArchivableIndex, const std::string& EntryName)
 		{
 			j_ComponentSet[EntryName] = JSON::array();
 
@@ -52,9 +52,16 @@ namespace Techless
 				return;
 
 			auto Set = SceneRegistry.GetRegistrySet<Component>();
-			for (auto component : *Set)
+			
+			int i = 0;
+			for (Component& component : *Set)
 			{
-				j_ComponentSet.at(EntryName).emplace_back(component);
+				std::string EntityID = Set->GetIDAtIndex(i);
+
+				if (ArchivableIndex.at(EntityID) == true)
+					j_ComponentSet.at(EntryName).emplace_back(component);
+			
+				++i;
 			}
 		}
 	};

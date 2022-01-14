@@ -83,12 +83,16 @@
   <ItemGroup>
     <ClInclude Include="src\app\application\application.hpp" />
     <ClInclude Include="src\app\layers\editor.h" />
+    <ClInclude Include="src\app\layers\editor_panels\asset_manager.h" />
+    <ClInclude Include="src\app\layers\editor_panels\explorer.h" />
     <ClInclude Include="src\scriptindex.h" />
     <ClInclude Include="src\scripts\camera\camera.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app\entry.cpp" />
     <ClCompile Include="src\app\layers\editor.cpp" />
+    <ClCompile Include="src\app\layers\editor_panels\asset_manager.cpp" />
+    <ClCompile Include="src\app\layers\editor_panels\explorer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

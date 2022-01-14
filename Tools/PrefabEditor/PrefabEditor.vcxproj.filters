@@ -27,12 +27,24 @@
     <ClInclude Include="src\scriptindex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\app\layers\editor_panels\explorer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app\layers\editor_panels\asset_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app\layers\editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\app\entry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\layers\editor_panels\explorer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\app\layers\editor_panels\asset_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

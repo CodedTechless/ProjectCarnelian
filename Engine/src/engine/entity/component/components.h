@@ -39,7 +39,7 @@ namespace Techless
 		{
 			for (auto* Child : Children)
 			{
-				Child->SetParent(nullptr);
+				Child->SetParent(Parent ? Parent : nullptr);
 			}
 
 			if (Parent)
@@ -50,9 +50,9 @@ namespace Techless
 		inline glm::vec2 GetLocalScale() const { return LocalScale; };
 		inline float GetLocalOrientation() const { return LocalOrientation; };
 
-		inline glm::vec3 GetGlobalPosition() const { return GlobalPosition; };
-		inline glm::vec2 GetGlobalScale() const { return GlobalScale; };
-		inline float GetGlobalOrientation() const { return GlobalOrientation; };
+		inline glm::vec3 GetGlobalPosition() { RecalculateTransform(); return GlobalPosition; };
+		inline glm::vec2 GetGlobalScale() { RecalculateTransform(); return GlobalScale; };
+		inline float GetGlobalOrientation() { RecalculateTransform(); return GlobalOrientation; };
 		
 		/*
 			to-do: find a nicer way to do this please, this is disgusting.
@@ -77,9 +77,22 @@ namespace Techless
 		inline void operator=  (float Orientation) { LocalOrientation = Orientation; MarkAsDirty(this); };
 
 	public:
-		void SetParent(TransformComponent* Transform)
+
+		static bool IsParentOfSelf(TransformComponent* OriginalTransform, TransformComponent* Transform)
 		{
-			if (Transform == Parent) return;
+			if (Transform == nullptr)
+				return false;
+
+			if (OriginalTransform == Transform)
+				return true;
+
+			return IsParentOfSelf(OriginalTransform, Transform->Parent);
+		}
+
+		bool SetParent(TransformComponent* Transform)
+		{
+			if (Transform && IsParentOfSelf(this, Transform))
+				return false;
 
 			if (Parent != nullptr)
 				Parent->RemoveChild(this);
@@ -90,6 +103,8 @@ namespace Techless
 				Transform->AddChild(this);
 
 			MarkAsDirty(this);
+
+			return true;
 		}
 
 		inline TransformComponent* GetParent() const { return Parent; };

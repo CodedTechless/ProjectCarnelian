@@ -1,18 +1,17 @@
 
-#include "renderer.h"
 
-#include "GL/glew.h"
-#include "GLFW/glfw3.h"
-
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw.h>
-#include <imgui/imgui_impl_opengl3.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <imgui/imgui.h>
+
+#include <engine/application/application.h>
 #include <engine/watchdog/watchdog.h>
 
+#include "renderer.h"
 // {0.f, 0.f}, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f }
 
 namespace Techless {
@@ -62,12 +61,12 @@ namespace Techless {
 		Debug::OpenGLMessage(std::string(message),source, type, id, severity);
 	}
 
-	void Renderer::Init()
+	void Renderer::InitOpenGL()
 	{
-		Debug::Log("Initialising renderer...", "Renderer");
+		Debug::Log("Initialising OpenGL...", "Renderer");
 
 #if DEBUG
-		Debug::Log("Debug mode is enabled in this build.", "Renderer");
+		Debug::Log("OpenGL debug mode is enabled in this build.", "Renderer");
 
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -79,7 +78,7 @@ namespace Techless {
 		// Enable depth testing (for Z-axis based depth) and blending (for alpha support)
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
-		
+
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -88,6 +87,12 @@ namespace Techless {
 		MaxTextureSize = std::min((int)glMaxTextureSize, 2048);
 
 		Debug::Log("MaxTextureSize: " + std::to_string(MaxTextureSize) + " (" + std::to_string(glMaxTextureSize) + ")", "Renderer");
+	}
+
+	void Renderer::Init()
+	{
+		Debug::Log("Initialising renderer...", "Renderer");
+		InitOpenGL();
 
 		// Create the vertex array which will hold attribute information for our batch vertex buffer and index buffer.
 		RendererData.QuadVertexArray = std::make_shared<VertexArray>();
@@ -151,13 +156,6 @@ namespace Techless {
 		RendererData.VertexDefault[1] = {  0.5f,  0.5f, 0.f, 1.f };
 		RendererData.VertexDefault[2] = {  0.5f, -0.5f, 0.f, 1.f };
 		RendererData.VertexDefault[3] = { -0.5f, -0.5f, 0.f, 1.f };
-		
-		// Set up ImGui for debug UI and shit like that
-		IMGUI_CHECKVERSION();											// check the currently running version
-		ImGui::CreateContext();											// create the ImGui context
-		ImGui_ImplGlfw_InitForOpenGL(glfwGetCurrentContext(), true);	// bind it to the currently active GLFW window
-		ImGui::StyleColorsDark();										// sets the window colour style to dark mode
-		ImGui_ImplOpenGL3_Init((char*)glGetString(330));				// initialises it in OpenGL mode
 
 		auto e = glGetString(GL_VERSION);
 		Debug::Log("Started renderer. (OpenGL " + std::string((const char*)e) + ")", "Renderer");
@@ -169,25 +167,14 @@ namespace Techless {
 
 	void Renderer::DrawQuad(const glm::vec3& Position, const glm::vec2& Size, float Orientation, const Colour& colour)
 	{
-		glm::mat4 Transform = glm::translate(glm::mat4(1.0f), Position);
-		
-		if (Orientation != 0) Transform *= glm::rotate(glm::mat4(1.0f), glm::radians(Orientation), glm::vec3(0.f, 0.f, 1.f));
-		if (Size != glm::vec2(1.f, 1.f)) Transform *= glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1.f));
+		glm::mat4 Transform = 
+			glm::translate(glm::mat4(1.0f), Position)
+			* glm::rotate(glm::mat4(1.0f), glm::radians(Orientation), glm::vec3(0.f, 0.f, 1.f))
+			* glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1.f));
 
 		glm::vec2 TexCoords[] = { { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f } };
 		DrawTexturedQuad(RendererData.ActiveTextures[0], TexCoords, Transform, colour);
 	}
-
-/*	// Draw a quad using vector coordinates with a colour and an angle
-	void Renderer::DrawQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::vec3& Position, const glm::vec2& Size, const glm::vec4& Colour, float Angle)
-	{
-		glm::mat4 Transform =
-			glm::translate(glm::mat4(1.0f), Position)
-			* glm::rotate(glm::mat4(1.0f), glm::radians(Angle), glm::vec3(0, 0, 1))
-			* glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1));
-
-		DrawQuad(Tex, TexCoords, Transform, Colour);
-	}*/
 
 	void Renderer::DrawSprite(const Ptr<Sprite> sprite, const glm::mat4& Transform, const Colour& colour)
 	{
@@ -207,7 +194,7 @@ namespace Techless {
 	{
 		if (RendererData.CurrentVertexIndex >= RendererDataSet::MaxInds)
 		{
-			ForceReset();
+			ResetBatch();
 		}
 
 		float TexIndex = 0.f;
@@ -223,7 +210,7 @@ namespace Techless {
 		{
 			if (RendererData.NextTextureSlot > RendererDataSet::ActiveTextureSlots)
 			{
-				ForceReset();
+				ResetBatch();
 			}
 
 			RendererData.ActiveTextures[RendererData.NextTextureSlot] = Tex;
@@ -250,7 +237,7 @@ namespace Techless {
 	{
 		if (RendererData.CurrentVertexIndex >= RendererDataSet::MaxInds)
 		{
-			ForceReset();
+			ResetBatch();
 		}
 
 		float TexIndex = 0.f;
@@ -266,7 +253,7 @@ namespace Techless {
 		{
 			if (RendererData.NextTextureSlot > RendererDataSet::ActiveTextureSlots)
 			{
-				ForceReset();
+				ResetBatch();
 			}
 
 			RendererData.ActiveTextures[RendererData.NextTextureSlot] = Tex;
@@ -302,16 +289,9 @@ namespace Techless {
 	///////////
 	void Renderer::Begin(glm::mat4 Projection, glm::mat4 Transform, Ptr<Shader> shader, Ptr<FrameBuffer> frameBuffer)
 	{	
-		// begins a new scene
-		RendererData.NextTextureSlot = 1;
-		RendererData.CurrentVertexIndex = 0;
-		RendererData.QuadArrayPointer = RendererData.QuadArray;
-
 		glm::mat4 Proj = Projection * glm::inverse(Transform);
 
 		RendererData.ActiveShader = shader ? shader : RendererData.DefaultTextureShader;
-
-		RendererData.ActiveShader->Bind();
 		RendererData.ActiveShader->SetUniformMat4f("CameraProjection", Proj);
 
 		if (frameBuffer)
@@ -322,20 +302,12 @@ namespace Techless {
 
 		DebugInfo.DrawCalls = 0;
 		DebugInfo.VertexCount = 0;
+
+		BeginBatch();
 	}
 
 	void Renderer::End()
 	{
-		// ends the active scene
-		auto Size = (uint32_t)((uint8_t*)RendererData.QuadArrayPointer - (uint8_t*)RendererData.QuadArray);
-		
-		RendererData.BatchVertexBuffer->Set(RendererData.QuadArray, Size);
-
-		for (unsigned int i = 0; i < RendererData.NextTextureSlot; i++)
-		{
-			RendererData.ActiveTextures[i]->Bind(i);
-		}
-
 		Flush();
 		
 		if (RendererData.ActiveFrameBuffer)
@@ -345,54 +317,90 @@ namespace Techless {
 		}
 	}
 
-	void Renderer::Flush()
+	void Renderer::BeginBatch()
 	{
-		// flushes the pending renders
-		if (RendererData.CurrentVertexIndex == 0) {
-			return;
-		}
-
-		glDrawElements(GL_TRIANGLES, RendererData.CurrentVertexIndex, GL_UNSIGNED_INT, nullptr); // draws the array of buffer data that is currently binded
-
-		DebugInfo.DrawCalls++;
-	}
-
-	void Renderer::ForceReset()
-	{
-		// used when max indicies/vertex/textures are taken. resets the pipeline and starts a new scene to take over (to avoid a crash)
-		End();
-
-		std::cout << "Reset forced" << std::endl;
-
 		RendererData.NextTextureSlot = 1;
 		RendererData.CurrentVertexIndex = 0;
 		RendererData.QuadArrayPointer = RendererData.QuadArray;
 	}
 
+	void Renderer::ResetBatch()
+	{
+		Flush();
+		BeginBatch();
+	}
+
+	void Renderer::Flush()
+	{
+		if (RendererData.CurrentVertexIndex == 0)
+			return;
+
+		{
+			auto Size = (uint32_t)((uint8_t*)RendererData.QuadArrayPointer - (uint8_t*)RendererData.QuadArray);
+			RendererData.BatchVertexBuffer->Set(RendererData.QuadArray, Size);
+
+			for (unsigned int i = 0; i < RendererData.NextTextureSlot; i++)
+			{
+				RendererData.ActiveTextures[i]->Bind(i);
+			}
+		}
+
+		RendererData.ActiveShader->Bind();
+		glDrawElements(GL_TRIANGLES, RendererData.CurrentVertexIndex, GL_UNSIGNED_INT, nullptr); // draws the array of buffer data that is currently binded
+
+		DebugInfo.DrawCalls++;
+	}
+
 	void Renderer::SetClearColour(glm::vec4 Colour)
 	{
-		glClearColor(Colour.x, Colour.y, Colour.z, Colour.w);
+		glClearColor(Colour.r, Colour.g, Colour.b, Colour.a);
 	}
 
 	void Renderer::Clear()
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
 	}
 
-	void Renderer::RenderImGuiElements()
+	void Renderer::ShowRuntimeStatsWindow()
 	{
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-	}
+		auto Runtime = Application::GetRuntimeData();
+		auto DebugInfo = Renderer::GetDebugInfo();
 
-	void Renderer::Stop()
-	{
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
+		{
+			ImGui::Begin("Render Debug");
+
+			if (ImGui::CollapsingHeader("Performance"))
+			{
+				ImGui::Columns(2, "performance_table");
+
+				std::string PerformanceLabels = "FPS\nUpdate Rate\nLast fixed update took\nLast frame took";
+				ImGui::Text(PerformanceLabels.c_str());
+
+				ImGui::NextColumn();
+
+				std::string PerformanceData = std::to_string(Runtime.Framerate) + "\n" + std::to_string(Runtime.UpdateRate) + "\n" + std::to_string(Runtime.FixedUpdateTime) + "ms\n" + std::to_string(Runtime.UpdateTime) + "ms";
+				ImGui::Text(PerformanceData.c_str());
+
+				ImGui::Columns();
+			}
+
+			if (ImGui::CollapsingHeader("Renderer Information"))
+			{
+
+				ImGui::Columns(2, "renderer_info_table");
+
+				std::string RendererLabels = "Draw calls last frame\nVertex count last frame";
+				ImGui::Text(RendererLabels.c_str());
+
+				ImGui::NextColumn();
+
+				std::string RendererData = std::to_string(DebugInfo.DrawCalls) + " calls\n" + std::to_string(DebugInfo.VertexCount) + " verticies";
+				ImGui::Text(RendererData.c_str());
+
+				ImGui::Columns();
+			}
+
+			ImGui::End();
+		}
 	}
 }

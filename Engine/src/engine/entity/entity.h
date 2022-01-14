@@ -51,6 +51,7 @@ namespace Techless
 		Scene* ActiveScene = nullptr;
 	
 	public:
+		bool Archivable = true;
 
 		inline friend void to_json(JSON& json, const Entity& entity)
 		{

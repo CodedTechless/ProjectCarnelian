@@ -33,6 +33,7 @@ namespace Techless {
 
 	void LayerSet::PushOverlay(Layer* Overlay) {
 		Layers.emplace_back(Overlay);
+		Overlay->OnCreated();
 	}
 
 	void LayerSet::PopOverlay(Layer* Overlay) {

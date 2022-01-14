@@ -1,6 +1,5 @@
 
 #include <Engine.h>
-#include <scriptindex.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
@@ -11,54 +10,55 @@
 
 using namespace Techless;
 
-namespace Carnelian {
+namespace PrefabEditor {
 
 	void Editor::OnCreated()
 	{
-        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
         ActiveScene = CreatePtr<Scene>();
 
-        auto& SceneCamera = ActiveScene->CreateEntity("Camera");
-        SceneCamera.RemoveComponent<TagComponent>();
+
+        auto& SceneCamera = ActiveScene->CreateEntity("techless_EditorCamera");
         SceneCamera.AddComponent<CameraComponent>();
+        SceneCamera.Archivable = false;
 
         auto& Script = SceneCamera.AddComponent<ScriptComponent>();
-        Script.Bind<NativeScripts::Core::Camera>(SceneCamera);
+        ActiveCameraScript = Script.Bind<NativeScript::Core::Camera>(SceneCamera);
 
         ActiveScene->SetActiveCamera(SceneCamera);
-
+        
         FrameBufferSpecification FSpec;
         FSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth };
         FSpec.Size = { 128, 72 };
-
         ActiveFrameBuffer = CreatePtr<FrameBuffer>(FSpec);
 
-        Renderer::SetClearColour(glm::vec4(0.5f, 0.5f, 0.5f, 1.f));
-	}
+        EditorExplorer.SetSceneContext(ActiveScene);
+        EditorExplorer.Refresh();
+    }
 
     void Editor::OnUpdateFixed(const float& Delta)
     {
-        //ActiveScene->FixedUpdate(Delta);
+        ActiveCameraScript->OnFixedUpdate(Delta);
 
         FixedUpdateRate = Delta;
     }
 
     void Editor::OnUpdate(const float& Delta)
     {
+        auto Spec = ActiveFrameBuffer->GetSpecification();
+        if ((Spec.Size.x != ViewportSize.x or Spec.Size.y != ViewportSize.y) 
+            and (ViewportSize.x > 0 and ViewportSize.y > 0))
+        {
+            ActiveFrameBuffer->Resize(ViewportSize);
+            ActiveCameraScript->OnWindowEvent({ ViewportSize });
+        }
 
-        //ActiveFrameBuffer->Resize(ViewportSize);
+        ActiveCameraScript->OnUpdate(Delta);
+
         ActiveFrameBuffer->Bind();
-        
-        /*
-        auto CameraScript = ActiveScene->GetActiveCamera().GetComponent<ScriptComponent>().GetScript<Camera>();
-        WindowEvent wEvent;
-        wEvent.Size = ViewportSize;
-        CameraScript->OnWindowEvent(wEvent);
-        */
+        Renderer::SetClearColour({ 0.1f, 0.1f, 0.1f, 1.f });
+        Renderer::Clear();
 
         ActiveScene->Update(Delta, false);
-
         ActiveFrameBuffer->Unbind();
         
         UpdateRate = Delta;
@@ -69,20 +69,22 @@ namespace Carnelian {
         static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
         
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
-        ImGui::SetNextWindowViewport(viewport->ID);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        {
+            const ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(viewport->WorkPos);
+            ImGui::SetNextWindowSize(viewport->WorkSize);
+            ImGui::SetNextWindowViewport(viewport->ID);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+            window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+            window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-        dockspace_flags |= ImGuiDockNodeFlags_PassthruCentralNode;
+            dockspace_flags |= ImGuiDockNodeFlags_PassthruCentralNode;
 
-        if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-            window_flags |= ImGuiWindowFlags_NoBackground;
+            if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+                window_flags |= ImGuiWindowFlags_NoBackground;
+        }
 
         ImGui::Begin("Editor", nullptr, window_flags);
         ImGui::PopStyleVar(3);
@@ -97,7 +99,9 @@ namespace Carnelian {
                 if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
                 if (ImGui::MenuItem("Save", "Ctrl+S")) 
                 {
-                    ActiveScene->Serialise("assets/prefabs/New Prefab.prefab");
+                    ActiveScene->Serialise("assets/prefabs/" + PrefabName + ".prefab");
+
+                    Debug::Log("Saved prefab!", "PrefabEditor");
                 }
 
                 ImGui::Separator();
@@ -108,10 +112,14 @@ namespace Carnelian {
 
             if (ImGui::BeginMenu("Insert"))
             {
-                if (ImGui::MenuItem("Create Entity", "")) 
+                if (ImGui::MenuItem("Create Entity")) 
                 {
                     auto& Entity = ActiveScene->CreateEntity();
-                    SelectedEntity = &Entity;
+
+                    auto& c_Sprite = Entity.AddComponent<SpriteComponent>();
+                    c_Sprite.SetSprite("checkers");
+
+                    EditorExplorer.SetSelectedEntity(Entity);
                 }
 
                 ImGui::EndMenu();
@@ -121,75 +129,52 @@ namespace Carnelian {
         }
         ImGui::End();
 
-
-        RenderViewport();
-        RenderSceneHierarchy();
-        RenderProperties();
-        RenderAssetManager();
-    }
-    
-    void Editor::RenderViewport()
-    {
+        // -= Viewport =-
+        
         ImGui::Begin("Viewport");
 
-        auto rID = ActiveFrameBuffer->GetColourAttachmentRendererID();
-        
-        auto Region = ImGui::GetContentRegionAvail();
-        ViewportSize = { Region.x, Region.y };
-
-        ImGui::Image(reinterpret_cast<void*>(rID), ImVec2{ (float)ViewportSize.x, (float)ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-
-        ImGui::End();
-    }
-
-    void Editor::RenderSceneHierarchy()
-    {
-        ImGui::Begin("Explorer");
-        
-        auto Entities = ActiveScene->GetInstances<Entity>();
-
-        auto Transforms = ActiveScene->GetInstances<TransformComponent>();
-        auto Tags = ActiveScene->GetInstances<TagComponent>();
-
-        int i = 0;
-        for (auto& transform : *Transforms)
         {
-            auto EntityID = Transforms->GetIDAtIndex(i++);
-            if (!Tags->Has(EntityID))
-                continue;
+            ViewportFocused = ImGui::IsWindowFocused() && ImGui::IsWindowHovered();
+            ActiveCameraScript->AcceptingInput = ImGui::IsWindowFocused();
 
-            auto& tag = Tags->Get(EntityID);
+            ImVec2 Region = ImGui::GetContentRegionAvail();
+            ViewportSize = { Region.x, Region.y };
 
-            ImGuiTreeNodeFlags node_flags = (SelectedEntity && SelectedEntity->GetID() == EntityID ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-
-            bool Opened = ImGui::TreeNodeEx(tag.Name.c_str(), node_flags);
-            if (ImGui::IsItemClicked())
-            {
-                SelectedEntity = &Entities->Get(EntityID);
-            }
+            uint32_t rID = ActiveFrameBuffer->GetColourAttachmentRendererID();
+            ImGui::Image((ImTextureID)rID, ImVec2{ (float)ViewportSize.x, (float)ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
         }
-        ImGui::End();
-    }
-
-    void Editor::RenderProperties()
-    {
-        ImGui::Begin("Properties");
 
         ImGui::End();
-    }
 
-    void Editor::RenderAssetManager()
-    {
-        ImGui::Begin("Asset Manager");
+        // -= Project Settings =-
 
+        ImGui::Begin("Prefab Settings");
 
+        {
+            char buf[50] = {};
+            strcpy_s(buf, PrefabName.c_str());
+
+            ImGui::InputText("Prefab Name", buf, 50);
+
+            PrefabName = buf;
+        }
 
         ImGui::End();
+
+        // ------------
+
+        EditorExplorer.RenderImGuiElements();
+        EditorAssetManager.RenderImGuiElements();
+
+        Renderer::ShowRuntimeStatsWindow();
     }
 
     Input::Filter Editor::OnInputEvent(const InputEvent& inputEvent, bool Processed)
     {
-        return ActiveScene->OnInputEvent(inputEvent, Processed);
+        if (ViewportFocused)
+            return ActiveCameraScript->OnInputEvent(inputEvent, Processed);
+    
+        return Input::Filter::Ignore;
     }
 
     /*
