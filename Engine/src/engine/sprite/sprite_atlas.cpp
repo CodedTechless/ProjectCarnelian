@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 namespace Techless
 {
 
+	
 	std::unordered_map<std::string, std::shared_ptr<Sprite>> SpriteAtlas::SpriteCache{};
 	std::array<Ptr<Texture>, 8> SpriteAtlas::TexturePages{};
 
@@ -42,8 +43,6 @@ namespace Techless
 		unsigned char* Tex = new unsigned char[BlockSize];
 		memset(Tex, 0, BlockSize);
 
-		Debug::Log("Allocated a " + std::to_string(TextureSize) + "x" + std::to_string(TextureSize) + " texture page (" + std::to_string(BlockSize) + " bytes)", "SpriteAtlas");
-
 		return Tex;
 	}
 
@@ -67,8 +66,6 @@ namespace Techless
 				textureInfo.Name = FsPath.stem().string();
 
 				TextureBuffers.push_back(textureInfo);
-
-				Debug::Log("Loaded " + textureInfo.Name, "SpriteAtlas");
 			}
 		}
 	}
@@ -89,6 +86,8 @@ namespace Techless
 		while (!Success)
 		{
 			auto* PageBuffer = AllocateBuffer(MaxTextureSize);
+			Debug::Log("Allocated a " + std::to_string(MaxTextureSize) + "x" + std::to_string(MaxTextureSize) + " texture page (" + std::to_string(MaxTextureSize * MaxTextureSize * 4) + " bytes)", "SpriteAtlas");
+
 			auto TextureCount = Textures.size();
 
 			stbrp_context NewContext;
@@ -148,7 +147,7 @@ namespace Techless
 		}
 	}
 
-	std::shared_ptr<Sprite> SpriteAtlas::GetSprite(const std::string& Name)
+	std::shared_ptr<Sprite> SpriteAtlas::Get(const std::string& Name)
 	{
 		if (SpriteCache.find(Name) != SpriteCache.end())
 			return SpriteCache[Name];

@@ -271,7 +271,7 @@ namespace Techless
 	{
 		Colour SpriteColour{ 1.f, 1.f, 1.f };
 
-		inline void SetSprite(const std::string& NewSprite) { aSprite = SpriteAtlas::GetSprite(NewSprite); };
+		inline void SetSprite(const std::string& NewSprite) { aSprite = SpriteAtlas::Get(NewSprite); };
 		inline Ptr<Sprite> GetSprite() const { return aSprite; };
 
 		void SetRGBColour(const Colour& colour) { SpriteColour = colour; };
@@ -428,5 +428,10 @@ namespace Techless
 		{
 
 		}*/
+	};
+
+	struct LuaScriptComponent
+	{
+
 	};
 }

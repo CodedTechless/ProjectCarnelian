@@ -1,6 +1,10 @@
+
+
 #include "registry.h"
 
-namespace Techless {
+namespace Techless 
+{
+	
 	void Registry::Clear(const std::string& ID)
 	{
 		for (auto Set : InstanceSets)
@@ -8,4 +12,5 @@ namespace Techless {
 			Set.second->Clear(ID);
 		}
 	}
+
 }

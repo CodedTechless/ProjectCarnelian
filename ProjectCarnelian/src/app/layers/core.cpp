@@ -1,6 +1,7 @@
 
+
 #include <Engine.h>
-#include <scriptindex.h>
+#include <app/native_scripts/scriptindex.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>

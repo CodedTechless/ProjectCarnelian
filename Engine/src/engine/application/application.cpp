@@ -10,6 +10,8 @@
 
 #include <render/renderer.h>
 
+#include <sol/sol.hpp>
+
 namespace Techless {
 
     Application* Application::CurrentApplication = nullptr;
@@ -19,6 +21,11 @@ namespace Techless {
 
     void Application::Init() 
     {
+        sol::state lua;
+        lua.open_libraries(sol::lib::base);
+
+        lua.script("print('bark bark bark!')");
+
         assert(CurrentApplication == nullptr);
         CurrentApplication = this;
 

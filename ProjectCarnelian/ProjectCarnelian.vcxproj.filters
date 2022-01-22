@@ -21,13 +21,13 @@
     <ClInclude Include="src\app\layers\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\scripts\camera\camera.hpp">
+    <ClInclude Include="src\app\native_scripts\camera\camera.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\scriptindex.h">
+    <ClInclude Include="src\app\native_scripts\scriptindex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\scripts\player\player.hpp">
+    <ClInclude Include="src\app\native_scripts\player\player.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1492,5 +1492,14 @@
     <ClInclude Include="src\engine\entity\prefabs\prefab.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\dependencies\sol\sol.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dependencies\sol\config.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dependencies\sol\forward.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

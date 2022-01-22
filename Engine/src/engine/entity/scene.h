@@ -1,6 +1,8 @@
 #pragma once
 
 #include <engine/entity/registry/registry.h>
+#include <engine/entity/prefabs/prefab.h>
+
 #include <engine/application/event.h>
 
 #include <json/json.hpp>
@@ -16,7 +18,7 @@ namespace Techless
 	public:
 		Entity& CreateEntity(const std::string& TagName = "Entity");
 		void DestroyEntity(const std::string& EntityID);
-//		Entity& Instantiate();
+		Entity& Instantiate(const Prefab& prefab);
 
 		void Update(const float Delta, bool AllowScriptRuntime = true);
 		void FixedUpdate(const float Delta);

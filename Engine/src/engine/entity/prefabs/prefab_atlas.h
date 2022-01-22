@@ -12,8 +12,10 @@ namespace Techless
 	{
 	public:
 
-		Ptr<Prefab> Load(const std::string& FilePath);
+		static Ptr<Prefab> Get(const std::string& FilePath);
 	
 	private:
+
+		static std::unordered_map<std::string, Ptr<Prefab>> Prefabs;
 	};
 }

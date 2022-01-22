@@ -33,6 +33,11 @@ namespace Techless
 		SceneRegistry.Remove<Entity>(EntityID);
 	}
 
+	Entity& Scene::Instantiate(const Prefab& prefab)
+	{
+
+	}
+
 	Input::Filter Scene::OnInputEvent(const InputEvent& inputEvent, bool Processed)
 	{
 		/*
@@ -156,13 +161,12 @@ namespace Techless
 			j_Entities += entity;
 		}
 
-		PushSerialisedComponent<TagComponent>		(j_Components, ArchivableIndex, "Tag");
-		PushSerialisedComponent<TransformComponent>	(j_Components, ArchivableIndex, "Transform");
-		PushSerialisedComponent<RigidBodyComponent>	(j_Components, ArchivableIndex, "RigidBody");
-		PushSerialisedComponent<SpriteComponent>	(j_Components, ArchivableIndex, "Sprite");
-		//PushSerialisedComponent<AnimatorComponent>	(j_Components, "Animator");
-		PushSerialisedComponent<CameraComponent>	(j_Components, ArchivableIndex, "Camera");
-		//PushSerialisedComponent<ScriptComponent>	(j_Components, "Script");
+		PushSerialisedComponent <TagComponent>			(j_Components, ArchivableIndex, "Tag");
+		PushSerialisedComponent <TransformComponent>	(j_Components, ArchivableIndex, "Transform");
+		PushSerialisedComponent <RigidBodyComponent>	(j_Components, ArchivableIndex, "RigidBody");
+		PushSerialisedComponent <SpriteComponent>		(j_Components, ArchivableIndex, "Sprite");
+//		PushSerialisedComponent <AnimatorComponent>		(j_Components, ArchivableIndex, "Animator");
+		PushSerialisedComponent <CameraComponent>		(j_Components, ArchivableIndex, "Camera");
 
 		std::ofstream o(FilePath);
 		o << j_SerialisedScene << std::endl;

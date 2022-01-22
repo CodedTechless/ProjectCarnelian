@@ -264,6 +264,9 @@
     <None Include="src\dependencies\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\dependencies\sol\config.hpp" />
+    <ClInclude Include="src\dependencies\sol\forward.hpp" />
+    <ClInclude Include="src\dependencies\sol\sol.hpp" />
     <ClInclude Include="src\engine\entity\prefabs\prefab.h" />
     <ClInclude Include="src\engine\entity\prefabs\prefab_atlas.h" />
     <ClInclude Include="src\engine\layers\imgui\imgui_layer.h" />
