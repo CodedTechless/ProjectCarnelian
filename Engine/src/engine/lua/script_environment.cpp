@@ -101,6 +101,8 @@ namespace Techless
 
 		GetEntityBinding = { LuaVM["GetEntityBinding"] , &ScriptEnvironmentLogger::ScriptError };
 
+		// testing
+
 		sol::protected_function RegisterComponentType = LuaVM["RegisterComponentType"];
 
 		// [COMPONENT ASSIGNMENT]
