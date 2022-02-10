@@ -38,9 +38,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\scripts\example.lua" />
-    <None Include="assets\scripts\core\scene.lua" />
-    <None Include="assets\scripts\core\entity.lua" />
-    <None Include="assets\scripts\core\global_environment.lua" />
-    <None Include="assets\scripts\core\debug.lua" />
+    <None Include="assets\core_scripts\scene_binding.lua" />
+    <None Include="assets\core_scripts\entity_binding.lua" />
+    <None Include="assets\core_scripts\global_environment.lua" />
   </ItemGroup>
 </Project>

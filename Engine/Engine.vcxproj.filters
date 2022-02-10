@@ -1504,9 +1504,6 @@
     <ClInclude Include="src\dependencies\sol\forward.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\maths\vector.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\engine\lua\script_environment.h">
       <Filter>Header Files</Filter>
     </ClInclude>

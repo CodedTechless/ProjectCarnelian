@@ -273,7 +273,6 @@
     <ClInclude Include="src\engine\entity\prefabs\prefab.h" />
     <ClInclude Include="src\engine\entity\prefabs\prefab_atlas.h" />
     <ClInclude Include="src\engine\layers\imgui\imgui_layer.h" />
-    <ClInclude Include="src\engine\maths\vector.hpp" />
     <ClInclude Include="src\render\buffer\frame.h" />
     <ClInclude Include="src\dependencies\imgui\imconfig.h" />
     <ClInclude Include="src\dependencies\imgui\imgui.h" />

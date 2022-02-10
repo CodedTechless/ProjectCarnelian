@@ -19,7 +19,7 @@ c++ does:
 
 #define PullQuery(Name) "QueryComponent_" #Name , &LuaScriptableEntity::QueryComponent_##Name
 
-#define DefineQuery 
+#define DefineQuery(Type) if (ComponentName == #Type) return sol::make_object<Type*>(lua, QueryComponentType<Type>(Mode))
 
 namespace Techless
 {
@@ -58,13 +58,17 @@ namespace Techless
 			return nullptr;
 		}
 
-		sol::object QueryComponent(const std::string& ComponentName, QueryMode Mode)
+		sol::object QueryComponent(sol::this_state s, const std::string& ComponentName, QueryMode Mode)
 		{
-			if (ComponentName == "TagComponent")		QueryComponentType<TagComponent>(Mode);
-			if (ComponentName == "TransformComponent")	QueryComponentType<TransformComponent>(Mode);
-			if (ComponentName == "RigidBodyComponent")	QueryComponentType<RigidBodyComponent>(Mode);
-			if (ComponentName == "SpriteComponent")		QueryComponentType<SpriteComponent>(Mode);
-			if (ComponentName == "CameraComponent")		QueryComponentType<CameraComponent>(Mode);
+			sol::state_view lua(s);
+
+			DefineQuery(TagComponent);
+			DefineQuery(TransformComponent);
+			DefineQuery(RigidBodyComponent);
+			DefineQuery(SpriteComponent);
+			DefineQuery(CameraComponent);
+
+			return sol::lua_nil;
 		}
 
 		std::string GetID() const { return LinkedEntity->GetID(); };

@@ -7,7 +7,7 @@
 namespace Techless
 {
 
-
+    /*
     struct Vector2
     {
         Vector2() = default;
@@ -47,5 +47,5 @@ namespace Techless
     {
         stream << vector.X << " " << vector.Y << " " << vector.Z;
         return stream;
-    }
+    }*/
 }

@@ -5,10 +5,12 @@
 #include <imgui/imgui.h>
 
 #include <engine/sprite/sprite_atlas.h>
+#include <engine/lua/script_environment.h>
+#include <render/renderer.h>
+
 #include <engine/watchdog/watchdog.h>
 #include <engine/input/input.h>
 
-#include <render/renderer.h>
 
 #include <lua.hpp>
 
@@ -46,6 +48,7 @@ namespace Techless {
 
         Renderer::Init();
         SpriteAtlas::Init();
+        ScriptEnvironment::Init();
 
         a_ImGuiLayer = new ImGuiLayer();
         Layers.PushOverlay(a_ImGuiLayer);

@@ -1,6 +1,5 @@
 #include "script_environment.h"
 
-#include <engine/maths/vector.hpp>
 #include <engine/watchdog/watchdog.h>
 
 #include <engine/entity/component/components.h>
@@ -27,10 +26,21 @@ c++ does:
 
 namespace Techless
 {
-	static const std::string AccessibleLibraries[8] = { "print", "warn", "error", "math", "coroutine", "string", "require", "assert" };
+	static const std::string AccessibleLibraries[10] = { "print", "warn", "error", "math", "coroutine", "string", "require", "assert", "tostring", "tonumber" };
 
 	std::unordered_map<std::string, sol::protected_function> ScriptEnvironment::CachedScripts{};
-	sol::state ScriptEnvironment::LuaVM;
+	sol::state ScriptEnvironment::LuaVM{};
+
+	sol::protected_function ScriptEnvironment::RegisterScene{};
+	sol::protected_function ScriptEnvironment::RegisterEntity{};
+
+	sol::protected_function ScriptEnvironment::DeregisterEntity{};
+	sol::protected_function ScriptEnvironment::DeregisterScene{};
+
+	sol::protected_function ScriptEnvironment::RegisterComponent{};
+	sol::protected_function ScriptEnvironment::DeregisterComponent{};
+
+	sol::protected_function ScriptEnvironment::GetEntityBinding{};
 
 	namespace ScriptEnvironmentLogger
 	{
@@ -73,6 +83,7 @@ namespace Techless
 			{
 				std::string Name = FsPath.stem().string();
 				CachedScripts[Name] = LuaVM.load_file(Path);
+				CachedScripts[Name].error_handler = LuaVM["error"];
 
 				Debug::Log("Loaded " + Path + " to " + Name, "ScriptAtlas");
 			}
@@ -85,37 +96,12 @@ namespace Techless
 		LuaVM.open_libraries(sol::lib::base, sol::lib::package, sol::lib::coroutine, sol::lib::string, sol::lib::math);
 
 		// to-do: make these binaries/combine them with source :)
-		LuaVM.require_file("SceneBinding", "assets/scripts/core/scene_binding.lua", true, sol::load_mode::text);
-		LuaVM.require_file("EntityBinding", "assets/scripts/core/entity_binding.lua", true, sol::load_mode::text);
+		LuaVM.require_file("SceneBinding", "assets/core_scripts/scene_binding.lua", true, sol::load_mode::text);
+		LuaVM.require_file("EntityBinding", "assets/core_scripts/entity_binding.lua", true, sol::load_mode::text);
 
-		LuaVM.safe_script_file("assets/scripts/core/environment.lua", &ScriptEnvironmentLogger::ScriptError);
-
-		RegisterScene = { LuaVM["RegisterScene"] , &ScriptEnvironmentLogger::ScriptError };
-		DeregisterScene = { LuaVM["DeregisterScene"] , &ScriptEnvironmentLogger::ScriptError };
-		
-		RegisterEntity = { LuaVM["RegisterEntity"] , &ScriptEnvironmentLogger::ScriptError };
-		DeregisterEntity = { LuaVM["DeregisterEntity"] , &ScriptEnvironmentLogger::ScriptError };
-
-		RegisterComponent = { LuaVM["RegisterComponent"] , &ScriptEnvironmentLogger::ScriptError };
-		DeregisterComponent = { LuaVM["DeregisterComponent"] , &ScriptEnvironmentLogger::ScriptError };
-
-		GetEntityBinding = { LuaVM["GetEntityBinding"] , &ScriptEnvironmentLogger::ScriptError };
-
-		// testing
-
-		sol::protected_function RegisterComponentType = LuaVM["RegisterComponentType"];
-
-		// [COMPONENT ASSIGNMENT]
-
-		RegisterComponentType(TYPEID_STRING(TagComponent), "TagComponent");
-		RegisterComponentType(TYPEID_STRING(TransformComponent), "TransformComponent");
-		RegisterComponentType(TYPEID_STRING(RigidBodyComponent), "RigidBodyComponent");
-		RegisterComponentType(TYPEID_STRING(SpriteComponent), "SpriteComponent");
-		RegisterComponentType(TYPEID_STRING(CameraComponent), "CameraComponent");
-
-		LuaVM.set_function("print", ScriptEnvironmentLogger::Log);
-		LuaVM.set_function("warn", ScriptEnvironmentLogger::Warn);
-		LuaVM.set_function("error", ScriptEnvironmentLogger::Error);
+		//LuaVM.set_function("print", ScriptEnvironmentLogger::Log);
+		//LuaVM.set_function("warn", ScriptEnvironmentLogger::Warn);
+		//LuaVM.set_function("error", ScriptEnvironmentLogger::Error);
 
 		LuaVM.new_enum<QueryMode>("QueryMode", {
 			{ "Add", QueryMode::Add },
@@ -205,6 +191,34 @@ namespace Techless
 				"GetViewportResolution", &CameraComponent::GetViewportResolution
 			);
 		}
+
+		sol::protected_function_result res = LuaVM.safe_script_file("assets/core_scripts/global_environment.lua");
+		sol::error err = res;
+
+		if (!res.valid()) Debug::Error(err.what(), "LuaCoreEnv");
+
+		sol::protected_function RegisterComponentType = { LuaVM["RegisterComponentType"] , LuaVM["error"] };
+		
+		// [COMPONENT ASSIGNMENT]
+
+		RegisterComponentType(TYPEID_STRING(TagComponent), "TagComponent");
+		RegisterComponentType(TYPEID_STRING(TransformComponent), "TransformComponent");
+		RegisterComponentType(TYPEID_STRING(RigidBodyComponent), "RigidBodyComponent");
+		RegisterComponentType(TYPEID_STRING(SpriteComponent), "SpriteComponent");
+		RegisterComponentType(TYPEID_STRING(CameraComponent), "CameraComponent");
+
+		RegisterScene = { LuaVM["RegisterScene"] , LuaVM["error"] };
+		DeregisterScene = { LuaVM["DeregisterScene"] , LuaVM["error"] };
+
+		RegisterEntity = { LuaVM["RegisterEntity"] , LuaVM["error"] };
+		DeregisterEntity = { LuaVM["DeregisterEntity"] , LuaVM["error"] };
+
+		RegisterComponent = { LuaVM["RegisterComponent"] , LuaVM["error"] };
+		DeregisterComponent = { LuaVM["DeregisterComponent"] , LuaVM["error"] };
+
+		GetEntityBinding = { LuaVM["GetEntityBinding"] , LuaVM["error"] };
+
+		Read("assets/scripts");
 	}
 
 	Ptr<sol::environment> ScriptEnvironment::Create(const std::string& Name, Entity* entity)
@@ -217,7 +231,7 @@ namespace Techless
 		for (const auto& entry : AccessibleLibraries)
 			Environment[entry] = LuaVM[entry];
 
-		sol::set_environment(Environment, CachedScripts[Name]);
+		Environment.set_on(CachedScripts[Name]);
 		CachedScripts[Name].call();
 
 		return NewEnvironment;

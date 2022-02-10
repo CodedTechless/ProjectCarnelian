@@ -14,12 +14,12 @@ namespace Techless
 
 	Scene::Scene()
 	{
-		ScriptEnvironment::RegisterScene(this);
+		ScriptEnvID = ScriptEnvironment::RegisterScene(this);
 	}
 
 	Scene::~Scene()
 	{
-		ScriptEnvironment::DeregisterScene(this);
+		ScriptEnvironment::DeregisterScene(ScriptEnvID);
 	}
 
 	Entity& Scene::CreateEntity(const std::string& TagName)
@@ -28,7 +28,7 @@ namespace Techless
 		std::string NewUUID = UUID::Generate();
 
 		auto& Ent = SceneRegistry.Add<Entity>(NewUUID, this, NewUUID);
-		ScriptEnvironment::RegisterEntity(this, &Ent);
+		ScriptEnvironment::RegisterEntity(ScriptEnvID, Ent);
 
 		Ent.AddComponent<TransformComponent>();
 
@@ -40,7 +40,7 @@ namespace Techless
 
 	void Scene::DestroyEntity(const std::string& EntityID)
 	{
-		ScriptEnvironment::DeregisterEntity(this, EntityID);
+		ScriptEnvironment::DeregisterEntity(*this, EntityID);
 
 		if (SceneRegistry.Has<ScriptComponent>(EntityID))
 		{
@@ -62,7 +62,7 @@ namespace Techless
 		for (const PrefabEntity& prefabEntity : prefab.Entities)
 		{
 			Entity& newEntity = SceneRegistry.Add<Entity>(prefabEntity.EntityID, this, prefabEntity.EntityID);
-			ScriptEnvironment::RegisterEntity(this, &newEntity);
+			ScriptEnvironment::RegisterEntity(ScriptEnvID, newEntity);
 
 			if (prefabEntity.IsRoot)
 				RootEntity = &newEntity;
