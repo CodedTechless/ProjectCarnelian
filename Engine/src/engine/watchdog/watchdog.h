@@ -7,6 +7,14 @@
 namespace Techless 
 {
 	
+	struct LogMessage
+	{
+		std::string Time;
+		std::string Type;
+		std::string Header;
+		std::string Contents;
+	};
+
 	class Debug
 	{
 	public:
@@ -18,8 +26,8 @@ namespace Techless
 
 		static void OpenGLMessage(const std::string& String, GLenum Source, GLenum Type, GLuint Id, GLenum Severity);
 
-		static std::vector<std::string>& GetMessageLog() { return MessageLog; };
+		static std::vector<LogMessage>& GetMessageLog() { return MessageLog; };
 	private:
-		static std::vector<std::string> MessageLog;
+		static std::vector<LogMessage> MessageLog;
 	};
 }

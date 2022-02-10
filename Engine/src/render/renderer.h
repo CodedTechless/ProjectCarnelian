@@ -34,10 +34,10 @@ namespace Techless {
 		static void InitOpenGL();
 
 		static void DrawQuad(const glm::vec3& Position, const glm::vec2& Scale, float Orientation = 1.f, const Colour& colour = {});
-		static void DrawSprite(const Ptr<Sprite> sprite, const glm::mat4& Transform, const Colour& colour = {});
-		static void DrawTexturedQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::mat4& Transform, const glm::vec4& Colour = {});
+		static void DrawSprite(Ptr<Sprite> sprite, const glm::mat4& Transform, const Colour& colour = {});
+		static void DrawTexturedQuad(Ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::mat4& Transform, const glm::vec4& Colour = {});
 
-		static void DrawQuadArray(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], Quad* QuadArray, unsigned int Count);
+		static void DrawQuadArray(Ptr<Texture> Tex, const glm::vec2 TexCoords[4], Quad* QuadArray, unsigned int Count);
 
 	public:
 		static void Begin(glm::mat4 Projection, glm::mat4 Transform, Ptr<Shader> shader = nullptr, Ptr<FrameBuffer> frameBuffer = nullptr);
@@ -55,7 +55,6 @@ namespace Techless {
 		static void ShowRuntimeStatsWindow();
 
 		static RendererDebug& GetDebugInfo() { return DebugInfo; };
-		static std::shared_ptr<Texture> GetDefaultTexture() { return DefaultTexture; };
 		static int GetMaxTextureSize() { return MaxTextureSize; };
 
 	private:

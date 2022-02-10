@@ -3,7 +3,7 @@
 
 namespace Techless
 {
-	std::vector<std::string> Debug::MessageLog = {};
+	std::vector<LogMessage> Debug::MessageLog = {};
 
 	std::string GetTimeAsString() {
 		const time_t TimeNow = time(nullptr);
@@ -33,10 +33,12 @@ namespace Techless
 		if (Header != "")
 			fHeader = "[" + Header + "]";
 
-		std::string Final = "[" + GetTimeAsString() + "][" + Type + "]" + fHeader + " " + String;
+		std::string TimeString = GetTimeAsString();
+
+		std::string Final = "[" + TimeString + "][" + Type + "]" + fHeader + " " + String;
 
 		std::cout << Final << std::endl;
-		MessageLog.push_back(Final);
+		MessageLog.push_back({ TimeString, Type, Header, String });
 	}
 
 	void Debug::Log(const std::string& String, const std::string& Header)
@@ -136,11 +138,18 @@ namespace Techless
 		default:
 			_severity = "INFO";
 		}
+		std::string Time = GetTimeAsString();
 		
-		std::string Final = "[" + GetTimeAsString() + "][" + _severity + "][" + _source + "][OpenGL] " + std::to_string(Id) + ": " + String;
+		std::string MessageString = "OpenGL Error " + std::to_string(Id) + ": " + String;
+		std::string Final = "[" + Time + "][" + _severity + "][" + _source + "] " + MessageString;
 
 		std::cout << Final << std::endl;
-		MessageLog.push_back(Final);
+		MessageLog.push_back({
+			Time,
+			_severity,
+			_source,
+			MessageString
+		});
 	}
 
 }

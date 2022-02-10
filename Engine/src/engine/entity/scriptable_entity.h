@@ -42,6 +42,11 @@ namespace Techless
 			return LinkedEntity->GetScene();
 		}
 
+		inline Entity* GetSelf() const 
+		{
+			return LinkedEntity;
+		}
+
 	protected:
 		virtual void OnCreate() {};
 		virtual void OnDestroy() {};
@@ -54,7 +59,7 @@ namespace Techless
 		virtual void OnWindowEvent(const WindowEvent& inputEvent) {};
 
 	private:
-		Entity* LinkedEntity;
+		Entity* LinkedEntity = nullptr;
 
 		friend struct ScriptComponent;
 		friend class Scene;

@@ -4,36 +4,32 @@
 namespace PrefabEditor
 {
 
-    void ExplorerPanel::SetSceneContext(Ptr<Scene> sceneContext)
+    void ExplorerPanel::SetSceneContext(Ptr<EditorScene> sceneContext)
     {
         SceneContext = sceneContext;
         Refresh();
     }
 
-    void ExplorerPanel::SetSelectedEntity(Entity& entity)
+    void ExplorerPanel::SetSelectedEntity(Entity* entity)
     {
-        SelectedEntity = &entity;
+        SceneContext->SelectedEntity = entity;
         Refresh();
     }
 
-    bool ExplorerPanel::RenderExplorerEntity(Entity* entity, const ExplorerIndex& explorerIndex)
+    bool ExplorerPanel::RenderExplorerEntity(Entity* entity)
     {
         if (!entity->Archivable)
             return false;
 
         bool RequiresRefresh = false;
 
-        ImGuiTreeNodeFlags node_flags = (SelectedEntity && SelectedEntity->GetID() == entity->GetID() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = (SceneContext->SelectedEntity && SceneContext->SelectedEntity->GetID() == entity->GetID() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 
-        TransformComponent& Transform = entity->GetComponent<TransformComponent>();
-        bool HasChildren = (explorerIndex.find(&Transform) != explorerIndex.end());
-
+        bool HasChildren = (ParentEntities.find(entity) != ParentEntities.end());
         if (!HasChildren)
         {
             node_flags |= ImGuiTreeNodeFlags_Leaf;
         }
-
-        std::string EntityID = entity->GetID();
 
         std::string Tag = entity->GetComponent<TagComponent>().Name;
         bool Opened = ImGui::TreeNodeEx(entity->GetID().c_str(), node_flags, Tag.c_str());
@@ -42,9 +38,10 @@ namespace PrefabEditor
         {
             ImGui::Text(Tag.c_str());
 
-            const char* CharEntityID = EntityID.c_str();
+            std::string EntityID = entity->GetID();
+            const char* c_EntityID = EntityID.c_str();
 
-            ImGui::SetDragDropPayload("RE_PARENTING", (void*)CharEntityID, (EntityID.length() + 1) * sizeof(char) );
+            ImGui::SetDragDropPayload("RE_PARENTING", c_EntityID, (EntityID.length() * sizeof(char)) + 1);
             ImGui::EndDragDropSource();
         }
 
@@ -54,24 +51,20 @@ namespace PrefabEditor
 
             if (Payload)
             {
-                std::string DeliveryEntityID = (const char*)Payload->Data;
+                const std::string DeliveryEntityID = (const char*)Payload->Data;
 
-                if (DeliveryEntityID != EntityID)
+
+                if (DeliveryEntityID != entity->GetID())
                 {
-                    auto Transforms = SceneContext->GetInstances<TransformComponent>();
+                    Entity& DeliveryEntity = SceneContext->LinkedScene->GetInstanceByID<Entity>(DeliveryEntityID);
+                    DeliveryEntity.SetParent(entity);
 
-                    if (Transforms->Has(DeliveryEntityID))
-                    {
-                        TransformComponent& otherTransform = Transforms->Get(DeliveryEntityID);
-                        bool Success = otherTransform.SetParent(&Transform);
+                    if (DeliveryEntity.GetParent() == entity)
+                        Debug::Log("Set parent of " + DeliveryEntity.GetID() + " to " + entity->GetID(), "PrefabEditor");
+                    else
+                        Debug::Log("Unable to set parent.", "PrefabEditor");
 
-                        if (Success)
-                            Debug::Log("Set parent of " + DeliveryEntityID + " to " + EntityID, "PrefabEditor");
-                        else
-                            Debug::Log("Couldn't set parent.", "PrefabEditor");
-
-                        RequiresRefresh = true;
-                    }
+                    RequiresRefresh = true;
                 }
             }
 
@@ -80,16 +73,16 @@ namespace PrefabEditor
 
         if (ImGui::IsItemClicked())
         {
-            SelectedEntity = entity;
+            SceneContext->SelectedEntity = entity;
         }
 
         if (Opened)
         {
             if (HasChildren)
             {
-                for (Entity* f_Entity : explorerIndex.at(&Transform))
+                for (Entity* f_Entity : ParentEntities.at(entity))
                 {
-                    auto NextRequiresRefresh = RenderExplorerEntity(f_Entity, explorerIndex);
+                    auto NextRequiresRefresh = RenderExplorerEntity(f_Entity);
 
                     if (NextRequiresRefresh)
                         RequiresRefresh = true;
@@ -109,36 +102,11 @@ namespace PrefabEditor
 
         if (SceneContext)
         {
-            if (ImGui::BeginDragDropTarget())
-            {
-                const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload("RE_PARENTING");
-
-                Debug::Log("markiplier eat poopoo and caca");
-
-                if (Payload)
-                {
-                    std::string DeliveryEntityID = (const char*)Payload->Data;
-
-                    auto Transforms = SceneContext->GetInstances<TransformComponent>();
-                    if (Transforms->Has(DeliveryEntityID))
-                    {
-                        TransformComponent& otherTransform = Transforms->Get(DeliveryEntityID);
-                        otherTransform.SetParent(nullptr);
-
-                        Debug::Log("Set parent to nullptr for " + DeliveryEntityID, "PrefabEditor");
-
-                        Refresh();
-                    }
-                }
-
-                ImGui::EndDragDropTarget();
-            }
-
             bool FullRefresh = false;
 
             for (Entity* entity : TopLevelEntities)
             {
-                bool RequiresRefresh = RenderExplorerEntity(entity, ParentEntities);
+                bool RequiresRefresh = RenderExplorerEntity(entity);
 
                 if (RequiresRefresh)
                     FullRefresh = true;
@@ -147,28 +115,26 @@ namespace PrefabEditor
             if (FullRefresh)
                 Refresh();
             
-        }
-
-        if (ImGui::BeginPopupContextWindow())
-        {
-            if (ImGui::MenuItem("Delete"))
+            if (ImGui::BeginPopupContextWindow())
             {
-                SceneContext->DestroyEntity(SelectedEntity->GetID());
-                
-                SelectedEntity = nullptr;
-                Refresh();
-            }
+                if (ImGui::MenuItem("Delete"))
+                {
+                    SceneContext->SelectedEntity->Destroy();
+                    SceneContext->SelectedEntity = nullptr;
 
-            ImGui::EndPopup();
+                    Refresh();
+                }
+
+                ImGui::EndPopup();
+            }
         }
 
         ImGui::End();
 
         ImGui::Begin("Properties");
 
-        if (SelectedEntity)
+        if (SceneContext && SceneContext->SelectedEntity)
             RenderProperties();
-
 
         ImGui::End();
 	}
@@ -178,28 +144,26 @@ namespace PrefabEditor
         TopLevelEntities.clear();
         ParentEntities.clear();
 
-        auto Entities = SceneContext->GetInstances<Entity>();
-        auto Transforms = SceneContext->GetInstances<TransformComponent>();
+        auto Entities = SceneContext->LinkedScene->GetInstances<Entity>();
 
         int i = 0;
-        for (auto& transform : *Transforms)
+        for (Entity& entity : *Entities)
         {
-            TransformComponent* Parent = transform.GetParent();
+            Entity* Parent = entity.GetParent();
 
-            Entity* Entity = &Entities->Get(Transforms->GetIDAtIndex(i++));
             if (Parent == nullptr)
-                TopLevelEntities.emplace_back(Entity);
+                TopLevelEntities.emplace_back(&entity);
             else
-                ParentEntities[Parent].emplace_back(Entity);
+                ParentEntities[Parent].emplace_back(&entity);
         }
     }
 
     template<typename Component, typename PropertyFunction>
-    static void RenderComponentProperties(const char* Title, Entity& entity, PropertyFunction propertyFunction)
+    static void RenderComponentProperties(const char* Title, Entity* entity, PropertyFunction propertyFunction)
     {
-        if (entity.HasComponent<Component>())
+        if (entity->HasComponent<Component>())
         {
-            auto& component = entity.GetComponent<Component>();
+            auto& component = entity->GetComponent<Component>();
             
             bool Open = ImGui::TreeNodeEx(Title, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding);
 
@@ -229,14 +193,33 @@ namespace PrefabEditor
 
     void ExplorerPanel::RenderProperties()
     {
-        ImGui::Text(SelectedEntity->GetComponent<TagComponent>().Name.c_str());
+        ImGui::Text(SceneContext->SelectedEntity->GetComponent<TagComponent>().Name.c_str());
         ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 1.f, 1.f, 0.5f });
-        ImGui::Text(SelectedEntity->GetID().c_str());
+        ImGui::Text(SceneContext->SelectedEntity->GetID().c_str());
         ImGui::PopStyleColor();
+
+        char buf[50] = {};
+
+        if (SceneContext->SelectedEntity->GetParent() == nullptr)
+            strcpy_s(buf, "None");
+        else
+        {
+            auto* Parent = SceneContext->SelectedEntity->GetParent();
+            strcpy_s(buf, Parent->GetComponent<TagComponent>().Name.c_str());
+        }
+
+        ImGui::PushItemWidth(150.f);
+        ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 1.f, 1.f, 0.5f });
+        ImGui::InputText("##parent", buf, 50, ImGuiInputTextFlags_ReadOnly);
+        ImGui::PopStyleColor();
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+        ImGui::Text("Parent");
 
         ImGui::Separator();
 
-        RenderComponentProperties<TagComponent>("Tag", *SelectedEntity,
+        RenderComponentProperties<TagComponent>("Tag", SceneContext->SelectedEntity,
             [](TagComponent& Component)
             {
                 char buf[50] = {};
@@ -252,7 +235,7 @@ namespace PrefabEditor
                 Component.Name = buf;
             });
 
-        RenderComponentProperties<TransformComponent>("Transform", *SelectedEntity,
+        RenderComponentProperties<TransformComponent>("Transform", SceneContext->SelectedEntity,
             [this](TransformComponent& Component)
             {
 
@@ -294,29 +277,22 @@ namespace PrefabEditor
 
                 //
 
-                char buf[50] = {};
 
-                ImGui::PushItemWidth(120.f);
-                ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 1.f, 1.f, 0.5f });
-                ImGui::InputText("##parent", buf, 50, ImGuiInputTextFlags_ReadOnly);
-                ImGui::PopStyleColor();
-                ImGui::PopItemWidth();
-
-                ImGui::SameLine(0.f, 0.f);
-                if (ImGui::Button("C"))
-                {
-                    Component.SetParent(nullptr);
-                    this->Refresh();
-                }
-                
-                ImGui::SameLine();
-                ImGui::Text("Parent");
             });
 
-        RenderComponentProperties<SpriteComponent>("Sprite", *SelectedEntity,
+        RenderComponentProperties<SpriteComponent>("Sprite", SceneContext->SelectedEntity,
             [](SpriteComponent& Component)
             {
                 char buf[50] = {};
+
+                Ptr<Sprite> sprite = Component.GetSprite();
+                if (!sprite)
+                    strcpy_s(buf, "None");
+                else
+                {
+                    std::string SpriteName = sprite->GetName();
+                    strcpy_s(buf, SpriteName.c_str());
+                }
 
                 ImGui::PushItemWidth(150.f);
                 ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 1.f, 1.f, 0.5f });
@@ -326,11 +302,13 @@ namespace PrefabEditor
 
                 if (ImGui::BeginDragDropTarget())
                 {
-                    const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload("SPRITE_ENTRY");
+                    const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload("SPRITE_ASSET_DRAG");
 
                     if (Payload)
                     {
-
+                        const std::string SpriteName = (const char*)Payload->Data;
+                        
+                        Component.SetSprite(SpriteName);
                     }
 
                     ImGui::EndDragDropTarget();
@@ -355,16 +333,16 @@ namespace PrefabEditor
                 Component.SpriteColour.A = col[3];
             });
 
-        RenderComponentProperties<CameraComponent>("Camera", *SelectedEntity,
+        RenderComponentProperties<CameraComponent>("Camera", SceneContext->SelectedEntity,
             [](CameraComponent& Component)
             {
 
             });
 
-        RenderComponentProperties<ScriptComponent>("Script", *SelectedEntity,
-            [](ScriptComponent& Component)
+        RenderComponentProperties<LuaScriptComponent>("Lua Script", SceneContext->SelectedEntity,
+            [](LuaScriptComponent& Component)
             {
-
+                
             });
 
         auto WindowWidth = ImGui::GetWindowSize().x;
@@ -393,7 +371,8 @@ namespace PrefabEditor
 
             ImGui::Separator();
 
-            CreateMenuEntry<ScriptComponent>("Script");
+            //CreateMenuEntry<ScriptComponent>("Script");
+            CreateMenuEntry<LuaScriptComponent>("Lua Script");
 
             ImGui::EndPopup();
         }

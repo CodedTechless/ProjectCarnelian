@@ -176,7 +176,7 @@ namespace Techless {
 		DrawTexturedQuad(RendererData.ActiveTextures[0], TexCoords, Transform, colour);
 	}
 
-	void Renderer::DrawSprite(const Ptr<Sprite> sprite, const glm::mat4& Transform, const Colour& colour)
+	void Renderer::DrawSprite(Ptr<Sprite> sprite, const glm::mat4& Transform, const Colour& colour)
 	{
 		auto texture = sprite->GetTexture();
 		auto SpriteBounds = sprite->GetAbsoluteBounds();
@@ -190,7 +190,7 @@ namespace Techless {
 	}
 
 	// Draw a quad using matricies
-	void Renderer::DrawTexturedQuad(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::mat4& Transform, const glm::vec4& Colour)
+	void Renderer::DrawTexturedQuad(Ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::mat4& Transform, const glm::vec4& Colour)
 	{
 		if (RendererData.CurrentVertexIndex >= RendererDataSet::MaxInds)
 		{
@@ -233,7 +233,7 @@ namespace Techless {
 		RendererData.CurrentVertexIndex += 6;
 	}
 
-	void Renderer::DrawQuadArray(const std::shared_ptr<Texture> Tex, const glm::vec2 TexCoords[4], Quad* QuadArray, unsigned int Count)
+	void Renderer::DrawQuadArray(Ptr<Texture> Tex, const glm::vec2 TexCoords[4], Quad* QuadArray, unsigned int Count)
 	{
 		if (RendererData.CurrentVertexIndex >= RendererDataSet::MaxInds)
 		{

@@ -1,6 +1,4 @@
 
-#include <Engine.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 
@@ -14,30 +12,49 @@ namespace PrefabEditor {
 
 	void Editor::OnCreated()
 	{
-        ActiveScene = CreatePtr<Scene>();
-
-
-        auto& SceneCamera = ActiveScene->CreateEntity("techless_EditorCamera");
-        SceneCamera.AddComponent<CameraComponent>();
-        SceneCamera.Archivable = false;
-
-        auto& Script = SceneCamera.AddComponent<ScriptComponent>();
-        ActiveCameraScript = Script.Bind<NativeScript::Core::Camera>(SceneCamera);
-
-        ActiveScene->SetActiveCamera(SceneCamera);
-        
         FrameBufferSpecification FSpec;
         FSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth };
         FSpec.Size = { 128, 72 };
         ActiveFrameBuffer = CreatePtr<FrameBuffer>(FSpec);
 
-        EditorExplorer.SetSceneContext(ActiveScene);
-        EditorExplorer.Refresh();
+        CreateScene("New Prefab");
+        SetScene("New Prefab");
+    }
+    
+    void Editor::CreateScene(const std::string& SceneName, Prefab* LoadWithPrefab)
+    {
+        for (auto& scene : Scenes)
+        {
+            if (scene->SceneName == SceneName)
+            {
+                Debug::Log("Scene with name " + SceneName + " already exists.", "PrefabEditor");
+                return;
+            }
+        }
+
+        auto NewScene = CreatePtr<EditorScene >( SceneName, LoadWithPrefab );
+        NewScene->ActiveCameraScript->OnWindowEvent({ ViewportSize });
+        
+        Scenes.push_back(NewScene);
+    }
+
+    void Editor::SetScene(const std::string& SceneName)
+    {
+        for (auto& scene : Scenes)
+        {
+            if (scene->SceneName == SceneName)
+            {
+                ActiveEditorScene = scene;
+                EditorExplorer.SetSceneContext(ActiveEditorScene);
+
+                Debug::Log("Changed scene to " + SceneName, "PrefabEditor");
+            }
+        }
     }
 
     void Editor::OnUpdateFixed(const float& Delta)
     {
-        ActiveCameraScript->OnFixedUpdate(Delta);
+        ActiveEditorScene->ActiveCameraScript->OnFixedUpdate(Delta);
 
         FixedUpdateRate = Delta;
     }
@@ -49,16 +66,18 @@ namespace PrefabEditor {
             and (ViewportSize.x > 0 and ViewportSize.y > 0))
         {
             ActiveFrameBuffer->Resize(ViewportSize);
-            ActiveCameraScript->OnWindowEvent({ ViewportSize });
+
+            for (auto& scene : Scenes)
+                scene->ActiveCameraScript->OnWindowEvent({ ViewportSize });
         }
 
-        ActiveCameraScript->OnUpdate(Delta);
+        ActiveEditorScene->ActiveCameraScript->OnUpdate(Delta);
 
         ActiveFrameBuffer->Bind();
         Renderer::SetClearColour({ 0.1f, 0.1f, 0.1f, 1.f });
         Renderer::Clear();
 
-        ActiveScene->Update(Delta, false);
+        ActiveEditorScene->LinkedScene->Update(Delta, false);
         ActiveFrameBuffer->Unbind();
         
         UpdateRate = Delta;
@@ -96,17 +115,26 @@ namespace PrefabEditor {
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
+                if (ImGui::MenuItem("New")) 
+                { 
+                    CreateScene("new " + std::to_string(++NewScenes)); 
+                };
+                
                 if (ImGui::MenuItem("Save", "Ctrl+S")) 
                 {
-                    ActiveScene->Serialise("assets/prefabs/" + PrefabName + ".prefab");
+                    ActiveEditorScene->Save();
+                    EditorAssetManager.RefreshPrefabs();
 
                     Debug::Log("Saved prefab!", "PrefabEditor");
                 }
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Close", "Ctrl+W", nullptr, false)) {}
+                if (ImGui::MenuItem("Close", "Ctrl+W", nullptr, false))
+                {
+
+                };
+
                 ImGui::EndMenu();
             }
 
@@ -114,12 +142,10 @@ namespace PrefabEditor {
             {
                 if (ImGui::MenuItem("Create Entity")) 
                 {
-                    auto& Entity = ActiveScene->CreateEntity();
+                    auto& Entity = ActiveEditorScene->LinkedScene->CreateEntity();
+                    Entity.SetParent(ActiveEditorScene->SceneRoot);
 
-                    auto& c_Sprite = Entity.AddComponent<SpriteComponent>();
-                    c_Sprite.SetSprite("checkers");
-
-                    EditorExplorer.SetSelectedEntity(Entity);
+                    EditorExplorer.SetSelectedEntity(&Entity);
                 }
 
                 ImGui::EndMenu();
@@ -134,14 +160,50 @@ namespace PrefabEditor {
         ImGui::Begin("Viewport");
 
         {
+            ImGui::BeginTabBar("##scene selector", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable);
+
+            for (auto& scene : Scenes)
+            {
+                if (ImGui::BeginTabItem(scene->SceneName.c_str(), nullptr, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton))
+                {
+                    if (ActiveEditorScene->SceneName != scene->SceneName)
+                        SetScene(scene->SceneName);
+                    
+                    ImGui::EndTabItem();
+                }
+            }
+
+            ImGui::EndTabBar();
+        }
+
+        {
             ViewportFocused = ImGui::IsWindowFocused() && ImGui::IsWindowHovered();
-            ActiveCameraScript->AcceptingInput = ImGui::IsWindowFocused();
+            ActiveEditorScene->ActiveCameraScript->AcceptingInput = ImGui::IsWindowFocused();
 
             ImVec2 Region = ImGui::GetContentRegionAvail();
             ViewportSize = { Region.x, Region.y };
 
+            ImGui::PushID("ViewportDropZone");
+
             uint32_t rID = ActiveFrameBuffer->GetColourAttachmentRendererID();
             ImGui::Image((ImTextureID)rID, ImVec2{ (float)ViewportSize.x, (float)ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+        
+            if (ImGui::BeginDragDropTarget())
+            {
+                const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload("PREFAB_ASSET_DRAG");
+
+                if (Payload)
+                {
+                    PrefabFileItem* PrefabFileItemData = static_cast<PrefabFileItem*>(Payload->Data);
+
+                    auto& Prefab = PrefabAtlas::Get(PrefabFileItemData->FilePath);
+                    CreateScene(PrefabFileItemData->FileName, &Prefab);
+                }
+
+                ImGui::EndDragDropTarget();
+            }
+
+            ImGui::PopID();
         }
 
         ImGui::End();
@@ -152,11 +214,11 @@ namespace PrefabEditor {
 
         {
             char buf[50] = {};
-            strcpy_s(buf, PrefabName.c_str());
+            strcpy_s(buf, ActiveEditorScene->SceneName.c_str());
 
             ImGui::InputText("Prefab Name", buf, 50);
 
-            PrefabName = buf;
+            ActiveEditorScene->SceneName = buf;
         }
 
         ImGui::End();
@@ -172,7 +234,7 @@ namespace PrefabEditor {
     Input::Filter Editor::OnInputEvent(const InputEvent& inputEvent, bool Processed)
     {
         if (ViewportFocused)
-            return ActiveCameraScript->OnInputEvent(inputEvent, Processed);
+            return ActiveEditorScene->ActiveCameraScript->OnInputEvent(inputEvent, Processed);
     
         return Input::Filter::Ignore;
     }

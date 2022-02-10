@@ -13,6 +13,9 @@
 // sprites
 #include <engine/sprite/sprite_atlas.h>
 
+// prefabs
+#include <engine/entity/prefabs/prefab_atlas.h>
+
 // scenes and entities
 #include <engine/entity/scene.h>
 #include <engine/entity/entity.h>

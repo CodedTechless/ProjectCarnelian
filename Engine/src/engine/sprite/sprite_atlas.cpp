@@ -11,12 +11,11 @@ namespace fs = std::filesystem;
 
 namespace Techless
 {
-
-	
-	std::unordered_map<std::string, std::shared_ptr<Sprite>> SpriteAtlas::SpriteCache{};
+	std::unordered_map<std::string, Ptr<Sprite>> SpriteAtlas::SpriteCache{};
 	std::array<Ptr<Texture>, 8> SpriteAtlas::TexturePages{};
 
-	Ptr<Sprite> SpriteAtlas::MissingTexture = nullptr;
+	Ptr<Texture> SpriteAtlas::MissingTexture = nullptr;
+	Ptr<Sprite> SpriteAtlas::MissingSprite = nullptr;
 
 	unsigned int SpriteAtlas::TexturePageIndex = 0;
 
@@ -74,8 +73,8 @@ namespace Techless
 	{
 		Debug::Log("Loading textures...", "SpriteAtlas");
 
-		auto MissingTextureTex = CreatePtr<Texture>("assets/missing_texture.png");
-		MissingTexture = CreatePtr<Sprite>(MissingTextureTex);
+		MissingTexture = CreatePtr<Texture>( "assets/missing_texture.png" );
+		MissingSprite = CreatePtr<Sprite>( MissingTexture );
 
 		std::vector<TextureInfo> Textures;
 		Read(Textures, "assets/textures");
@@ -88,7 +87,7 @@ namespace Techless
 			auto* PageBuffer = AllocateBuffer(MaxTextureSize);
 			Debug::Log("Allocated a " + std::to_string(MaxTextureSize) + "x" + std::to_string(MaxTextureSize) + " texture page (" + std::to_string(MaxTextureSize * MaxTextureSize * 4) + " bytes)", "SpriteAtlas");
 
-			auto TextureCount = Textures.size();
+			size_t TextureCount = Textures.size();
 
 			stbrp_context NewContext;
 			stbrp_rect* Rects = new stbrp_rect[TextureCount];
@@ -108,12 +107,12 @@ namespace Techless
 			stbrp_init_target(&NewContext, MaxTextureSize, MaxTextureSize, Nodes, TextureCount);
 			Success = stbrp_pack_rects(&NewContext, Rects, TextureCount);
 
-			Ptr<Texture> newTexture = CreatePtr<Texture>(glm::i32vec2(MaxTextureSize, MaxTextureSize), 4);
+			auto newTexture = CreatePtr<Texture>(glm::i32vec2(MaxTextureSize, MaxTextureSize), 4);
 			TexturePages[TexturePageIndex++] = newTexture;
 
-			for (auto& textureInfo : Textures)
+			for (TextureInfo& textureInfo : Textures)
 			{
-				auto& Rect = *textureInfo.Rect;
+				stbrp_rect& Rect = *textureInfo.Rect;
 				
 				if (Rect.was_packed)
 				{
@@ -134,8 +133,7 @@ namespace Techless
 					auto TopLeft = glm::vec2((float)Rect.x, (float)Rect.y);
 					auto BottomRight = glm::vec2((float)(Rect.x + Rect.w), (float)(Rect.y + Rect.h));
 
-					Ptr<Sprite> newSprite = CreatePtr<Sprite>(newTexture, TopLeft, BottomRight, textureInfo.Name);
-					SpriteCache[textureInfo.Name] = newSprite;
+					SpriteCache[textureInfo.Name] = CreatePtr<Sprite>( newTexture, TopLeft, BottomRight, textureInfo.Name );
 
 					stbi_image_free(textureInfo.Buffer);
 					textureInfo.Packed = true;
@@ -143,15 +141,17 @@ namespace Techless
 			}
 
 			newTexture->Push(PageBuffer);
+			TexturePageIndex++;
+
 			delete[] PageBuffer;
 		}
 	}
 
-	std::shared_ptr<Sprite> SpriteAtlas::Get(const std::string& Name)
+	Ptr<Sprite> SpriteAtlas::Get(const std::string& Name)
 	{
 		if (SpriteCache.find(Name) != SpriteCache.end())
 			return SpriteCache[Name];
 		
-		return MissingTexture;
+		return MissingSprite;
 	}
 }

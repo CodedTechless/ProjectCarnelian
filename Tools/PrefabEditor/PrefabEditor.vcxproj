@@ -77,22 +77,24 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\glew-2.1.0\lib\Release\x64;$(SolutionDir)Dependencies\GLFW\lib-vc2019;$(SolutionDir)lib\Release</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\glew-2.1.0\lib\Release\x64;$(SolutionDir)Dependencies\GLFW\lib-vc2019;$(SolutionDir)Dependencies\lua-5.4.2;$(SolutionDir)lib\Release</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\app\application\application.hpp" />
     <ClInclude Include="src\app\layers\editor.h" />
-    <ClInclude Include="src\app\layers\editor_panels\asset_manager.h" />
-    <ClInclude Include="src\app\layers\editor_panels\explorer.h" />
+    <ClInclude Include="src\editor_panels\asset_manager.h" />
+    <ClInclude Include="src\editor_panels\explorer.h" />
+    <ClInclude Include="src\editor_scene\editor_scene.h" />
     <ClInclude Include="src\scriptindex.h" />
     <ClInclude Include="src\scripts\camera\camera.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app\entry.cpp" />
     <ClCompile Include="src\app\layers\editor.cpp" />
-    <ClCompile Include="src\app\layers\editor_panels\asset_manager.cpp" />
-    <ClCompile Include="src\app\layers\editor_panels\explorer.cpp" />
+    <ClCompile Include="src\editor_panels\asset_manager.cpp" />
+    <ClCompile Include="src\editor_panels\explorer.cpp" />
+    <ClCompile Include="src\editor_scene\editor_scene.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

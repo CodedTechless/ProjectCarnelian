@@ -2,18 +2,34 @@
 
 #include <engine/entity/component/components.h>
 #include <engine/entity/entity.h>
+#include <engine/entity/prefabs/prefab.h>
 #include <uuid/uuid.hpp>
+
+#include <engine/lua/script_environment.h>
 
 #include <render/renderer.h>
 
 namespace Techless
 {
 
+	Scene::Scene()
+	{
+		ScriptEnvironment::RegisterScene(this);
+	}
+
+	Scene::~Scene()
+	{
+		ScriptEnvironment::DeregisterScene(this);
+	}
+
 	Entity& Scene::CreateEntity(const std::string& TagName)
 	{
+
 		std::string NewUUID = UUID::Generate();
 
 		auto& Ent = SceneRegistry.Add<Entity>(NewUUID, this, NewUUID);
+		ScriptEnvironment::RegisterEntity(this, &Ent);
+
 		Ent.AddComponent<TransformComponent>();
 
 		auto& Tag = Ent.AddComponent<TagComponent>();
@@ -24,24 +40,59 @@ namespace Techless
 
 	void Scene::DestroyEntity(const std::string& EntityID)
 	{
+		ScriptEnvironment::DeregisterEntity(this, EntityID);
+
 		if (SceneRegistry.Has<ScriptComponent>(EntityID))
 		{
 			auto& Script = SceneRegistry.Get<ScriptComponent>(EntityID);
 			Script.Instance->OnDestroy();
 		}
 
-		SceneRegistry.Remove<Entity>(EntityID);
+		SceneRegistry.Clear(EntityID);
 	}
 
-	Entity& Scene::Instantiate(const Prefab& prefab)
+	Entity& Scene::Instantiate(Prefab& prefab)
 	{
+		// to-do: add some sort of checklist for colliding uuids?!?! hello??
+		// the chances are HORRIFICALLY LOW for a collision, but "HORRIFICALLY LOW" =/= none!!
+		
+		Entity* RootEntity = nullptr;
 
+		// Create all the prefab entities with their respective ID's
+		for (const PrefabEntity& prefabEntity : prefab.Entities)
+		{
+			Entity& newEntity = SceneRegistry.Add<Entity>(prefabEntity.EntityID, this, prefabEntity.EntityID);
+			ScriptEnvironment::RegisterEntity(this, &newEntity);
+
+			if (prefabEntity.IsRoot)
+				RootEntity = &newEntity;
+		}
+
+		// Set all of the parents of the prefab object
+		auto Entities = SceneRegistry.GetRegistrySet<Entity>();
+		for (const PrefabEntity& prefabEntity : prefab.Entities)
+		{
+			Entity& newEntity = Entities->Get(prefabEntity.EntityID);
+
+			if (prefabEntity.ParentEntityID != "")
+				newEntity.SetParent(&Entities->Get(prefabEntity.ParentEntityID));
+		}
+
+		// [COMPONENT ASSIGNMENT]
+		// Assign all of the relevant components!
+		AssignPrefabComponents<TagComponent>		(prefab);
+		AssignPrefabComponents<TransformComponent>	(prefab);
+		AssignPrefabComponents<RigidBodyComponent>	(prefab);
+		AssignPrefabComponents<SpriteComponent>		(prefab);
+		AssignPrefabComponents<CameraComponent>		(prefab);
+
+		return *RootEntity;
 	}
 
 	Input::Filter Scene::OnInputEvent(const InputEvent& inputEvent, bool Processed)
 	{
 		/*
-			to-do:
+			to-do: (list)
 			 - make it so inputs propagate from positive to negative depths
 			 - do it efficiently (don't sort on z-depth every input because that's really fucking inefficient bitch)
 		*/
@@ -129,7 +180,8 @@ namespace Techless
 				auto& Transform = TransformComponents->Get(EntityID);
 
 				auto aSprite = Sprite.GetSprite();
-				Renderer::DrawSprite(aSprite, Transform.GetGlobalTransform(), Sprite.SpriteColour);
+				if (aSprite)
+					Renderer::DrawSprite(aSprite, Transform.GetGlobalTransform(), Sprite.SpriteColour);
 
 				++i;
 			}
@@ -138,9 +190,26 @@ namespace Techless
 		Renderer::End();
 	}
 
-	void Scene::Serialise(const std::string& FilePath)
+	static void PushSerialisedChildren(JSON& j_Entities, std::unordered_map<std::string, bool>& ArchivableIndex, const Entity& entity)
+	{
+		if (!entity.Archivable)
+			return;
+		
+		ArchivableIndex[entity.GetID()] = true;
+		j_Entities += entity;
+		
+		for (Entity* child : entity.GetChildren())
+		{
+			PushSerialisedChildren(j_Entities, ArchivableIndex, *child);
+		}
+	}
+
+	void Scene::Serialise(const std::string& FilePath, const Entity& RootEntity)
 	{
 		JSON j_SerialisedScene = {
+			{"Scene", {
+				{"RootEntityID", RootEntity.GetID()}
+			}},
 			{"Entities", JSON::array()},
 			{"Components", JSON::object()}
 		};
@@ -150,22 +219,19 @@ namespace Techless
 
 		std::unordered_map<std::string, bool> ArchivableIndex = {};
 
-		auto Entities = SceneRegistry.GetRegistrySet<Entity>();
-		for (auto& entity : *Entities)
-		{
-			ArchivableIndex[entity.GetID()] = entity.Archivable;
+		PushSerialisedChildren(j_Entities, ArchivableIndex, RootEntity);
 
-			if (!entity.Archivable)
-				continue;
+		// to-do: make this system better in some way (combine pull/push?)
+		// this works for now :)
+		// would be nice if i didnt have to assign component types in three different locations but yknoww, it's cooool-
 
-			j_Entities += entity;
-		}
+		// [COMPONENT ASSIGNMENT]
 
 		PushSerialisedComponent <TagComponent>			(j_Components, ArchivableIndex, "Tag");
 		PushSerialisedComponent <TransformComponent>	(j_Components, ArchivableIndex, "Transform");
 		PushSerialisedComponent <RigidBodyComponent>	(j_Components, ArchivableIndex, "RigidBody");
 		PushSerialisedComponent <SpriteComponent>		(j_Components, ArchivableIndex, "Sprite");
-//		PushSerialisedComponent <AnimatorComponent>		(j_Components, ArchivableIndex, "Animator");
+//		PushSerialisedComponent <AnimatorComponent>		(j_Components, ArchivableIndex);
 		PushSerialisedComponent <CameraComponent>		(j_Components, ArchivableIndex, "Camera");
 
 		std::ofstream o(FilePath);

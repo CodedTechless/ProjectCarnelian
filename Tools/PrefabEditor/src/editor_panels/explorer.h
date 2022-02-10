@@ -2,28 +2,25 @@
 
 #include <imgui/imgui.h>
 
-#include <engine/entity/scene.h>
-#include <engine/entity/entity.h>
-#include <engine/entity/component/components.h>
+#include <editor_scene/editor_scene.h>
 
-#include <engineincl.h>
 #include <Engine.h>
 
 using namespace Techless;
 
 namespace PrefabEditor
 {
-	typedef std::unordered_map<TransformComponent*, std::vector<Entity*>> ExplorerIndex;
+	typedef std::unordered_map<Entity*, std::vector<Entity*>> ExplorerIndex;
 
 	class ExplorerPanel
 	{
 	public:
 		ExplorerPanel() = default;
 		
-		void SetSceneContext(Ptr<Scene> sceneContext);
-		void SetSelectedEntity(Entity& entity);
+		void SetSceneContext(Ptr<EditorScene> sceneContext);
+		void SetSelectedEntity(Entity* entity);
 
-		inline Ptr<Scene> GetSceneContext() const { return SceneContext; };
+		inline Ptr<EditorScene> GetSceneContext() const { return SceneContext; };
 
 		void RenderImGuiElements();
 		void RenderProperties();
@@ -36,9 +33,9 @@ namespace PrefabEditor
 		{
 			if (ImGui::MenuItem(Text))
 			{
-				if (!SelectedEntity->HasComponent<Component>())
+				if (!SceneContext->SelectedEntity->HasComponent<Component>())
 				{
-					SelectedEntity->AddComponent<Component>();
+					SceneContext->SelectedEntity->AddComponent<Component>();
 					Debug::Log("Added a " + std::string(typeid(Component).name()) + " to entity.", "PrefabEditor");
 				}
 				else
@@ -50,11 +47,10 @@ namespace PrefabEditor
 			}
 		}
 
-		bool RenderExplorerEntity(Entity* entity, const ExplorerIndex& explorerIndex);
+		bool RenderExplorerEntity(Entity* entity);
 	
 	private:
-		Ptr<Scene> SceneContext;
-		Entity* SelectedEntity;
+		Ptr<EditorScene> SceneContext;
 
 		std::vector<Entity*> TopLevelEntities = {};
 		ExplorerIndex ParentEntities = {};

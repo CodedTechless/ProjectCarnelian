@@ -27,9 +27,6 @@
     <ClInclude Include="src\app\native_scripts\scriptindex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\app\native_scripts\player\player.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app\layers\core.cpp">
@@ -38,5 +35,15 @@
     <ClCompile Include="src\app\entry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="assets\scripts\core\entity_environment.lua">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\scripts\example.lua" />
+    <None Include="assets\scripts\core\scene.lua" />
+    <None Include="assets\scripts\core\entity.lua" />
+    <None Include="assets\scripts\core\global_environment.lua" />
+    <None Include="assets\scripts\core\debug.lua" />
   </ItemGroup>
 </Project>

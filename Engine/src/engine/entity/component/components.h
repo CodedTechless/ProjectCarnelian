@@ -1,7 +1,10 @@
 #pragma once
 
 #include <engineincl.h>
+
 #include <engine/sprite/sprite_atlas.h>
+#include <engine/lua/script_environment.h>
+
 #include <engine/entity/scriptable_entity.h>
 #include <engine/maths/colour.hpp>
 
@@ -15,16 +18,72 @@ using JSON = nlohmann::json;
 namespace Techless
 {
 	
+	/*
+	namespace Serialiser
+	{
+
+		template <typename Type>
+		bool CompareTypeForName(const std::string& Name)
+		{
+			return Name == type;
+		}
+
+		template <typename Component>
+		std::string GetTypeEntryName()
+		{
+			std::string Name = typeid(Component).name();
+			
+			if (CompareTypeForName<TagComponent>(Name)) return "Tag";
+			if (CompareTypeForName<TransformComponent>(Name)) return "Transform";
+			if (CompareTypeForName<RigidBodyComponent>(Name)) return "RigidBody";
+			if (CompareTypeForName<SpriteComponent>(Name)) return "Sprite";
+			if (CompareTypeForName<CameraComponent>(Name)) return "Camera";
+
+			assert(false);
+		}
+	}
+	
+	// i never finished this because i wasn't able to make it work so...
+	*/
+
+	struct BaseComponent
+	{
+		BaseComponent() = default;
+		virtual ~BaseComponent() = default;
+
+		inline Entity* GetLinkedEntity() const { return LinkedEntity; };
+
+	protected:
+		Entity* LinkedEntity = nullptr;
+
+		friend class Entity;
+	};
+
 	//////////////////////
 	// Basic components //
 	//////////////////////
 
-	struct TagComponent
+	struct TagComponent : public BaseComponent
 	{
+	public:
+		TagComponent() = default;
+		TagComponent(const TagComponent& component) = default;
+
 		std::string Name = "Tag";
 
-	public:
-		NLOHMANN_DEFINE_TYPE_INTRUSIVE(TagComponent, Name);
+	public: // json serialisation
+
+		inline friend void to_json(JSON& json, const TagComponent& component)
+		{
+			json = JSON{
+				{"Name", component.Name}
+			};
+		}
+
+		inline friend void from_json(const JSON& json, TagComponent& component)
+		{
+			json.at("Name").get_to(component.Name);
+		}
 	};
 
 
@@ -32,19 +91,13 @@ namespace Techless
 	// Physical Components //
 	/////////////////////////
 
-	struct TransformComponent
+	// to-do: clean this up
+
+	struct TransformComponent : public BaseComponent
 	{
 	public:
-		~TransformComponent()
-		{
-			for (auto* Child : Children)
-			{
-				Child->SetParent(Parent ? Parent : nullptr);
-			}
-
-			if (Parent)
-				Parent->RemoveChild(this);
-		}
+		TransformComponent() = default;
+		TransformComponent(const TransformComponent& component) = default;
 
 		inline glm::vec3 GetLocalPosition() const { return LocalPosition; };
 		inline glm::vec2 GetLocalScale() const { return LocalScale; };
@@ -54,90 +107,45 @@ namespace Techless
 		inline glm::vec2 GetGlobalScale() { RecalculateTransform(); return GlobalScale; };
 		inline float GetGlobalOrientation() { RecalculateTransform(); return GlobalOrientation; };
 		
+		inline void SetLocalPosition(glm::vec3 Position) { LocalPosition = Position; MarkAsDirty(); };
+		inline void SetLocalScale(glm::vec2 Scale) { LocalScale = Scale; MarkAsDirty(); };
+		inline void SetLocalOrientation(float Rotation) { LocalOrientation = Rotation; MarkAsDirty(); };
+
 		/*
 			to-do: find a nicer way to do this please, this is disgusting.
 		*/
 
-		inline void operator+= (glm::vec3 Position) { LocalPosition += Position; MarkAsDirty(this); };
-		inline void operator-= (glm::vec3 Position) { LocalPosition -= Position; MarkAsDirty(this); };
-		inline void operator*= (glm::vec3 Position) { LocalPosition *= Position; MarkAsDirty(this); };
-		inline void operator/= (glm::vec3 Position) { LocalPosition /= Position; MarkAsDirty(this); };
-		inline void operator=  (glm::vec3 Position) { LocalPosition = Position; MarkAsDirty(this); };
+		inline glm::mat4 GetGlobalTransform() { RecalculateTransform(); return GlobalTransform; }
 
-		inline void operator+= (glm::vec2 Scale) { LocalScale += Scale; MarkAsDirty(this); };
-		inline void operator-= (glm::vec2 Scale) { LocalScale -= Scale; MarkAsDirty(this); };
-		inline void operator*= (glm::vec2 Scale) { LocalScale *= Scale; MarkAsDirty(this); };
-		inline void operator/= (glm::vec2 Scale) { LocalScale /= Scale; MarkAsDirty(this); };
-		inline void operator=  (glm::vec2 Scale) { LocalScale = Scale; MarkAsDirty(this); };
+	private:
 
-		inline void operator+= (float Orientation) { LocalOrientation += Orientation; MarkAsDirty(this); };
-		inline void operator-= (float Orientation) { LocalOrientation -= Orientation; MarkAsDirty(this); };
-		inline void operator*= (float Orientation) { LocalOrientation *= Orientation; MarkAsDirty(this); };
-		inline void operator/= (float Orientation) { LocalOrientation /= Orientation; MarkAsDirty(this); };
-		inline void operator=  (float Orientation) { LocalOrientation = Orientation; MarkAsDirty(this); };
-
-	public:
-
-		static bool IsParentOfSelf(TransformComponent* OriginalTransform, TransformComponent* Transform)
-		{
-			if (Transform == nullptr)
-				return false;
-
-			if (OriginalTransform == Transform)
-				return true;
-
-			return IsParentOfSelf(OriginalTransform, Transform->Parent);
-		}
-
-		bool SetParent(TransformComponent* Transform)
-		{
-			if (Transform && IsParentOfSelf(this, Transform))
-				return false;
-
-			if (Parent != nullptr)
-				Parent->RemoveChild(this);
-
-			Parent = Transform;
-
-			if (Transform != nullptr)
-				Transform->AddChild(this);
-
-			MarkAsDirty(this);
-
-			return true;
-		}
-
-		inline TransformComponent* GetParent() const { return Parent; };
-		inline std::vector<TransformComponent*>& GetChildren() { return Children; };
-
-	public:
 		/*
 			This is mainly used by the renderer, as scripts don't really have a need for messing directly
 			with transformations (as of right now but that might change)
 
-			Recalculates the transform based on parents positions
+			Recalculates the transform based on parents positions. Stores it so that it doesn't need to be 
+			recalculated every time its requested.
 		*/
-
 		void RecalculateTransform()
 		{
 			if (FLAG_TransformDirty)
 			{
+				Entity* Parent = LinkedEntity->GetParent();
+
 				if (Parent)
 				{
-					if (Parent->FLAG_TransformDirty)
-					{
-						Parent->RecalculateTransform();
-					}
+					TransformComponent& ParentTransform = Parent->GetComponent<TransformComponent>();
+					ParentTransform.RecalculateTransform();
 
-					GlobalScale = LocalScale * Parent->GlobalScale;
-					GlobalOrientation = LocalOrientation + Parent->GlobalOrientation;
+					GlobalScale = LocalScale * ParentTransform.GlobalScale;
+					GlobalOrientation = LocalOrientation + ParentTransform.GlobalOrientation;
 					
-					auto rad = GlobalOrientation * M_PI / 180;
+					auto rad = ParentTransform.GlobalOrientation * M_PI / 180;
 					auto c = cos(rad);
 					auto s = sin(rad);
 					
-					auto ParentGlobalPosition = Parent->GlobalPosition;
-					auto ScaledPosition = LocalPosition * glm::vec3(Parent->GlobalScale, 0.f);
+					auto ParentGlobalPosition = ParentTransform.GlobalPosition;
+					auto ScaledPosition = LocalPosition * glm::vec3(ParentTransform.GlobalScale, 0.f);
 
 					GlobalPosition = ParentGlobalPosition + glm::vec3(ScaledPosition.x * c - ScaledPosition.y * s , ScaledPosition.x * s + ScaledPosition.y * c, LocalPosition.z);
 				}
@@ -156,9 +164,20 @@ namespace Techless
 			}
 		}
 
-		inline glm::mat4 GetGlobalTransform(const glm::vec2& QuadSize = glm::vec2(1.f, 1.f)) { RecalculateTransform(); return GlobalTransform; }
+		// using a dirty flag to signify when a global position/scale/orientation does not match up with its parents position or with its own local position.
+		void MarkAsDirty()
+		{
+			if (FLAG_TransformDirty)
+				return;
 
-	protected:
+			FLAG_TransformDirty = true;
+
+			for (Entity* LinkedChild : LinkedEntity->GetChildren())
+			{
+				LinkedChild->GetComponent<TransformComponent>().MarkAsDirty();
+			}
+		}
+
 		glm::vec3 LocalPosition{ 0.f, 0.f, 0.f };
 		glm::vec2 LocalScale{ 1.f, 1.f };
 		float LocalOrientation = 0.f;
@@ -169,52 +188,16 @@ namespace Techless
 
 		glm::mat4 GlobalTransform{ 1.f };
 
-	private:
-		void AddChild(TransformComponent* Transform)
-		{
-			Children.push_back(Transform);
-		}
-
-		void RemoveChild(TransformComponent* Transform)
-		{
-			auto it = std::find(Children.begin(), Children.end(), Transform);
-			if (it != Children.end())
-			{
-				Children.erase(it);
-			}
-		}
-
-		TransformComponent* Parent = nullptr;
-		std::vector<TransformComponent*> Children{};
-		
-	private:
-		// using a dirty flag to signify when a global position/scale/orientation does not match up with its parents position or with its own local position.
-
-		static void MarkAsDirty(TransformComponent* Component)
-		{
-			if (Component->FLAG_TransformDirty)
-				return;
-
-			Component->FLAG_TransformDirty = true;
-
-			for (auto* Transform : Component->GetChildren())
-			{
-				MarkAsDirty(Transform);
-			}
-		}
-
 		bool FLAG_TransformDirty = true;
 
+		friend class Entity;
 		friend class Scene;
+		friend class ScriptAtlas;
 
-	public:
-
-		// json serialisation
-
+	public: // json serialisation
+		
 		inline friend void to_json(JSON& json, const TransformComponent& component)
 		{
-			// we have no access to entities here, therefore the Parent can only be serialised by a separate part of the program
-
 			json = JSON{
 				{"LocalPosition", {
 					{"x", component.LocalPosition.x},
@@ -225,8 +208,7 @@ namespace Techless
 					{"x", component.LocalScale.x},
 					{"y", component.LocalScale.y}
 				}},
-				{"LocalOrientation", component.LocalOrientation},
-				{"Parent", nullptr}
+				{"LocalOrientation", component.LocalOrientation}
 			};
 		}
 
@@ -240,18 +222,20 @@ namespace Techless
 
 			json.at("LocalOrientation").get_to(component.LocalOrientation);
 
-			MarkAsDirty(&component);
+			component.MarkAsDirty();
 		}
 	};
 
-	struct RigidBodyComponent
+	struct RigidBodyComponent : public BaseComponent
 	{
+	public:
+		RigidBodyComponent() = default;
+		RigidBodyComponent(const RigidBodyComponent& component) = default;
+
 		float Velocity = 0.f;
 		float Friction = 100.f;
 
-	public:
-
-		// json serialisation
+	public: // json serialisation
 
 		NLOHMANN_DEFINE_TYPE_INTRUSIVE(RigidBodyComponent, Velocity, Friction);
 	};
@@ -267,21 +251,22 @@ namespace Techless
 	// Sprite-related //
 	////////////////////
 
-	struct SpriteComponent
+	struct SpriteComponent : public BaseComponent
 	{
+	public:
+		SpriteComponent() = default;
+		SpriteComponent(const SpriteComponent& component) = default;
+
 		Colour SpriteColour{ 1.f, 1.f, 1.f };
 
-		inline void SetSprite(const std::string& NewSprite) { aSprite = SpriteAtlas::Get(NewSprite); };
+		inline void SetSprite(const std::string& spriteName) { aSprite = SpriteAtlas::Get(spriteName); };
 		inline Ptr<Sprite> GetSprite() const { return aSprite; };
-
-		void SetRGBColour(const Colour& colour) { SpriteColour = colour; };
+		inline std::string GetSpriteName() const { return aSprite->GetName(); };
 		
 	private:
-		Ptr<Sprite> aSprite;
+		Ptr<Sprite> aSprite = nullptr;
 
-	public:
-
-		// json serialisation
+	public: // json serialisation
 
 		inline friend void to_json(JSON& json, const SpriteComponent& component)
 		{
@@ -300,10 +285,14 @@ namespace Techless
 		}
 	};
 
-	struct AnimatorComponent
+	struct AnimatorComponent : public BaseComponent
 	{
-		/*
 	public:
+		AnimatorComponent() = default;
+		AnimatorComponent(const AnimatorComponent& component) = default;
+		
+		/*
+	public: // json serialisation
 
 		inline friend void to_json(JSON& json, const AnimatorComponent& component)
 		{
@@ -320,8 +309,12 @@ namespace Techless
 	// Viewport related //
 	//////////////////////
 
-	struct CameraComponent
+	struct CameraComponent : public BaseComponent
 	{
+	public:
+		CameraComponent() = default;
+		CameraComponent(const CameraComponent& component) = default;
+
 		// Builds orthographic matrix for the rendering API to use.
 		void SetProjection(glm::vec2 Size, float pNear, float pFar)
 		{
@@ -340,12 +333,10 @@ namespace Techless
 		inline glm::mat4 GetProjection() const { return Projection; };
 		inline std::pair<float, float> GetZPlane() const{ return { Near, Far }; }; // First is Near, second is Far
 		
-		inline glm::vec2 GetViewportSize() const { return ViewportSize; };
 		inline glm::vec2 GetViewportResolution() const { return ViewportResolution; };
 
 	private:
 
-		glm::vec2 ViewportSize = { 0.f, 0.f }; // [currently unused] to-do: add support for multiple viewports??
 		glm::vec2 ViewportResolution = { 1280.f, 720.f };
 
 		float Near = -100.f;
@@ -353,9 +344,7 @@ namespace Techless
 
 		glm::mat4 Projection = glm::ortho(0.f, 1280.f, 720.f, 0.f, -100.f, 100.f);
 
-	public:
-
-		// json serialisation
+	public: // json serialisation
 
 		inline friend void to_json(JSON& json, const CameraComponent& component)
 		{
@@ -389,8 +378,12 @@ namespace Techless
 	// Script-related //
 	////////////////////
 
-	struct ScriptComponent
+	struct ScriptComponent : public BaseComponent
 	{
+	public:
+		// script component is entirely native so there's no way to serialise it without
+		// extreme difficulty! therefore, i don't provide support for it at all :)
+
 		Ptr<ScriptableEntity> Instance = nullptr;
 
 		template<typename Script>
@@ -416,22 +409,21 @@ namespace Techless
 
 		friend class Scene;
 
-	public:
-
-		/*
-		inline friend void to_json(JSON& json, const ScriptComponent& component)
-		{
-
-		}
-
-		inline friend void from_json(const JSON& json, ScriptComponent& component)
-		{
-
-		}*/
 	};
 
-	struct LuaScriptComponent
+	struct LuaScriptComponent : public BaseComponent
 	{
+	public:
+		LuaScriptComponent() = default;
+		LuaScriptComponent(const LuaScriptComponent& component) = default;
+
+		void Bind(const std::string& Name)
+		{
+			Instance = ScriptEnvironment::Create(Name, LinkedEntity);
+		}
+
+	private:
+		Ptr<sol::environment> Instance;
 
 	};
 }

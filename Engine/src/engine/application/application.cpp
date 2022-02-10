@@ -10,6 +10,9 @@
 
 #include <render/renderer.h>
 
+#include <lua.hpp>
+
+#define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
 namespace Techless {
@@ -19,12 +22,19 @@ namespace Techless {
 
     constexpr float UpdateRate = 1.f / 60.f;
 
+    Application::~Application()
+    {
+        glfwTerminate();
+    }
+
     void Application::Init() 
     {
-        sol::state lua;
-        lua.open_libraries(sol::lib::base);
 
-        lua.script("print('bark bark bark!')");
+        sol::state test;
+        test.open_libraries(sol::lib::base);
+
+        test.script("print('bark bark bark!')");
+
 
         assert(CurrentApplication == nullptr);
         CurrentApplication = this;
@@ -155,6 +165,6 @@ namespace Techless {
             LastTime = Time;
         }
 
-        glfwTerminate();
+        
     }
 }

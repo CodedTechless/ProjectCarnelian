@@ -35,7 +35,7 @@ public:
 	void OnUpdate(const float Delta)
 	{
 		auto& Transform = GetComponent<TransformComponent>();
-		Transform += (PositionTo - Transform.GetLocalPosition()) * 0.2f * Delta;
+		Transform.SetLocalPosition(Transform.GetLocalPosition() + (PositionTo - Transform.GetLocalPosition()) * 0.2f * Delta);
 	
 		auto WindowSize = Application::GetActiveApplication().GetActiveWindow()->Size;
 

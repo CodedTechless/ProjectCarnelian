@@ -6,6 +6,7 @@
 namespace Techless {
 	class Texture {
 	public:
+		Texture() = default;
 		Texture(const glm::i32vec2& dimensions, int bitsPerPixel);
 		Texture(const std::string& Path);
 		~Texture();

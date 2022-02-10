@@ -2,14 +2,14 @@
 
 #include <scriptindex.h>
 
-#include <app/layers/editor_panels/explorer.h>
-#include <app/layers/editor_panels/asset_manager.h>
-
-#include "Engine.h"
+#include <editor_panels/explorer.h>
+#include <editor_panels/asset_manager.h>
+#include <editor_scene/editor_scene.h>
 
 using namespace Techless;
 
-namespace PrefabEditor {
+namespace PrefabEditor 
+{
 
 	class Editor : public Layer 
 	{
@@ -23,23 +23,26 @@ namespace PrefabEditor {
 		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
 		//void OnWindowEvent(const WindowEvent& windowEvent);
 
+		void CreateScene(const std::string& SceneName, Prefab* LoadWithPrefab = nullptr);
+		void SetScene(const std::string& SceneName);
+
 	private:
 		ExplorerPanel EditorExplorer;
 		AssetManagerPanel EditorAssetManager;
 
-		std::string PrefabName = "New Prefab";
+	private:
+		Ptr<EditorScene> ActiveEditorScene = nullptr;
+		std::vector<Ptr<EditorScene>> Scenes{};
+		
+		int NewScenes = 1;
 
 	private:
-		Ptr<Scene> ActiveScene;
-		Ptr<NativeScript::Core::Camera> ActiveCameraScript;
-		Ptr<FrameBuffer> ActiveFrameBuffer;
-
-		glm::u32vec2 ViewportSize;
+		Ptr<FrameBuffer> ActiveFrameBuffer = nullptr;
+		
+		glm::u32vec2 ViewportSize = { 0.f, 0.f };
 		bool ViewportFocused = false;
 
-		Entity* SelectedEntity = nullptr;
-
-		float UpdateRate;
-		float FixedUpdateRate;
+		float UpdateRate = 0.f;
+		float FixedUpdateRate = 0.f;
 	};
 }

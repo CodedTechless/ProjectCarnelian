@@ -96,6 +96,7 @@
     <ClCompile Include="src\engine\entity\prefabs\prefab_atlas.cpp" />
     <ClCompile Include="src\engine\layers\imgui\imgui_layer.cpp" />
     <ClCompile Include="src\engine\layers\layer.cpp" />
+    <ClCompile Include="src\engine\lua\script_environment.cpp" />
     <ClCompile Include="src\render\buffer\frame.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui_demo.cpp" />
@@ -264,12 +265,15 @@
     <None Include="src\dependencies\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\lua\identities\scriptable_lua_entity.hpp" />
+    <ClInclude Include="src\engine\lua\script_environment.h" />
     <ClInclude Include="src\dependencies\sol\config.hpp" />
     <ClInclude Include="src\dependencies\sol\forward.hpp" />
     <ClInclude Include="src\dependencies\sol\sol.hpp" />
     <ClInclude Include="src\engine\entity\prefabs\prefab.h" />
     <ClInclude Include="src\engine\entity\prefabs\prefab_atlas.h" />
     <ClInclude Include="src\engine\layers\imgui\imgui_layer.h" />
+    <ClInclude Include="src\engine\maths\vector.hpp" />
     <ClInclude Include="src\render\buffer\frame.h" />
     <ClInclude Include="src\dependencies\imgui\imconfig.h" />
     <ClInclude Include="src\dependencies\imgui\imgui.h" />

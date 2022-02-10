@@ -1,8 +1,11 @@
 #pragma once
 
-#define _USE_MATH_DEFINES
-#define MaxEntities 5000
+#define M_PI 3.14159265358979323846   // pi
 
+#define MaxEntities 5000
+#define TYPEID_STRING(Type) std::string(typeid(Type).name())
+
+#define _USE_MATH_DEFINES
 #include <cmath>
 
 #include <memory>
@@ -33,6 +36,12 @@ namespace Techless
 	constexpr Ptr<T> CreatePtr(Args&& ...args)
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
+	}
+
+	template<typename T, typename U>
+	constexpr Ptr<T> CastPtr(const U& u)
+	{
+		return std::static_pointer_cast<T>(u);
 	}
 
 	template <typename T>

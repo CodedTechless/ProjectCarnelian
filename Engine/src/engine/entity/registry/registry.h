@@ -13,7 +13,7 @@ namespace Techless
 	{
 	public:
 		virtual ~RegistrySet() = default;
-		virtual void Clear(const std::string& ID) = 0;
+		virtual void Clear(std::string ID) = 0;
 	};
 
 	template<typename Type>
@@ -24,9 +24,9 @@ namespace Techless
 		template<typename... Args>
 		Type& Insert(const std::string& ID, Args&&... args)
 		{
-			//Debug::Log("Inserted " + entity + " into component type set " + typeid(Component).name() + " at index " + std::to_string(Index));
+			Type type = { std::forward<Args>(args)... };
 
-			Instances[Index] = { std::forward<Args>(args)... };
+			Instances[Index] = type;
 
 			IDIndex[ID] = Index;
 			IndexID[Index] = ID;
@@ -46,20 +46,16 @@ namespace Techless
 			return IDIndex.contains(ID);
 		}
 
-		void Remove(const std::string& ID)
+		void Remove(std::string ID)
 		{
-			
 			auto RemovedIndex = IDIndex[ID];
 			auto LastIndex = Index - 1;
 
-			if (RemovedIndex != LastIndex)
-			{
-				Instances[RemovedIndex] = Instances[LastIndex];
+			Instances[RemovedIndex] = Instances[LastIndex];
 
-				auto LastEntity = IndexID[LastIndex];
-				IDIndex[LastEntity] = RemovedIndex;
-				IndexID[RemovedIndex] = LastEntity;
-			}
+			auto LastEntity = IndexID[LastIndex];
+			IDIndex[LastEntity] = RemovedIndex;
+			IndexID[RemovedIndex] = LastEntity;
 
 			IDIndex.erase(ID);
 			IndexID.erase(LastIndex);
@@ -67,7 +63,7 @@ namespace Techless
 			Index--;
 		}
 
-		void Clear(const std::string& ID) override
+		void Clear(std::string ID) override
 		{
 			if (IDIndex.find(ID) != IDIndex.end())
 			{
@@ -109,8 +105,6 @@ namespace Techless
 		template<typename Type, typename... Args>
 		Type& Add(const std::string& ID, Args&&... args)
 		{
-			Verify<Type>();
-
 			return GetRegistrySet<Type>()->Insert(ID, std::forward<Args>(args)... );
 		}
 
@@ -127,7 +121,7 @@ namespace Techless
 		}
 
 		template <typename Type>
-		void Remove(const std::string& ID)
+		void Remove(std::string ID)
 		{
 			GetRegistrySet<Type>()->Remove(ID);
 		}
@@ -147,7 +141,7 @@ namespace Techless
 			return std::static_pointer_cast<TypedRegistrySet<Type>>(InstanceSets[InstanceName]);
 		}
 
-		void Clear(const std::string& ID);
+		void Clear(std::string ID);
 
 	private:
 		std::unordered_map<const char*, Ptr<RegistrySet>> InstanceSets{};

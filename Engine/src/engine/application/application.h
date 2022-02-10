@@ -5,6 +5,7 @@
 #include <engine/application/window.h>
 
 
+
 #include "event.h"
 
 namespace Techless {
@@ -21,7 +22,7 @@ namespace Techless {
 	class Application {
 	public:
 		Application() = default;
-		virtual ~Application() = default;
+		~Application();
 		
 		static Application& GetActiveApplication() { return *CurrentApplication; };
 		static RuntimeInfo& GetRuntimeData() { return RuntimeData; }
@@ -29,8 +30,6 @@ namespace Techless {
 		inline bool IsRunning() const { return Running; };
 		inline Window* GetActiveWindow() const { return aWindow; };
 		inline void SetApplicationTitle(const std::string& nApplicationTitle) { ApplicationTitle = nApplicationTitle; };
-
-		void RenderDebugImGuiElements();
 
 		void AddLayer(Layer* NewLayer);
 		void AddOverlay(Layer* NewOverlay);

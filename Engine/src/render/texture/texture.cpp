@@ -15,7 +15,7 @@ namespace Techless {
 	Texture::Texture(const std::string& filePath)
 	{
 		Allocate();
-		Load(FilePath);
+		Load(filePath);
 	}
 
 	Texture::~Texture() 
@@ -58,10 +58,12 @@ namespace Techless {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	void Texture::Load(const std::string& FilePath) 
+	void Texture::Load(const std::string& filePath) 
 	{
+		FilePath = filePath;
+
 		stbi_set_flip_vertically_on_load(1);
-		LocalBuffer = stbi_load(FilePath.c_str(), &Dimensions.x, &Dimensions.y, &BitsPerPixel, 4);
+		LocalBuffer = stbi_load(filePath.c_str(), &Dimensions.x, &Dimensions.y, &BitsPerPixel, 4);
 
 		glBindTexture(GL_TEXTURE_2D, RendererID);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Dimensions.x, Dimensions.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, LocalBuffer);

@@ -5,7 +5,7 @@
 namespace Techless
 {
 
-	Sprite::Sprite(std::shared_ptr<Texture> Tex, const glm::vec2& topLeft, const glm::vec2& bottomRight, const std::string& name)
+	Sprite::Sprite(Ptr<Texture> Tex, const glm::vec2& topLeft, const glm::vec2& bottomRight, const std::string& name)
 		: BaseTexture(Tex), Name(name)
 	{
 		SetBounds(topLeft, bottomRight);
@@ -20,7 +20,7 @@ namespace Techless
 
 		Size = BottomRight - TopLeft;
 		
-		AbsoluteTopLeft = TopLeft / (glm::vec2)TextureSize;
-		AbsoluteBottomRight = BottomRight / (glm::vec2)TextureSize;
+		AbsoluteTopLeft = (TopLeft + 0.0001f) / (glm::vec2)TextureSize;
+		AbsoluteBottomRight = (BottomRight - 0.0001f) / (glm::vec2)TextureSize;
 	}
 }

@@ -5,7 +5,7 @@
 namespace Techless 
 {
 	
-	void Registry::Clear(const std::string& ID)
+	void Registry::Clear(std::string ID)
 	{
 		for (auto Set : InstanceSets)
 		{
