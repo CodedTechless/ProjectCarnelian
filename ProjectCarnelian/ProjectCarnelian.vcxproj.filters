@@ -35,9 +35,6 @@
     <ClCompile Include="src\app\entry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="assets\scripts\core\entity_environment.lua">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\scripts\example.lua" />

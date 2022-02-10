@@ -87,7 +87,6 @@
     <ClInclude Include="src\app\native_scripts\camera\camera.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="assets\scripts\core\entity_environment.lua" />
     <ClCompile Include="src\app\entry.cpp" />
     <ClCompile Include="src\app\layers\core.cpp" />
   </ItemGroup>

@@ -90,16 +90,16 @@ namespace Techless
 
 		LuaVM.safe_script_file("assets/scripts/core/environment.lua", &ScriptEnvironmentLogger::ScriptError);
 
-		RegisterScene = LuaVM["RegisterScene"];
-		DeregisterScene = LuaVM["DeregisterScene"];
+		RegisterScene = { LuaVM["RegisterScene"] , &ScriptEnvironmentLogger::ScriptError };
+		DeregisterScene = { LuaVM["DeregisterScene"] , &ScriptEnvironmentLogger::ScriptError };
 		
-		RegisterEntity = LuaVM["RegisterEntity"];
-		DeregisterEntity = LuaVM["DeregisterEntity"];
+		RegisterEntity = { LuaVM["RegisterEntity"] , &ScriptEnvironmentLogger::ScriptError };
+		DeregisterEntity = { LuaVM["DeregisterEntity"] , &ScriptEnvironmentLogger::ScriptError };
 
-		RegisterComponent = LuaVM["RegisterComponent"];
-		DeregisterComponent = LuaVM["DeregisterComponent"];
+		RegisterComponent = { LuaVM["RegisterComponent"] , &ScriptEnvironmentLogger::ScriptError };
+		DeregisterComponent = { LuaVM["DeregisterComponent"] , &ScriptEnvironmentLogger::ScriptError };
 
-		GetEntityBinding = LuaVM["GetEntityBinding"];
+		GetEntityBinding = { LuaVM["GetEntityBinding"] , &ScriptEnvironmentLogger::ScriptError };
 
 		sol::protected_function RegisterComponentType = LuaVM["RegisterComponentType"];
 
@@ -123,13 +123,15 @@ namespace Techless
 		LuaVM.new_usertype<glm::vec2>("Vector2",
 			sol::constructors<glm::vec2(), glm::vec2(float, float)>(),
 			"X", &glm::vec2::x,
-			"Y", &glm::vec2::y);
+			"Y", &glm::vec2::y
+		);
 
 		LuaVM.new_usertype<glm::vec3>("Vector3",
 			sol::constructors<glm::vec3(), glm::vec3(float, float, float)>(),
 			"X", &glm::vec3::x,
 			"Y", &glm::vec3::y,
-			"Z", &glm::vec3::z);
+			"Z", &glm::vec3::z
+		);
 
 		LuaVM.new_usertype<Colour>("Colour",
 			sol::constructors<Colour(), Colour(float, float, float), Colour(float, float, float, float), Colour(int, int, int), Colour(int, int, int, int)>(),
@@ -150,13 +152,7 @@ namespace Techless
 			"GetLightScene", &LuaScriptableEntity::GetLinkedScene,
 			"GetLightEntity", &LuaScriptableEntity::GetLinkedEntity,
 
-			// [COMPONENT ASSIGNMENT]
-
-			PullQuery(Tag),
-			PullQuery(Transform),
-			PullQuery(RigidBody),
-			PullQuery(Sprite),
-			PullQuery(Camera)
+			"QueryComponent", &LuaScriptableEntity::QueryComponent
 		);
 
 		LuaVM.new_usertype<Entity>("LightEntity",
@@ -211,14 +207,10 @@ namespace Techless
 
 	Ptr<sol::environment> ScriptEnvironment::Create(const std::string& Name, Entity* entity)
 	{
-		sol::object
+		sol::object EntityTable = GetEntityBinding(entity->GetScene(), entity->GetID());
 
-		auto entity = GetEntityBinding(entity->GetScene(), );
-
-		Ptr<sol::environment> NewEnvironment = CreatePtr<sol::environment>(LuaVM, sol::create);
+		Ptr<sol::environment> NewEnvironment = CreatePtr<sol::environment>(LuaVM, sol::create, EntityTable);
 		sol::environment& Environment = *NewEnvironment;
-
-		Environment["Scene"] = entity->GetScene();
 
 		for (const auto& entry : AccessibleLibraries)
 			Environment[entry] = LuaVM[entry];

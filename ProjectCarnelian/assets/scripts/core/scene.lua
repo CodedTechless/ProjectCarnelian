@@ -20,24 +20,7 @@ function SceneBinding:CreateEntity(Tag)
 end
 
 function SceneBinding:ChangeComponent(LinkedEntity, ComponentName, ChangeQueryMode)
-	if ComponentName == "TagComponent" then
-		return LinkedEntity.QueryComponent_Tag(ChangeQueryMode);
-	
-	elseif ComponentName == "TransformComponent" then
-		return LinkedEntity.QueryComponent_Transform(ChangeQueryMode);
-	
-	elseif ComponentName == "RigidBodyComponent" then
-		return LinkedEntity.QueryComponent_RigidBody(ChangeQueryMode);
-		
-	elseif ComponentName == "SpriteComponent" then
-		return LinkedEntity.QueryComponent_Sprite(ChangeQueryMode);
-		
-	elseif ComponentName == "CameraComponent" then
-		return LinkedEntity.QueryComponent_Camera(ChangeQueryMode);
-		
-	end
-
-	error("Invalid component name used in Scene:ChangeComponent: " .. ComponentName)
+	return LinkedEntity.QueryComponent(ComponentName, ChangeQueryMode);
 end
 
 function SceneBinding:GetComponent(LinkedEntityID, ComponentName)
