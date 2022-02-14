@@ -5,15 +5,11 @@
 #include <imgui/imgui.h>
 
 #include <engine/sprite/sprite_atlas.h>
-#include <engine/watchdog/watchdog.h>
-#include <engine/input/input.h>
-
+#include <engine/lua/script_environment.h>
 #include <render/renderer.h>
 
-#include <lua.hpp>
-
-#define SOL_ALL_SAFETIES_ON 1
-#include <sol/sol.hpp>
+#include <engine/watchdog/watchdog.h>
+#include <engine/input/input.h>
 
 namespace Techless {
 
@@ -30,11 +26,6 @@ namespace Techless {
     void Application::Init() 
     {
 
-        sol::state test;
-        test.open_libraries(sol::lib::base);
-
-        test.script("print('bark bark bark!')");
-
 
         assert(CurrentApplication == nullptr);
         CurrentApplication = this;
@@ -46,6 +37,7 @@ namespace Techless {
 
         Renderer::Init();
         SpriteAtlas::Init();
+        ScriptEnvironment::Init();
 
         a_ImGuiLayer = new ImGuiLayer();
         Layers.PushOverlay(a_ImGuiLayer);

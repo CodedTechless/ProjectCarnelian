@@ -23,7 +23,7 @@ namespace Techless
         Window* ActiveWindow;
     };
 
-    Window::Window(const char AppTitle[], glm::uvec2 aSize)
+    Window::Window(const char AppTitle[], glm::vec2 aSize)
         : Size(aSize)
     {
         glfwSetErrorCallback(GLFWErrorCallback);

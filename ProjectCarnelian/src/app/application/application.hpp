@@ -19,7 +19,7 @@ namespace Carnelian
 
 			Init();
 
-			auto Main = new Core();
+			Core* Main = new Core();
 			Layers.PushLayer(Main);
 
 			Run();

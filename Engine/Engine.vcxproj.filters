@@ -114,6 +114,12 @@
     <ClCompile Include="src\engine\lua\script_environment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\watchdog\imgui\explorer\explorer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\watchdog\imgui\console\console_panel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\dependencies\glm\detail\func_common.inl">
@@ -1504,13 +1510,16 @@
     <ClInclude Include="src\dependencies\sol\forward.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\maths\vector.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\engine\lua\script_environment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\lua\identities\scriptable_lua_entity.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\watchdog\imgui\explorer\explorer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\watchdog\imgui\console\console_panel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

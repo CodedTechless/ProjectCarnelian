@@ -1,9 +1,23 @@
 
-
+print("I'm working!")
 
 
 function OnCreated()
 	print("OnCreated")
+
+	print(ID);
+	inspect(_ENV);
+
+	local Tag = GetComponent("TagComponent");
+	print(Tag.Name);
+
+	local Transform = GetComponent("TransformComponent");
+	print(Transform)
+	Transform.LocalPosition = Vector3.new(Transform.LocalPosition.X + 100, Transform.LocalPosition.Y, Transform.LocalPosition.Z);
+
+	print(ID);
+	
+	print(Scene);
 end
 
 function OnDestroy()

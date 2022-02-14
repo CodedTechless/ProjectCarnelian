@@ -16,19 +16,27 @@ namespace Techless
 	class Scene
 	{
 	public:
-		Scene();
-		~Scene();
+		static Ptr<Scene> Create();
 
-		Entity& CreateEntity(const std::string& TagName = "Entity");
-		Entity& Instantiate(Prefab& prefab);
+		Scene() = default;
+		~Scene();
 
 		void Update(const float Delta, bool AllowScriptRuntime = true);
 		void FixedUpdate(const float Delta);
 
+		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
+		void OnWindowEvent(const WindowEvent& windowEvent);
+
 		void Serialise(const std::string& FilePath, const Entity& RootEntity);
 
-		inline void SetActiveCamera(Entity& entity) { ActiveCamera = &entity; };
-		inline Entity& GetActiveCamera() const { return *ActiveCamera; };
+	public:
+		Entity& CreateEntity(const std::string& TagName = "Entity");
+		Entity& Instantiate(Prefab& prefab);
+
+		void SetActiveCamera(Entity& entity) { ActiveCamera = &entity; };
+		Entity& GetActiveCamera() const { return *ActiveCamera; };
+
+		inline int GetScriptEnvID() const { return ScriptEnvID; };
 
 		template<typename Type>
 		Ptr<TypedRegistrySet<Type>> GetInstances()
@@ -42,17 +50,11 @@ namespace Techless
 			return SceneRegistry.Get<Type>(EntityID);
 		}
 
-		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
-		void OnWindowEvent(const WindowEvent& windowEvent);
-
 	private:
 		Entity* ActiveCamera = nullptr;
-		void DestroyEntity(const std::string& EntityID);
-
-		friend class Entity;
-
-	private:
 		Registry SceneRegistry;
+
+		int ScriptEnvID = 0;
 
 		template<typename Component>
 		void PushSerialisedComponent(JSON& j_ComponentSet, const std::unordered_map<std::string, bool>& ArchivableIndex, const std::string& EntryName)
@@ -86,5 +88,9 @@ namespace Techless
 				entity.AddComponent<Component>(pair.second);
 			}
 		}
+
+		void DestroyEntity(const std::string& EntityID);
+
+		friend class Entity;
 	};
 }

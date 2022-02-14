@@ -4,8 +4,13 @@
 
 #include <engine/application/event.h>
 
+// to-do: integrate lua with layer system!
+
 namespace Techless {
-	class Layer {
+
+
+	class Layer 
+	{
 	public:
 		Layer() = default;
 		Layer(const std::string& layerName);
@@ -14,17 +19,17 @@ namespace Techless {
 		virtual void OnCreated() {};
 		virtual void OnRemoved() {};
 
-		virtual void OnUpdate(const float& Delta) {};		  // runs every frame
-		virtual void OnUpdateEnd(const float& Delta) {};
+		virtual void OnUpdate(const float Delta) {};
+		virtual void OnUpdateEnd(const float Delta) {};
 
-		virtual void OnUpdateFixed(const float& Delta) {};	  // runs 60 times a second
-		virtual void OnUpdateFixedEnd(const float& Delta) {}; // runs 60 times a second, after OnUpdateFixed.
+		virtual void OnUpdateFixed(const float Delta) {};
+		virtual void OnUpdateFixedEnd(const float Delta) {};
 
 		virtual Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed) { return Input::Filter::Ignore; };
 		virtual void OnWindowEvent(const WindowEvent& inputEvent) {};
 
-//		virtual bool OnInput(const InputObject& InputEvent) { return false; };
 	protected:
 		std::string LayerName = "Layer";
+
 	};
 }

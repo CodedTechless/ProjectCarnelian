@@ -10,7 +10,7 @@ namespace Techless
 	class Window
 	{
 	public:
-		Window(const char AppTitle[], glm::uvec2 Size);
+		Window(const char AppTitle[], glm::vec2 Size);
 
 		void Clear();
 		void SetVsyncEnabled(bool Enabled);
@@ -20,7 +20,7 @@ namespace Techless
 		inline GLFWwindow* GetContext() const { return aWindow; };
 
 		bool IsFocused = true;
-		glm::uvec2 Size;
+		glm::vec2 Size;
 
 	private:
 		GLFWwindow* aWindow;

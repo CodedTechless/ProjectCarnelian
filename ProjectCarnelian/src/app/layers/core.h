@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine.h"
+#include <Engine.h>
 
 using namespace Techless;
 
@@ -11,20 +11,31 @@ namespace Carnelian {
 	public:
 		void OnCreated();
 
-		void OnUpdate(const float& Delta);
-		void OnUpdateFixed(const float& Delta);
+		void OnUpdate(const float Delta);
+		void OnUpdateFixed(const float Delta);
+		void OnUpdateEnd(const float Delta);
 
 		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
 		void OnWindowEvent(const WindowEvent& windowEvent);
 
-	public:
-		Entity& CreatePlayer();
-
 	private:
-		std::shared_ptr<Scene> ActiveScene;
+		Ptr<Scene> ActiveScene = nullptr;
 
+		ExplorerPanel SceneExplorer{};
+		
 		float UpdateRate;
 		float FixedUpdateRate;
+
+	private:
+		void BuildEnvironment();
+
+		sol::protected_function GetFunction(const std::string& Name)
+		{
+			return LayerScript->get<sol::protected_function>(Name);
+		}
+
+		Ptr<ScriptEnv> LayerScript = nullptr;
+
 	};
 
 }

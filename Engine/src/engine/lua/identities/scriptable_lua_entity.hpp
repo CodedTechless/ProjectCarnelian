@@ -19,25 +19,7 @@ c++ does:
 
 #define PullQuery(Name) "QueryComponent_" #Name , &LuaScriptableEntity::QueryComponent_##Name
 
-#define DefineQuery(Name, Type) \
-	Type* QueryComponent_##Name(QueryMode Mode)\
-	{\
-		switch (Mode)\
-		{\
-			case QueryMode::Add:\
-			{\
-				if (!LinkedEntity->HasComponent<Type>())\
-					return &LinkedEntity->AddComponent<Type>();\
-				break;\
-			}\
-			case QueryMode::Remove:\
-			{\
-				if (LinkedEntity->HasComponent<Type>())\
-					LinkedEntity->RemoveComponent<Type>();\
-			}\
-		}\
-		return nullptr;\
-	}
+#define DefineQuery(Type) if (ComponentName == #Type) return sol::make_object<Type*>(lua, QueryComponentType<Type>(Mode))
 
 namespace Techless
 {
@@ -54,13 +36,43 @@ namespace Techless
 		LuaScriptableEntity(Entity* entity)
 			: LinkedEntity(entity) {};
 
-		// [COMPONENT ASSIGNMENT]
+		template<typename T>
+		T* QueryComponentType(QueryMode Mode)
+		{
+			switch (Mode)
+			{
+			case QueryMode::Add:
+			{
+				if (!LinkedEntity->HasComponent<T>())
+					return &LinkedEntity->AddComponent<T>();
+				
+				break;
+			}
+			case QueryMode::Remove:
+				{
+					if (LinkedEntity->HasComponent<T>())
+						LinkedEntity->RemoveComponent<T>();
+				}
+			}
 
-		DefineQuery(Tag, TagComponent);
-		DefineQuery(Transform, TransformComponent);
-		DefineQuery(RigidBody, RigidBodyComponent);
-		DefineQuery(Sprite, SpriteComponent);
-		DefineQuery(Camera, CameraComponent);
+			return nullptr;
+		}
+
+		sol::object QueryComponent(sol::this_state s, const std::string& ComponentName, QueryMode Mode)
+		{
+			sol::state_view lua(s);
+
+			// [COMPONENT ASSIGNMENT] Lua
+
+			DefineQuery(TagComponent);
+			DefineQuery(TransformComponent);
+			DefineQuery(RigidBodyComponent);
+			DefineQuery(SpriteComponent);
+			DefineQuery(CameraComponent);
+			DefineQuery(LuaScriptComponent);
+
+			return sol::lua_nil;
+		}
 
 		std::string GetID() const { return LinkedEntity->GetID(); };
 

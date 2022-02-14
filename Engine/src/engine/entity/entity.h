@@ -20,13 +20,20 @@ namespace Techless
 		void SetParent(Entity* entity);
 		void Destroy();
 
+		inline std::string GetID() const { return EntityID; };
+		inline Scene* GetScene() const { return ActiveScene; };
+
+		inline Entity* GetParent() const { return Parent; };
+		inline std::vector<Entity*> GetChildren() const { return Children; };
+		
+	public:
 		template <typename ComponentType, typename... Args>
 		ComponentType& AddComponent(Args&&... args)
 		{
 			ComponentType& component = ActiveScene->SceneRegistry.Add<ComponentType>(EntityID, std::forward<Args>(args)...);
 			component.LinkedEntity = this;
 			
-			ScriptEnvironment::RegisterComponent(EntityID, TYPEID_STRING(ComponentType), &component);
+			ScriptEnvironment::RegisterComponent<ComponentType>(ActiveScene->GetScriptEnvID(), EntityID, &component);
 
 			return component;
 		}
@@ -35,7 +42,8 @@ namespace Techless
 		void RemoveComponent()
 		{
 			ActiveScene->SceneRegistry.Remove<ComponentType>(EntityID);
-			ScriptEnvironment::DeregisterComponent(EntityID, TYPEID_STRING(ComponentType));
+			
+			ScriptEnvironment::DeregisterComponent<ComponentType>(ActiveScene->GetScriptEnvID(), EntityID);
 		}
 
 		template <typename ComponentType>
@@ -50,17 +58,9 @@ namespace Techless
 			return ActiveScene->SceneRegistry.Has<ComponentType>(EntityID);
 		}
 
-		inline std::string GetID() const { return EntityID; };
-		inline Scene* GetScene() const { return ActiveScene; };
-
-		inline Entity* GetParent() const { return Parent; };
-		inline std::vector<Entity*> GetChildren() const { return Children; };
-
 	private:
 		std::string EntityID;
 		Scene* ActiveScene = nullptr;
-
-	private:
 
 		void AddChild(Entity* entity);
 		void RemoveChild(Entity* entity);

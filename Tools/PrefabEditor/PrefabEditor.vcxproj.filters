@@ -54,4 +54,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\core_scripts\entity_binding.lua" />
+    <None Include="assets\core_scripts\global_environment.lua" />
+    <None Include="assets\core_scripts\scene_binding.lua" />
+  </ItemGroup>
 </Project>
