@@ -3,14 +3,12 @@
 local EntityBinding = {}
 
 function EntityBinding.new(Scene, LinkedEntity) -- LightEntity is a C++ through-type. It has to be converted to LuaScriptableEntity.
-	local self = {};
+	local self = setmetatable({}, EntityBinding);
 
 	self.LinkedEntity = LinkedEntity; -- wrapped type
 	self.ID = LinkedEntity.ID;
 
 	self.Scene = Scene;
-
-	self.self = self;
 
 	function self.AddComponent(ComponentName)
 		return self.Scene:ChangeComponent(self.LinkedEntity, ComponentName, QueryMode.Add);

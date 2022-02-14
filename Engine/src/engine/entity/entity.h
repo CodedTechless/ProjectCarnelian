@@ -33,7 +33,7 @@ namespace Techless
 			ComponentType& component = ActiveScene->SceneRegistry.Add<ComponentType>(EntityID, std::forward<Args>(args)...);
 			component.LinkedEntity = this;
 			
-			ScriptEnvironment::RegisterComponent(ActiveScene->GetScriptEnvID(), EntityID, TYPEID_STRING(ComponentType), component);
+			ScriptEnvironment::RegisterComponent<ComponentType>(ActiveScene->GetScriptEnvID(), EntityID, &component);
 
 			return component;
 		}
@@ -42,7 +42,8 @@ namespace Techless
 		void RemoveComponent()
 		{
 			ActiveScene->SceneRegistry.Remove<ComponentType>(EntityID);
-			ScriptEnvironment::DeregisterComponent(ActiveScene->GetScriptEnvID(), EntityID, TYPEID_STRING(ComponentType));
+			
+			ScriptEnvironment::DeregisterComponent<ComponentType>(ActiveScene->GetScriptEnvID(), EntityID);
 		}
 
 		template <typename ComponentType>

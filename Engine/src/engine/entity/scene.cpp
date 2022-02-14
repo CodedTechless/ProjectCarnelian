@@ -12,9 +12,12 @@
 namespace Techless
 {
 
-	Scene::Scene()
+	Ptr<Scene> Scene::Create()
 	{
-		ScriptEnvID = ScriptEnvironment::RegisterScene(this);
+		Ptr<Scene> newScene = CreatePtr<Scene>();
+		newScene->ScriptEnvID = ScriptEnvironment::RegisterScene(newScene);
+
+		return newScene;
 	}
 
 	Scene::~Scene()
@@ -27,8 +30,8 @@ namespace Techless
 
 		std::string NewUUID = UUID::Generate();
 
-		auto& Ent = SceneRegistry.Add<Entity>(NewUUID, this, NewUUID);
-		ScriptEnvironment::RegisterEntity(ScriptEnvID, Ent);
+		Entity& Ent = SceneRegistry.Add<Entity>(NewUUID, this, NewUUID);
+		ScriptEnvironment::RegisterEntity(ScriptEnvID, &Ent);
 
 		Ent.AddComponent<TransformComponent>();
 
@@ -40,12 +43,20 @@ namespace Techless
 
 	void Scene::DestroyEntity(const std::string& EntityID)
 	{
-		ScriptEnvironment::DeregisterEntity(*this, EntityID);
+		ScriptEnvironment::DeregisterEntity(ScriptEnvID, EntityID);
 
 		if (SceneRegistry.Has<ScriptComponent>(EntityID))
 		{
 			auto& Script = SceneRegistry.Get<ScriptComponent>(EntityID);
 			Script.Instance->OnDestroy();
+		}
+
+		if (SceneRegistry.Has<LuaScriptComponent>(EntityID))
+		{
+			auto& LuaScript = SceneRegistry.Get<LuaScriptComponent>(EntityID);
+
+			if (LuaScript.IsLoaded())
+				LuaScript.GetFunction("OnDestroy")();
 		}
 
 		SceneRegistry.Clear(EntityID);
@@ -62,7 +73,7 @@ namespace Techless
 		for (const PrefabEntity& prefabEntity : prefab.Entities)
 		{
 			Entity& newEntity = SceneRegistry.Add<Entity>(prefabEntity.EntityID, this, prefabEntity.EntityID);
-			ScriptEnvironment::RegisterEntity(ScriptEnvID, newEntity);
+			ScriptEnvironment::RegisterEntity(ScriptEnvID, &newEntity);
 
 			if (prefabEntity.IsRoot)
 				RootEntity = &newEntity;
@@ -85,6 +96,7 @@ namespace Techless
 		AssignPrefabComponents<RigidBodyComponent>	(prefab);
 		AssignPrefabComponents<SpriteComponent>		(prefab);
 		AssignPrefabComponents<CameraComponent>		(prefab);
+		AssignPrefabComponents<LuaScriptComponent>	(prefab);
 
 		return *RootEntity;
 	}
@@ -97,12 +109,12 @@ namespace Techless
 			 - do it efficiently (don't sort on z-depth every input because that's really fucking inefficient bitch)
 		*/
 
-		auto FinalFilter = Input::Filter::Ignore;
+		Input::Filter FinalFilter = Input::Filter::Ignore;
 		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
 
-		for (auto Script : *ScriptComponents)
+		for (ScriptComponent& Script : *ScriptComponents)
 		{
-			auto Response = Script.Instance->OnInputEvent(inputEvent, Processed);
+			Input::Filter Response = Script.Instance->OnInputEvent(inputEvent, Processed);
 
 			if (Response != Input::Filter::Ignore)
 				FinalFilter = Response;
@@ -113,6 +125,27 @@ namespace Techless
 				Processed = true;
 		}
 
+		if (FinalFilter != Input::Filter::Stop)
+		{
+			auto LuaScriptComponents = SceneRegistry.GetRegistrySet<LuaScriptComponent>();
+
+			for (LuaScriptComponent& LuaScript : *LuaScriptComponents)
+			{
+				if (LuaScript.IsLoaded())
+				{
+					Input::Filter Response = LuaScript.GetFunction("OnInputEvent")(inputEvent, Processed);
+
+					if (Response != Input::Filter::Ignore)
+						FinalFilter = Response;
+
+					if (Response == Input::Filter::Stop)
+						break;
+					else if (Response == Input::Filter::Continue)
+						Processed = true;
+				}
+			}
+		}
+
 		return FinalFilter;
 	}
 
@@ -120,31 +153,56 @@ namespace Techless
 	{
 		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
 
-		for (auto Script : *ScriptComponents)
+		for (auto& Script : *ScriptComponents)
 		{
 			Script.Instance->OnWindowEvent(windowEvent);
 		}
-	}
 
-	void Scene::FixedUpdate(const float Delta)
-	{
-		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
+		auto LuaScriptComponents = SceneRegistry.GetRegistrySet<LuaScriptComponent>();
 
-		for (auto Script : *ScriptComponents)
+		for (auto& LuaScript : *LuaScriptComponents)
 		{
-			Script.Instance->OnFixedUpdate(Delta);
+			if (LuaScript.IsLoaded())
+				LuaScript.GetFunction("OnWindowEvent")(windowEvent);
 		}
 	}
 
-	void Scene::Update(const float Delta, bool AllowScriptRuntime)
+	void Scene::FixedUpdate(float Delta)
 	{
 		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
 
+		for (auto& Script : *ScriptComponents)
+		{
+			Script.Instance->OnFixedUpdate(Delta);
+		}
+
+		auto LuaScriptComponents = SceneRegistry.GetRegistrySet<LuaScriptComponent>();
+
+		for (auto& LuaScript : *LuaScriptComponents)
+		{
+			if (LuaScript.IsLoaded())
+				LuaScript.GetFunction("OnFixedUpdate")(Delta);
+		}
+	}
+
+	void Scene::Update(float Delta, bool AllowScriptRuntime)
+	{
+
 		if (AllowScriptRuntime)
 		{
+			auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
+
 			for (auto& Script : *ScriptComponents)
 			{
 				Script.Instance->OnUpdate(Delta);
+			}
+
+			auto LuaScriptComponents = SceneRegistry.GetRegistrySet<LuaScriptComponent>();
+
+			for (auto& LuaScript : *LuaScriptComponents)
+			{
+				if (LuaScript.IsLoaded())
+					LuaScript.GetFunction("OnUpdate")(Delta);
 			}
 		}
 
@@ -160,14 +218,6 @@ namespace Techless
 		glm::mat4 CameraTransform = CameraComp.GetTransform(CameraPosition);
 		
 		Renderer::Begin(CameraProjection, CameraTransform);
-
-		if (AllowScriptRuntime)
-		{
-			for (auto& Script : *ScriptComponents)
-			{
-				Script.Instance->OnDraw(Delta);
-			}
-		}
 
 		{
 			auto SpriteComponents = SceneRegistry.GetRegistrySet<SpriteComponent>();
@@ -225,7 +275,7 @@ namespace Techless
 		// this works for now :)
 		// would be nice if i didnt have to assign component types in three different locations but yknoww, it's cooool-
 
-		// [COMPONENT ASSIGNMENT]
+		// [COMPONENT ASSIGNMENT] Prefab Serialisation
 
 		PushSerialisedComponent <TagComponent>			(j_Components, ArchivableIndex, "Tag");
 		PushSerialisedComponent <TransformComponent>	(j_Components, ArchivableIndex, "Transform");
@@ -233,6 +283,7 @@ namespace Techless
 		PushSerialisedComponent <SpriteComponent>		(j_Components, ArchivableIndex, "Sprite");
 //		PushSerialisedComponent <AnimatorComponent>		(j_Components, ArchivableIndex);
 		PushSerialisedComponent <CameraComponent>		(j_Components, ArchivableIndex, "Camera");
+		PushSerialisedComponent <LuaScriptComponent>	(j_Components, ArchivableIndex, "LuaScript");
 
 		std::ofstream o(FilePath);
 		o << j_SerialisedScene << std::endl;

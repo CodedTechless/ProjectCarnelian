@@ -5,21 +5,11 @@ function inspect(table)
 	for k,v in pairs(table) do
 		if type(v) == "string" or type(v) == "number" or type(v) == "table" then
 			print("	[".. k .."] :", v)
-		elseif type(v) == "boolean" then
-			print("	[" .. k .. "] : " .. (v and "true" or "false"));
 		else
 			print("	[".. k .."] : (" .. type(v) .. ")")
 		end
 	end
 	print("}");
-end
-
-function sign(value)
-	return (value > 0 and 1) or (value < 0 and -1) or 0
-end
-
-function bool_tonumber(bool)
-	return bool and 1 or 0
 end
 
 --[[
@@ -35,30 +25,17 @@ function print(...)
 end
 ]]
 
---_G.Layers = {};
-_G.Scenes = {};
 
+_G.Scenes = {};
 _G.ComponentTypes = {};
 
 _G.CurrentSceneAddress = 0;
---_G.CurrentLayerAddress = 0;
-
---[[
-function RegisterLayer(LightLayer)
-	CurrentLayerAddress = CurrentLayerAddress + 1;
-
-	Layers[CurrentLayerAddress] = LayerBinding.new(LightLayer)
-	return CurrentLayerAddress;
-end]]
-
-function GetSceneBinding(SceneAddress)
-	return Scenes[SceneAddress]
-end
 
 function RegisterScene(LightScene)
 	CurrentSceneAddress = CurrentSceneAddress + 1;
 
 	Scenes[CurrentSceneAddress] = SceneBinding.new(LightScene);
+--	inspect(Scenes[CurrentSceneAddress]);
 
 	return CurrentSceneAddress;
 end
@@ -69,21 +46,38 @@ end
 
 function GetEntityBinding(SceneAddress, LightEntityID)
 	local BindedScene = Scenes[SceneAddress]
+--	print("GetEntityBinding", SceneAddress, BindedScene)
 
-	return BindedScene:GetEntityByID(LightEntityID);
+	for _, Ent in pairs(BindedScene.Entities) do
+		if Ent.ID == LightEntityID then
+--			print("Found", Ent, "(" .. Ent.ID .. ")");
+			return Ent;
+		end
+	end
 end
 
 function RegisterEntity(SceneAddress, LightEntity)
 	local BindedScene = Scenes[SceneAddress]
-	BindedScene:RegisterEntity(LightEntity);
+--	print("RegisterEntity", SceneAddress, BindedScene)
+
+	local LuaEntity = EntityBinding.new(BindedScene, LuaScriptableEntity.new(LightEntity));
+	table.insert(BindedScene.Entities, LuaEntity);
+	
+--	inspect(LuaEntity);
+--	print("Registered Entity", LightEntity.ID)
 end
 
 function DeregisterEntity(SceneAddress, LinkedEntityID)
 	local BindedScene = Scenes[SceneAddress]
 --	print("DeregisterEntity", SceneAddress, BindedScene)
 
-	local _, i = BindedScene:GetEntityByID(LinkedEntityID)
-	if i then table.remove(BindedScene.Entities, i); end
+	for i, Ent in ipairs(BindedScene.Entities) do
+		if Ent.ID == LinkedEntityID then
+			table.remove(BindedScene.Entities, i);
+			
+			break;
+		end
+	end
 
 	for i, ComponentSet in ipairs(BindedScene.Components) do
 		if ComponentSet[LinkedEntityID] then

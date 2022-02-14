@@ -138,18 +138,9 @@ namespace Techless
 		default:
 			_severity = "INFO";
 		}
-		std::string Time = GetTimeAsString();
 		
-		std::string MessageString = "OpenGL Error " + std::to_string(Id) + ": " + String;
-		std::string Final = "[" + Time + "][" + _severity + "][" + _source + "] " + MessageString;
 
-		std::cout << Final << std::endl;
-		MessageLog.push_back({
-			Time,
-			_severity,
-			_source,
-			MessageString
-		});
+		Log("OpenGL Error " + std::to_string(Id) + " [" + _source + "]: " + String, _severity, "OpenGL");
 	}
 
 }

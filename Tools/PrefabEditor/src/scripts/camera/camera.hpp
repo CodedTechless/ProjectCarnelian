@@ -13,7 +13,7 @@ namespace NativeScript
 		{
 		public:
 			// Settings
-			bool FreeCamera = true;
+			bool FreeCamera = false;
 			TransformComponent* Subject = nullptr;
 
 			bool AcceptingInput = true;
@@ -30,8 +30,6 @@ namespace NativeScript
 
 			float ZoomSpeed = 0.1f;
 
-			glm::vec2 ViewportSize = {};
-
 			// Z-Plane
 			float Near = -100.f;
 			float Far = 100.f;
@@ -39,20 +37,17 @@ namespace NativeScript
 			void OnCreate()
 			{
 				PositionTo = GetComponent<TransformComponent>().GetLocalPosition();
-
-				ViewportSize = Application::GetActiveApplication().GetActiveWindow()->Size;
 			}
 
 			void OnUpdate(const float Delta)
 			{
 				auto& Transform = GetComponent<TransformComponent>();
-				Transform += (PositionTo - Transform.GetLocalPosition()) * 0.2f * Delta;
+				Transform.SetLocalPosition(Transform.GetLocalPosition() + (PositionTo - Transform.GetLocalPosition()) * 0.2f * Delta);
 
-				auto Pos = Transform.GetLocalPosition();
-				//Debug::Log(std::to_string(Pos.x) + " " + std::to_string(Pos.y));
+				auto WindowSize = Application::GetActiveApplication().GetActiveWindow()->Size;
 
 				auto& CameraComp = GetComponent<CameraComponent>();
-				CameraComp.SetProjection(ViewportSize * ZoomLevel, Near, Far);
+				CameraComp.SetProjection((glm::vec2)WindowSize * ZoomLevel, Near, Far);
 
 				ZoomLevel += (ZoomLevelTo - ZoomLevel) * 0.3f * Delta;
 			}
@@ -71,6 +66,8 @@ namespace NativeScript
 					}
 
 					PositionTo += glm::vec3(Horizontal, Vertical, 0) * CameraSpeed * ZoomLevel * Delta;
+
+					//Debug::Log(std::to_string(PositionTo.x) + " " + std::to_string(PositionTo.y) + " " + std::to_string(PositionTo.z));
 				}
 				else if (Subject)
 				{
@@ -92,10 +89,8 @@ namespace NativeScript
 
 			void OnWindowEvent(const WindowEvent& windowEvent)
 			{
-				ViewportSize = windowEvent.Size;
-
 				auto& CameraComp = GetComponent<CameraComponent>();
-				CameraComp.SetProjection(ViewportSize * ZoomLevel, Near, Far);
+				CameraComp.SetProjection(windowEvent.Size * ZoomLevel, Near, Far);
 			}
 		};
 

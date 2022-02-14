@@ -97,6 +97,8 @@
     <ClCompile Include="src\engine\layers\imgui\imgui_layer.cpp" />
     <ClCompile Include="src\engine\layers\layer.cpp" />
     <ClCompile Include="src\engine\lua\script_environment.cpp" />
+    <ClCompile Include="src\engine\watchdog\imgui\console\console_panel.cpp" />
+    <ClCompile Include="src\engine\watchdog\imgui\explorer\explorer.cpp" />
     <ClCompile Include="src\render\buffer\frame.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui_demo.cpp" />
@@ -273,6 +275,8 @@
     <ClInclude Include="src\engine\entity\prefabs\prefab.h" />
     <ClInclude Include="src\engine\entity\prefabs\prefab_atlas.h" />
     <ClInclude Include="src\engine\layers\imgui\imgui_layer.h" />
+    <ClInclude Include="src\engine\watchdog\imgui\console\console_panel.h" />
+    <ClInclude Include="src\engine\watchdog\imgui\explorer\explorer.h" />
     <ClInclude Include="src\render\buffer\frame.h" />
     <ClInclude Include="src\dependencies\imgui\imconfig.h" />
     <ClInclude Include="src\dependencies\imgui\imgui.h" />

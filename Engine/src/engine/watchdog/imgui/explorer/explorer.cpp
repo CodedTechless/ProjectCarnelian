@@ -1,10 +1,12 @@
 
 #include "explorer.h"
 
-namespace PrefabEditor
+#include <engine/entity/component/components.h>
+
+namespace Techless
 {
 
-    void ExplorerPanel::SetSceneContext(Ptr<EditorScene> sceneContext)
+    void ExplorerPanel::SetSceneContext(Ptr<Scene> sceneContext)
     {
         SceneContext = sceneContext;
         Refresh();
@@ -12,7 +14,7 @@ namespace PrefabEditor
 
     void ExplorerPanel::SetSelectedEntity(Entity* entity)
     {
-        SceneContext->SelectedEntity = entity;
+        SelectedEntity = entity;
         Refresh();
     }
 
@@ -23,7 +25,7 @@ namespace PrefabEditor
 
         bool RequiresRefresh = false;
 
-        ImGuiTreeNodeFlags node_flags = (SceneContext->SelectedEntity && SceneContext->SelectedEntity->GetID() == entity->GetID() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = (SelectedEntity && SelectedEntity->GetID() == entity->GetID() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 
         bool HasChildren = (ParentEntities.find(entity) != ParentEntities.end());
         if (!HasChildren)
@@ -56,7 +58,7 @@ namespace PrefabEditor
 
                 if (DeliveryEntityID != entity->GetID())
                 {
-                    Entity& DeliveryEntity = SceneContext->LinkedScene->GetInstanceByID<Entity>(DeliveryEntityID);
+                    Entity& DeliveryEntity = SceneContext->GetInstanceByID<Entity>(DeliveryEntityID);
                     DeliveryEntity.SetParent(entity);
 
                     if (DeliveryEntity.GetParent() == entity)
@@ -73,7 +75,7 @@ namespace PrefabEditor
 
         if (ImGui::IsItemClicked())
         {
-            SceneContext->SelectedEntity = entity;
+            SelectedEntity = entity;
         }
 
         if (Opened)
@@ -119,8 +121,8 @@ namespace PrefabEditor
             {
                 if (ImGui::MenuItem("Delete"))
                 {
-                    SceneContext->SelectedEntity->Destroy();
-                    SceneContext->SelectedEntity = nullptr;
+                    SelectedEntity->Destroy();
+                    SelectedEntity = nullptr;
 
                     Refresh();
                 }
@@ -133,7 +135,7 @@ namespace PrefabEditor
 
         ImGui::Begin("Properties");
 
-        if (SceneContext && SceneContext->SelectedEntity)
+        if (SceneContext && SelectedEntity)
             RenderProperties();
 
         ImGui::End();
@@ -144,7 +146,7 @@ namespace PrefabEditor
         TopLevelEntities.clear();
         ParentEntities.clear();
 
-        auto Entities = SceneContext->LinkedScene->GetInstances<Entity>();
+        auto Entities = SceneContext->GetInstances<Entity>();
 
         int i = 0;
         for (Entity& entity : *Entities)
@@ -191,35 +193,36 @@ namespace PrefabEditor
         Base = glm::vec2(BaseArray[0], BaseArray[1]);
     }
 
-    void ExplorerPanel::RenderProperties()
+    static void DrawReadOnly(const std::string& Name, const std::string& Label, const std::string& Text = "")
     {
-        ImGui::Text(SceneContext->SelectedEntity->GetComponent<TagComponent>().Name.c_str());
-        ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 1.f, 1.f, 0.5f });
-        ImGui::Text(SceneContext->SelectedEntity->GetID().c_str());
-        ImGui::PopStyleColor();
-
         char buf[50] = {};
-
-        if (SceneContext->SelectedEntity->GetParent() == nullptr)
-            strcpy_s(buf, "None");
-        else
-        {
-            auto* Parent = SceneContext->SelectedEntity->GetParent();
-            strcpy_s(buf, Parent->GetComponent<TagComponent>().Name.c_str());
-        }
+        strcpy_s(buf, Text.c_str());
 
         ImGui::PushItemWidth(150.f);
         ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 1.f, 1.f, 0.5f });
-        ImGui::InputText("##parent", buf, 50, ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputText(Name.c_str(), buf, 50, ImGuiInputTextFlags_ReadOnly);
         ImGui::PopStyleColor();
         ImGui::PopItemWidth();
 
         ImGui::SameLine();
-        ImGui::Text("Parent");
+        ImGui::Text(Label.c_str());
+    }
+
+    void ExplorerPanel::RenderProperties()
+    {
+        ImGui::Text(SelectedEntity->GetComponent<TagComponent>().Name.c_str());
+        ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 1.f, 1.f, 0.5f });
+        ImGui::Text(SelectedEntity->GetID().c_str());
+        ImGui::PopStyleColor();
+
+        Entity* Parent = SelectedEntity->GetParent();
+        std::string Text = Parent ? Parent->GetComponent<TagComponent>().Name.c_str() : "None";
+
+        DrawReadOnly("##parent", "Parent", Text);
 
         ImGui::Separator();
 
-        RenderComponentProperties<TagComponent>("Tag", SceneContext->SelectedEntity,
+        RenderComponentProperties<TagComponent>("Tag", SelectedEntity,
             [](TagComponent& Component)
             {
                 char buf[50] = {};
@@ -235,7 +238,7 @@ namespace PrefabEditor
                 Component.Name = buf;
             });
 
-        RenderComponentProperties<TransformComponent>("Transform", SceneContext->SelectedEntity,
+        RenderComponentProperties<TransformComponent>("Transform", SelectedEntity,
             [this](TransformComponent& Component)
             {
 
@@ -280,25 +283,16 @@ namespace PrefabEditor
 
             });
 
-        RenderComponentProperties<SpriteComponent>("Sprite", SceneContext->SelectedEntity,
+        RenderComponentProperties<SpriteComponent>("Sprite", SelectedEntity,
             [](SpriteComponent& Component)
             {
+
                 char buf[50] = {};
 
                 Ptr<Sprite> sprite = Component.GetSprite();
-                if (!sprite)
-                    strcpy_s(buf, "None");
-                else
-                {
-                    std::string SpriteName = sprite->GetName();
-                    strcpy_s(buf, SpriteName.c_str());
-                }
+                std::string Text = sprite ? sprite->GetName() : "None";
 
-                ImGui::PushItemWidth(150.f);
-                ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 1.f, 1.f, 0.5f });
-                ImGui::InputText("##sprite name", buf, 50, ImGuiInputTextFlags_ReadOnly);
-                ImGui::PopStyleColor();
-                ImGui::PopItemWidth();
+                DrawReadOnly("##sprite name", "Sprite", Text);
 
                 if (ImGui::BeginDragDropTarget())
                 {
@@ -313,9 +307,6 @@ namespace PrefabEditor
 
                     ImGui::EndDragDropTarget();
                 }
-
-                ImGui::SameLine();
-                ImGui::Text("Sprite Name");
 
                 
                 float col[4] = { Component.SpriteColour.R, Component.SpriteColour.G, Component.SpriteColour.B, Component.SpriteColour.A };
@@ -333,16 +324,19 @@ namespace PrefabEditor
                 Component.SpriteColour.A = col[3];
             });
 
-        RenderComponentProperties<CameraComponent>("Camera", SceneContext->SelectedEntity,
+        RenderComponentProperties<CameraComponent>("Camera", SelectedEntity,
             [](CameraComponent& Component)
             {
 
             });
 
-        RenderComponentProperties<LuaScriptComponent>("Lua Script", SceneContext->SelectedEntity,
+        RenderComponentProperties<LuaScriptComponent>("Lua Script", SelectedEntity,
             [](LuaScriptComponent& Component)
             {
-                
+                std::string ScriptName = Component.GetScriptName();
+                std::string Text = (ScriptName == "" ? ScriptName : "None");
+
+                DrawReadOnly("##script", "Script", Text);
             });
 
         auto WindowWidth = ImGui::GetWindowSize().x;

@@ -62,11 +62,14 @@ namespace Techless
 		{
 			sol::state_view lua(s);
 
+			// [COMPONENT ASSIGNMENT] Lua
+
 			DefineQuery(TagComponent);
 			DefineQuery(TransformComponent);
 			DefineQuery(RigidBodyComponent);
 			DefineQuery(SpriteComponent);
 			DefineQuery(CameraComponent);
+			DefineQuery(LuaScriptComponent);
 
 			return sol::lua_nil;
 		}

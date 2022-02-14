@@ -11,8 +11,8 @@ namespace Techless
 
 		enum class Filter
 		{
-			Continue,
 			Ignore,
+			Continue,
 			Stop
 		};
 

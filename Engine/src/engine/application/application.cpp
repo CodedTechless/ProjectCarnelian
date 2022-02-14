@@ -11,12 +11,6 @@
 #include <engine/watchdog/watchdog.h>
 #include <engine/input/input.h>
 
-
-#include <lua.hpp>
-
-#define SOL_ALL_SAFETIES_ON 1
-#include <sol/sol.hpp>
-
 namespace Techless {
 
     Application* Application::CurrentApplication = nullptr;
@@ -31,11 +25,6 @@ namespace Techless {
 
     void Application::Init() 
     {
-
-        sol::state test;
-        test.open_libraries(sol::lib::base);
-
-        test.script("print('bark bark bark!')");
 
 
         assert(CurrentApplication == nullptr);

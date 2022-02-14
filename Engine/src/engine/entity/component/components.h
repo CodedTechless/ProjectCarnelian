@@ -259,9 +259,8 @@ namespace Techless
 
 		Colour SpriteColour{ 1.f, 1.f, 1.f };
 
-		inline void SetSprite(const std::string& spriteName) { aSprite = SpriteAtlas::Get(spriteName); };
+		inline void SetSprite(Ptr<Sprite> sprite) { aSprite = sprite; };
 		inline Ptr<Sprite> GetSprite() const { return aSprite; };
-		inline std::string GetSpriteName() const { return aSprite->GetName(); };
 		
 	private:
 		Ptr<Sprite> aSprite = nullptr;
@@ -280,8 +279,8 @@ namespace Techless
 		{
 			json.at("SpriteColour").get_to(component.SpriteColour);
 			
-			auto SpriteName = json.at("SpriteName").get<std::string>();
-			component.SetSprite(SpriteName);
+			Ptr<Sprite> Sprite = SpriteAtlas::Get(json.at("SpriteName").get<std::string>());
+			component.SetSprite(Sprite);
 		}
 	};
 
@@ -417,13 +416,53 @@ namespace Techless
 		LuaScriptComponent() = default;
 		LuaScriptComponent(const LuaScriptComponent& component) = default;
 
-		void Bind(const std::string& Name)
+		void Bind(const std::string& name)
 		{
-			Instance = ScriptEnvironment::Create(Name, LinkedEntity);
+			if (ScriptEnvironment::Has(name))
+			{
+				Instance = ScriptEnvironment::Create(name, LinkedEntity);
+				Name = name;
+
+				Debug::Log("Loaded script " + name + " into " + LinkedEntity->GetID(), "LuaScriptBinding");
+				GetFunction("OnCreated")();
+
+				Loaded = true;
+			}
+			else
+			{
+				Debug::Error("Script with name " + name + " does not exist.", "LuaScriptBinding");
+			}
 		}
 
-	private:
-		Ptr<sol::environment> Instance;
+		inline void Reload() { Bind(Name); }
+		inline bool IsLoaded() const { return Loaded; };
+		inline std::string GetScriptName() const { return Name; };
 
+	private:
+		bool Loaded = false;
+
+		Ptr<ScriptEnv> Instance = nullptr;
+		std::string Name = "";
+
+		sol::protected_function GetFunction(const std::string& Name)
+		{
+			return Instance->get<sol::protected_function>(Name);
+		}
+
+		friend class Scene;
+
+	public:
+
+		inline friend void to_json(JSON& json, const LuaScriptComponent& component)
+		{
+			json = JSON{
+				{"ScriptName", component.Name}
+			};
+		}
+
+		inline friend void from_json(const JSON& json, LuaScriptComponent& component)
+		{
+			component.Bind(json.at("ScriptName").get<std::string>());
+		}
 	};
 }

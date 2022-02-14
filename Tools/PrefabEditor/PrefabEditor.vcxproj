@@ -96,6 +96,11 @@
     <ClCompile Include="src\editor_panels\explorer.cpp" />
     <ClCompile Include="src\editor_scene\editor_scene.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\core_scripts\entity_binding.lua" />
+    <None Include="assets\core_scripts\global_environment.lua" />
+    <None Include="assets\core_scripts\scene_binding.lua" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

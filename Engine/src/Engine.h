@@ -22,8 +22,13 @@
 #include <engine/entity/scriptable_entity.h>
 #include <engine/entity/component/components.h>
 
+// lua
+#include <engine/lua/script_environment.h>
+
 // debug logging
 #include <engine/watchdog/watchdog.h>
+#include <engine/watchdog/imgui/console/console_panel.h>
+#include <engine/watchdog/imgui/explorer/explorer.h>
 
 // renderer
 #include <render/renderer.h>

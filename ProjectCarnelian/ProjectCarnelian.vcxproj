@@ -94,7 +94,10 @@
     <None Include="assets\core_scripts\entity_binding.lua" />
     <None Include="assets\core_scripts\global_environment.lua" />
     <None Include="assets\core_scripts\scene_binding.lua" />
+    <None Include="assets\scripts\Core\CameraController.lua" />
+    <None Include="assets\scripts\Core\Global\Layer.lua" />
     <None Include="assets\scripts\example.lua" />
+    <None Include="assets\scripts\Core\PlayerController.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -16,7 +16,9 @@ namespace Techless
 	class Scene
 	{
 	public:
-		Scene();
+		static Ptr<Scene> Create();
+
+		Scene() = default;
 		~Scene();
 
 		void Update(const float Delta, bool AllowScriptRuntime = true);
@@ -31,8 +33,8 @@ namespace Techless
 		Entity& CreateEntity(const std::string& TagName = "Entity");
 		Entity& Instantiate(Prefab& prefab);
 
-		inline void SetActiveCamera(Entity& entity) { ActiveCamera = &entity; };
-		inline Entity& GetActiveCamera() const { return *ActiveCamera; };
+		void SetActiveCamera(Entity& entity) { ActiveCamera = &entity; };
+		Entity& GetActiveCamera() const { return *ActiveCamera; };
 
 		inline int GetScriptEnvID() const { return ScriptEnvID; };
 

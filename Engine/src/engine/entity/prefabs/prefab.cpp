@@ -36,6 +36,7 @@ namespace Techless
 		PullSerialisedComponents<RigidBodyComponent>	(j_Components, "RigidBody");
 		PullSerialisedComponents<SpriteComponent>		(j_Components, "Sprite");
 		PullSerialisedComponents<CameraComponent>		(j_Components, "Camera");
+		PullSerialisedComponents<LuaScriptComponent>	(j_Components, "LuaScript");
 	}
 
 }

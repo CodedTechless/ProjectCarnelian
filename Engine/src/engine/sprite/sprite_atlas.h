@@ -19,6 +19,7 @@ namespace Techless
 		static std::unordered_map<std::string, Ptr<Sprite>>& GetSpriteCache() { return SpriteCache; };
 
 		static Ptr<Texture> GetMissingTexture() { return MissingTexture; };
+		static Ptr<Sprite> GetMissingSprite() { return MissingSprite; };
 
 	private:
 		static std::unordered_map<std::string, Ptr<Sprite>> SpriteCache;
