@@ -20,8 +20,10 @@ local function Approach(Value, Approach, Amount)
 end
 
 function OnCreated()
+	local Transform = GetComponent("TransformComponent");
+	Transform.LocalPosition.Z = 10;
+
 	local Camera = Scene:GetEntityByTag("Camera");
-	inspect(Camera);
 	Camera.SetSubject(true, self, Vector2.new(0, -16));
 end
 

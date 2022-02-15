@@ -57,7 +57,9 @@ namespace Carnelian
     void Core::OnUpdateEnd(const float Delta)
     {
         GetFunction("OnUpdateEnd");
-        SceneExplorer.RenderImGuiElements();
+
+        //SceneExplorer.RenderImGuiElements();
+        SceneConsole.RenderImGuiElements();
 
         Renderer::ShowRuntimeStatsWindow();
     }
@@ -76,6 +78,8 @@ namespace Carnelian
 
     void Core::OnWindowEvent(const WindowEvent& windowEvent)
     {
+        glViewport(0, 0, windowEvent.Size.x, windowEvent.Size.y);
+
         GetFunction("OnWindowEvent")(windowEvent);
 
         ActiveScene->OnWindowEvent(windowEvent);

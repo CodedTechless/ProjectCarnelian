@@ -6,7 +6,7 @@
 
 namespace Techless 
 {
-	
+
 	struct LogMessage
 	{
 		std::string Time;
@@ -26,8 +26,16 @@ namespace Techless
 
 		static void OpenGLMessage(const std::string& String, GLenum Source, GLenum Type, GLuint Id, GLenum Severity);
 
+		template<typename Func>
+		static void DefineCommand(std::string CommandName, Func commandFunction)
+		{
+			Commands[CommandName] = commandFunction;
+		}
+
 		static std::vector<LogMessage>& GetMessageLog() { return MessageLog; };
 	private:
+
+		static std::unordered_map<std::string, std::function<void()>> Commands;
 		static std::vector<LogMessage> MessageLog;
 	};
 }

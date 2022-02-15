@@ -2,7 +2,8 @@
 
 #include <scriptindex.h>
 
-#include <editor_panels/explorer.h>
+#include <engine/watchdog/imgui/explorer/explorer.h>
+#include <engine/watchdog/imgui/console/console_panel.h>
 #include <editor_panels/asset_manager.h>
 #include <editor_scene/editor_scene.h>
 
@@ -16,9 +17,9 @@ namespace PrefabEditor
 	public:
 		void OnCreated();
 
-		void OnUpdate(const float& Delta);
-		void OnUpdateEnd(const float& Delta);
-		void OnUpdateFixed(const float& Delta);
+		void OnUpdate(const float Delta);
+		void OnUpdateEnd(const float Delta);
+		void OnUpdateFixed(const float Delta);
 
 		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
 		//void OnWindowEvent(const WindowEvent& windowEvent);
@@ -27,8 +28,10 @@ namespace PrefabEditor
 		void SetScene(const std::string& SceneName);
 
 	private:
-		ExplorerPanel EditorExplorer;
-		AssetManagerPanel EditorAssetManager;
+		ExplorerPanel EditorExplorer{};
+		AssetManagerPanel EditorAssetManager{};
+
+		ConsolePanel EditorConsole{};
 
 	private:
 		Ptr<EditorScene> ActiveEditorScene = nullptr;

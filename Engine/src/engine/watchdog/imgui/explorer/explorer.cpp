@@ -193,7 +193,7 @@ namespace Techless
         Base = glm::vec2(BaseArray[0], BaseArray[1]);
     }
 
-    static void DrawReadOnly(const std::string& Name, const std::string& Label, const std::string& Text = "")
+    static void DrawReadOnly(const std::string& Name, const std::string& Text = "")
     {
         char buf[50] = {};
         strcpy_s(buf, Text.c_str());
@@ -203,7 +203,10 @@ namespace Techless
         ImGui::InputText(Name.c_str(), buf, 50, ImGuiInputTextFlags_ReadOnly);
         ImGui::PopStyleColor();
         ImGui::PopItemWidth();
+    }
 
+    static void DrawTextLabel(const std::string& Label)
+    {
         ImGui::SameLine();
         ImGui::Text(Label.c_str());
     }
@@ -218,7 +221,8 @@ namespace Techless
         Entity* Parent = SelectedEntity->GetParent();
         std::string Text = Parent ? Parent->GetComponent<TagComponent>().Name.c_str() : "None";
 
-        DrawReadOnly("##parent", "Parent", Text);
+        DrawReadOnly("##parent", Text);
+        DrawTextLabel("Parent");
 
         ImGui::Separator();
 
@@ -287,12 +291,10 @@ namespace Techless
             [](SpriteComponent& Component)
             {
 
-                char buf[50] = {};
-
                 Ptr<Sprite> sprite = Component.GetSprite();
                 std::string Text = sprite ? sprite->GetName() : "None";
 
-                DrawReadOnly("##sprite name", "Sprite", Text);
+                DrawReadOnly("##sprite name", Text);
 
                 if (ImGui::BeginDragDropTarget())
                 {
@@ -308,7 +310,8 @@ namespace Techless
                     ImGui::EndDragDropTarget();
                 }
 
-                
+                DrawTextLabel("Sprite");
+
                 float col[4] = { Component.SpriteColour.R, Component.SpriteColour.G, Component.SpriteColour.B, Component.SpriteColour.A };
                 
                 ImGui::PushItemWidth(200.f);
@@ -334,9 +337,10 @@ namespace Techless
             [](LuaScriptComponent& Component)
             {
                 std::string ScriptName = Component.GetScriptName();
-                std::string Text = (ScriptName == "" ? ScriptName : "None");
-
-                DrawReadOnly("##script", "Script", Text);
+                std::string Text = (ScriptName != "" ? ScriptName : "None");
+                
+                DrawReadOnly("##script", Text);
+                DrawTextLabel("Script");
             });
 
         auto WindowWidth = ImGui::GetWindowSize().x;

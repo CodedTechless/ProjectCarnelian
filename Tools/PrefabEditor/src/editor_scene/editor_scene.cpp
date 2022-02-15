@@ -7,7 +7,7 @@ namespace PrefabEditor
 	EditorScene::EditorScene(const std::string& sceneName, Prefab* LoadWithPrefab)
 		: SceneName(sceneName)
 	{
-		LinkedScene = CreatePtr<Scene>();
+		LinkedScene = Scene::Create();
 
 		if (LoadWithPrefab)
 		{

@@ -11,6 +11,8 @@
 #include <memory>
 #include <filesystem>
 
+#include <functional>
+
 #include <vector>
 #include <assert.h>
 

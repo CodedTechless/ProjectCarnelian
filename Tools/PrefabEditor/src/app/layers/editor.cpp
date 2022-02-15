@@ -32,7 +32,7 @@ namespace PrefabEditor {
             }
         }
 
-        auto NewScene = CreatePtr<EditorScene >( SceneName, LoadWithPrefab );
+        auto NewScene = CreatePtr<EditorScene>( SceneName, LoadWithPrefab );
         NewScene->ActiveCameraScript->OnWindowEvent({ ViewportSize });
         
         Scenes.push_back(NewScene);
@@ -45,21 +45,21 @@ namespace PrefabEditor {
             if (scene->SceneName == SceneName)
             {
                 ActiveEditorScene = scene;
-                EditorExplorer.SetSceneContext(ActiveEditorScene);
+                EditorExplorer.SetSceneContext(ActiveEditorScene->LinkedScene);
 
                 Debug::Log("Changed scene to " + SceneName, "PrefabEditor");
             }
         }
     }
 
-    void Editor::OnUpdateFixed(const float& Delta)
+    void Editor::OnUpdateFixed(const float Delta)
     {
         ActiveEditorScene->ActiveCameraScript->OnFixedUpdate(Delta);
 
         FixedUpdateRate = Delta;
     }
 
-    void Editor::OnUpdate(const float& Delta)
+    void Editor::OnUpdate(const float Delta)
     {
         auto Spec = ActiveFrameBuffer->GetSpecification();
         if ((Spec.Size.x != ViewportSize.x or Spec.Size.y != ViewportSize.y) 
@@ -83,7 +83,7 @@ namespace PrefabEditor {
         UpdateRate = Delta;
     }
 
-    void Editor::OnUpdateEnd(const float& Delta)
+    void Editor::OnUpdateEnd(const float Delta)
     {
         static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
@@ -227,6 +227,7 @@ namespace PrefabEditor {
 
         EditorExplorer.RenderImGuiElements();
         EditorAssetManager.RenderImGuiElements();
+        EditorConsole.RenderImGuiElements();
 
         Renderer::ShowRuntimeStatsWindow();
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Engine.h>
+#include <engine/watchdog/imgui/console/console_panel.h>
 
 using namespace Techless;
 
@@ -22,6 +23,7 @@ namespace Carnelian {
 		Ptr<Scene> ActiveScene = nullptr;
 
 		ExplorerPanel SceneExplorer{};
+		ConsolePanel SceneConsole{};
 		
 		float UpdateRate;
 		float FixedUpdateRate;

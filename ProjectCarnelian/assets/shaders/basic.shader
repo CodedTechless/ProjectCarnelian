@@ -33,6 +33,10 @@ in float QuadTextureSlot;
 uniform sampler2D Samplers[8];
 
 void main() {
+    vec4 TexColour = QuadColour;
+
     int TextureSlot = int(QuadTextureSlot);
-    Color = QuadColour * texture(Samplers[TextureSlot], QuadTextureCoordinate); //TexColour * u_Colour;
+    TexColour *= texture(Samplers[TextureSlot], QuadTextureCoordinate);
+
+    Color = TexColour;
 };

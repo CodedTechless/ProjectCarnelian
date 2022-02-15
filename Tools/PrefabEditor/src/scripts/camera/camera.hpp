@@ -13,7 +13,7 @@ namespace NativeScript
 		{
 		public:
 			// Settings
-			bool FreeCamera = false;
+			bool FreeCamera = true;
 			TransformComponent* Subject = nullptr;
 
 			bool AcceptingInput = true;
@@ -29,6 +29,8 @@ namespace NativeScript
 			float ZoomLevelTo = 1.f;
 
 			float ZoomSpeed = 0.1f;
+
+			glm::vec2 ViewportSize = {};
 
 			// Z-Plane
 			float Near = -100.f;
@@ -47,7 +49,7 @@ namespace NativeScript
 				auto WindowSize = Application::GetActiveApplication().GetActiveWindow()->Size;
 
 				auto& CameraComp = GetComponent<CameraComponent>();
-				CameraComp.SetProjection((glm::vec2)WindowSize * ZoomLevel, Near, Far);
+				CameraComp.SetProjection(ViewportSize * ZoomLevel, Near, Far);
 
 				ZoomLevel += (ZoomLevelTo - ZoomLevel) * 0.3f * Delta;
 			}
@@ -89,8 +91,10 @@ namespace NativeScript
 
 			void OnWindowEvent(const WindowEvent& windowEvent)
 			{
+				ViewportSize = windowEvent.Size;
+
 				auto& CameraComp = GetComponent<CameraComponent>();
-				CameraComp.SetProjection(windowEvent.Size * ZoomLevel, Near, Far);
+				CameraComp.SetProjection(ViewportSize * ZoomLevel, Near, Far);
 			}
 		};
 
