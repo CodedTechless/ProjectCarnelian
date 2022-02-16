@@ -19,13 +19,11 @@ namespace Techless {
 		float FixedUpdateTime = 0;
 	};
 
-	class Application {
+	class Application 
+	{
 	public:
 		Application() = default;
-		~Application();
-		
-		static Application& GetActiveApplication() { return *CurrentApplication; };
-		static RuntimeInfo& GetRuntimeData() { return RuntimeData; }
+		virtual ~Application() = default;
 
 		inline bool IsRunning() const { return Running; };
 		inline Window* GetActiveWindow() const { return aWindow; };
@@ -33,6 +31,9 @@ namespace Techless {
 
 		void AddLayer(Layer* NewLayer);
 		void AddOverlay(Layer* NewOverlay);
+
+		static Application& GetActiveApplication() { return *CurrentApplication; };
+		static RuntimeInfo& GetRuntimeData() { return RuntimeData; };
 
 	protected:
 		void Init();

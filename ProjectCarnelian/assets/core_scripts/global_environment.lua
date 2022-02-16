@@ -35,25 +35,10 @@ function print(...)
 end
 ]]
 
---_G.Layers = {};
 _G.Scenes = {};
+_G.CurrentSceneAddress = 0;
 
 _G.ComponentTypes = {};
-
-_G.CurrentSceneAddress = 0;
---_G.CurrentLayerAddress = 0;
-
---[[
-function RegisterLayer(LightLayer)
-	CurrentLayerAddress = CurrentLayerAddress + 1;
-
-	Layers[CurrentLayerAddress] = LayerBinding.new(LightLayer)
-	return CurrentLayerAddress;
-end]]
-
-function GetSceneBinding(SceneAddress)
-	return Scenes[SceneAddress]
-end
 
 function RegisterScene(LightScene)
 	CurrentSceneAddress = CurrentSceneAddress + 1;
@@ -63,42 +48,67 @@ function RegisterScene(LightScene)
 	return CurrentSceneAddress;
 end
 
-function DeregisterScene(SceneAddress)
-	Scenes[SceneAddress] = nil
+function DeregisterScene(SceneID)
+	Scenes[SceneID] = nil
 end	
 
-function GetEntityBinding(SceneAddress, LightEntityID)
-	local BindedScene = Scenes[SceneAddress]
+function GetSceneBinding(SceneID)
+	return Scenes[SceneID]
+end
+
+function CallScene(SceneID, FuncName, ...)
+    local BindedScene = Scenes[SceneID];
+
+    if BindedScene[FuncName] then
+        return BindedScene[FuncName](BindedScene, ...);
+    else
+        cerror("Attempted to run CallScene on " .. tostring(SceneID) .. " but function " .. FuncName .. " doesn't exist.");
+    end
+end
+
+
+-- Entities
+
+function GetEntityBinding(SceneID, LightEntityID)
+	local BindedScene = Scenes[SceneID]
 
 	return BindedScene:GetEntityByID(LightEntityID);
 end
 
-function RegisterEntity(SceneAddress, LightEntity)
-	local BindedScene = Scenes[SceneAddress]
+function RegisterEntity(SceneID, LightEntity)
+	local BindedScene = Scenes[SceneID]
 	BindedScene:RegisterEntity(LightEntity);
 end
 
-function DeregisterEntity(SceneAddress, LinkedEntityID)
-	local BindedScene = Scenes[SceneAddress]
---	print("DeregisterEntity", SceneAddress, BindedScene)
+function DeregisterEntity(SceneID, LinkedEntityID)
+	local BindedScene = Scenes[SceneID]
 
 	local _, i = BindedScene:GetEntityByID(LinkedEntityID)
 	if i then table.remove(BindedScene.Entities, i); end
 
-	for i, ComponentSet in ipairs(BindedScene.Components) do
+	for _, ComponentSet in ipairs(BindedScene.Components) do
 		if ComponentSet[LinkedEntityID] then
 			ComponentSet[LinkedEntityID] = nil;
 
 			break;
 		end
 	end
-
---	print("Removed " .. LinkedEntityID);
 end
 
-function RegisterComponent(SceneAddress, LinkedEntityID, InternalComponentName, LinkedComponent)
-	local BindedScene = Scenes[SceneAddress]
---	print("RegisterComponent", SceneAddress, BindedScene)
+function ResetEntity(SceneID, LightEntity)
+	local BindedScene = Scenes[SceneID]
+
+	local _, i = BindedScene:GetEntityByID(LightEntity)
+	if i then table.remove(BindedScene.Entities, i); end
+
+    BindedScene:RegisterEntity(LightEntity);
+end
+
+
+-- Components
+
+function RegisterComponent(SceneID, LinkedEntityID, InternalComponentName, LinkedComponent)
+	local BindedScene = Scenes[SceneID]
 
 	local ComponentName = GetComponentType(InternalComponentName);
 
@@ -107,24 +117,18 @@ function RegisterComponent(SceneAddress, LinkedEntityID, InternalComponentName, 
 	end
 
 	BindedScene.Components[ComponentName][LinkedEntityID] = LinkedComponent;
-
---	print("Registered Component " .. ComponentName .. "(" .. tostring(LinkedComponent) .. ") to " .. LinkedEntityID)
 end
 
-function DeregisterComponent(SceneAddress, LinkedEntityID, InternalComponentName)
-	local BindedScene = Scenes[SceneAddress]
---	print("DeregisterComponent", SceneAddress, BindedScene)
-
+function DeregisterComponent(SceneID, LinkedEntityID, InternalComponentName)
+	local BindedScene = Scenes[SceneID]
 
 	local ComponentName = GetComponentType(InternalComponentName);
 
 	if not BindedScene.Components[ComponentName] then
-		error("Entity " .. LinkedEntityID .. " with component of type " .. ComponentName .. " does not exist.");
+		cerror("Entity " .. LinkedEntityID .. " with component of type " .. ComponentName .. " does not exist.");
 	end
 
 	BindedScene.Components[ComponentName][LinkedEntityID] = nil;
-
---	print("Deregistered Component " .. ComponentName .. " from " .. LinkedEntityID)
 end
 
 function RegisterComponentType(InternalTypeName, TypeName)
@@ -133,7 +137,7 @@ end
 
 function GetComponentType(InternalTypeName)
 	if not ComponentTypes[InternalTypeName] then
-		error(InternalTypeName .. " is not a registered component type name");
+		cerror(InternalTypeName .. " is not a registered component type name");
 	end
 
 	return ComponentTypes[InternalTypeName];

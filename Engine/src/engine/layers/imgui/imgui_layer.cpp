@@ -25,11 +25,8 @@ namespace Techless
 
 		ImGui::StyleColorsDark();										// sets the window colour style to dark mode
 
-
 		ImGui_ImplGlfw_InitForOpenGL(glfwGetCurrentContext(), true);	// bind it to the currently active GLFW window
 		ImGui_ImplOpenGL3_Init((char*)glGetString(330));				// initialises it in OpenGL mode
-
-
 	}
 
 	void ImGuiLayer::OnRemoved()

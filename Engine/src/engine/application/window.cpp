@@ -166,6 +166,12 @@ namespace Techless
             });
 	}
 
+    Window::~Window()
+    {
+        glfwDestroyWindow(aWindow);
+        glfwTerminate();
+    }
+
     void Window::SetVsyncEnabled(bool Enabled)
     {
         if (Enabled)

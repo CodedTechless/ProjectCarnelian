@@ -12,17 +12,13 @@
 namespace Techless
 {
 
+	// Creates a Scene object (a shared_ptr) which has a pre-registered Lua scene counter-part.
 	Ptr<Scene> Scene::Create()
 	{
 		Ptr<Scene> newScene = CreatePtr<Scene>();
-		newScene->ScriptEnvID = ScriptEnvironment::RegisterScene(newScene);
+		newScene->SceneLuaID = ScriptEnvironment::RegisterScene(newScene);
 
 		return newScene;
-	}
-
-	Scene::~Scene()
-	{
-		ScriptEnvironment::DeregisterScene(ScriptEnvID);
 	}
 
 	Entity& Scene::CreateEntity(const std::string& TagName)
@@ -31,7 +27,7 @@ namespace Techless
 		std::string NewUUID = UUID::Generate();
 
 		Entity& Ent = SceneRegistry.Add<Entity>(NewUUID, this, NewUUID);
-		ScriptEnvironment::RegisterEntity(ScriptEnvID, &Ent);
+		ScriptEnvironment::RegisterEntity(SceneLuaID, &Ent);
 
 		Ent.AddComponent<TransformComponent>();
 
@@ -43,20 +39,12 @@ namespace Techless
 
 	void Scene::DestroyEntity(const std::string& EntityID)
 	{
-		ScriptEnvironment::DeregisterEntity(ScriptEnvID, EntityID);
+		ScriptEnvironment::DeregisterEntity(SceneLuaID, EntityID);
 
 		if (SceneRegistry.Has<ScriptComponent>(EntityID))
 		{
 			auto& Script = SceneRegistry.Get<ScriptComponent>(EntityID);
 			Script.Instance->OnDestroy();
-		}
-
-		if (SceneRegistry.Has<LuaScriptComponent>(EntityID))
-		{
-			auto& LuaScript = SceneRegistry.Get<LuaScriptComponent>(EntityID);
-
-			if (LuaScript.IsLoaded())
-				LuaScript.GetFunction("OnDestroy")();
 		}
 
 		SceneRegistry.Clear(EntityID);
@@ -73,7 +61,7 @@ namespace Techless
 		for (const PrefabEntity& prefabEntity : prefab.Entities)
 		{
 			Entity& newEntity = SceneRegistry.Add<Entity>(prefabEntity.EntityID, this, prefabEntity.EntityID);
-			ScriptEnvironment::RegisterEntity(ScriptEnvID, &newEntity);
+			ScriptEnvironment::RegisterEntity(SceneLuaID, &newEntity);
 
 			if (prefabEntity.IsRoot)
 				RootEntity = &newEntity;
@@ -127,23 +115,7 @@ namespace Techless
 
 		if (FinalFilter != Input::Filter::Stop)
 		{
-			auto LuaScriptComponents = SceneRegistry.GetRegistrySet<LuaScriptComponent>();
-
-			for (LuaScriptComponent& LuaScript : *LuaScriptComponents)
-			{
-				if (LuaScript.IsLoaded())
-				{
-					Input::Filter Response = LuaScript.GetFunction("OnInputEvent")(inputEvent, Processed);
-
-					if (Response != Input::Filter::Ignore)
-						FinalFilter = Response;
-
-					if (Response == Input::Filter::Stop)
-						break;
-					else if (Response == Input::Filter::Continue)
-						Processed = true;
-				}
-			}
+			Input::Filter LuaFilter = ScriptEnvironment::CallScene(SceneLuaID, "OnInputEvent", inputEvent, Processed).as<Input::Filter>();
 		}
 
 		return FinalFilter;
@@ -158,13 +130,7 @@ namespace Techless
 			Script.Instance->OnWindowEvent(windowEvent);
 		}
 
-		auto LuaScriptComponents = SceneRegistry.GetRegistrySet<LuaScriptComponent>();
-
-		for (auto& LuaScript : *LuaScriptComponents)
-		{
-			if (LuaScript.IsLoaded())
-				LuaScript.GetFunction("OnWindowEvent")(windowEvent);
-		}
+		ScriptEnvironment::CallScene(SceneLuaID, "OnWindowEvent", windowEvent);
 	}
 
 	void Scene::FixedUpdate(float Delta)
@@ -176,18 +142,11 @@ namespace Techless
 			Script.Instance->OnFixedUpdate(Delta);
 		}
 
-		auto LuaScriptComponents = SceneRegistry.GetRegistrySet<LuaScriptComponent>();
-
-		for (auto& LuaScript : *LuaScriptComponents)
-		{
-			if (LuaScript.IsLoaded())
-				LuaScript.GetFunction("OnFixedUpdate")(Delta);
-		}
+		ScriptEnvironment::CallScene(SceneLuaID, "OnFixedUpdate", Delta);
 	}
 
 	void Scene::Update(float Delta, bool AllowScriptRuntime)
 	{
-
 		if (AllowScriptRuntime)
 		{
 			auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
@@ -197,13 +156,7 @@ namespace Techless
 				Script.Instance->OnUpdate(Delta);
 			}
 
-			auto LuaScriptComponents = SceneRegistry.GetRegistrySet<LuaScriptComponent>();
-
-			for (auto& LuaScript : *LuaScriptComponents)
-			{
-				if (LuaScript.IsLoaded())
-					LuaScript.GetFunction("OnUpdate")(Delta);
-			}
+			ScriptEnvironment::CallScene(SceneLuaID, "OnUpdate", Delta);
 		}
 
 		// Sprite Rendering

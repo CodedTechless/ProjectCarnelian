@@ -16,8 +16,8 @@ namespace Carnelian
     {
         if (ScriptEnvironment::Has(LayerName))
         {
-            LayerScript = ScriptEnvironment::CreateGlobal(LayerName);
-            LayerScript->set("Scene", ScriptEnvironment::GetSceneBinding(ActiveScene->GetScriptEnvID()));
+            LayerScript = ScriptEnvironment::RegisterGenericScript(LayerName);
+            LayerScript->set("Scene", ScriptEnvironment::GetSceneBinding(ActiveScene->GetLuaID()));
 
             GetFunction("OnCreated")();
         }
@@ -50,6 +50,8 @@ namespace Carnelian
     {
         GetFunction("OnUpdate")(Delta);
         ActiveScene->Update(Delta);
+
+        //Debug::Log(std::to_string(LayerScript.use_count()));
 
         UpdateRate = Delta;
     }

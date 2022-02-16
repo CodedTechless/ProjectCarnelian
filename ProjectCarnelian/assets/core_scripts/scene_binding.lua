@@ -15,6 +15,52 @@ function SceneBinding.new(LinkedScene)
 	return self;
 end
 
+function SceneBinding:OnUpdate(Delta)
+	for _, e in next, self.Entities do
+		if e.HasLuaScript() then
+            e.OnUpdate(Delta);
+		end
+	end
+end
+
+function SceneBinding:OnFixedUpdate(Delta)
+	for _, e in next, self.Entities do
+		if e.HasLuaScript() then
+            e.OnFixedUpdate(Delta);
+		end
+	end
+end
+
+function SceneBinding:OnInputEvent(InputObject, Processed)
+	local FinalFilter = InputFilter.Ignore;
+
+	for _, e in next, self.Entities do
+		if e.HasLuaScript() then
+            local Filter = e.OnInputEvent(InputObject, Processed);
+
+            if Filter ~= InputFilter.Ignore then
+                FinalFilter = InputFilter;
+            end
+    
+            if Filter == InputFilter.Stop then
+                break;
+            elseif Filter == InputFilter.Continue then
+                Processed = true;
+            end
+		end
+	end
+
+	return FinalFilter;
+end
+
+function SceneBinding:OnWindowEvent(WindowEventObject)
+	for _, e in next, self.Entities do
+        if e.HasLuaScript() then
+		    e.OnWindowEvent(WindowEventObject);
+        end
+	end
+end
+
 function SceneBinding:RegisterEntity(LightEntity)
 	local ExistingEntity = self:GetEntityByID(LightEntity.ID)
 	if ExistingEntity then
@@ -65,12 +111,9 @@ function SceneBinding:ChangeComponent(LinkedEntity, ComponentName, ChangeQueryMo
 end
 
 function SceneBinding:GetComponent(LinkedEntityID, ComponentName)
-	if not self.Components[ComponentName] or not self.Components[ComponentName][LinkedEntityID] then
-		error("Entity " .. LinkedEntityID .. " does not have " .. ComponentName);
-		return
+	if self.Components[ComponentName] then
+		return self.Components[ComponentName][LinkedEntityID];
 	end
-
-	return self.Components[ComponentName][LinkedEntityID]
 end
 
 return SceneBinding;

@@ -15,6 +15,12 @@ namespace Techless
 
 		void Begin();
 		void End();
+
+		void SetAbsorbInputs(bool Mode) { AbsorbInputs = Mode; };
+		inline bool GetAbsorbInputs() const { return AbsorbInputs; };
+
+	private:
+		bool AbsorbInputs = true;
 	};
 
 

@@ -416,15 +416,22 @@ namespace Techless
 		LuaScriptComponent() = default;
 		LuaScriptComponent(const LuaScriptComponent& component) = default;
 
+		void Unbind()
+		{
+			ScriptEnvironment::ResetEntity(LinkedEntity->GetScene()->GetLuaID(), LinkedEntity);
+		}
+
 		void Bind(const std::string& name)
 		{
+			if (Loaded)
+				Unbind();
+
 			if (ScriptEnvironment::Has(name))
 			{
-				Instance = ScriptEnvironment::Create(name, LinkedEntity);
+				ScriptEnvironment::RegisterEntityScript(name, LinkedEntity);
 				Name = name;
 
 				Debug::Log("Loaded script " + name + " into " + LinkedEntity->GetID(), "LuaScriptBinding");
-				GetFunction("OnCreated")();
 
 				Loaded = true;
 			}
@@ -434,20 +441,12 @@ namespace Techless
 			}
 		}
 
-		inline void Reload() { Bind(Name); }
 		inline bool IsLoaded() const { return Loaded; };
 		inline std::string GetScriptName() const { return Name; };
 
 	private:
-		bool Loaded = false;
-
-		Ptr<ScriptEnv> Instance = nullptr;
 		std::string Name = "";
-
-		sol::protected_function GetFunction(const std::string& Name)
-		{
-			return Instance->get<sol::protected_function>(Name);
-		}
+		bool Loaded = false;
 
 		friend class Scene;
 

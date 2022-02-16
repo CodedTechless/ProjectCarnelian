@@ -98,6 +98,7 @@
     <None Include="assets\scripts\Core\Global\Layer.lua" />
     <None Include="assets\scripts\example.lua" />
     <None Include="assets\scripts\Core\PlayerController.lua" />
+    <None Include="assets\scripts\test.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

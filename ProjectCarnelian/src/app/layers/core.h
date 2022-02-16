@@ -36,7 +36,7 @@ namespace Carnelian {
 			return LayerScript->get<sol::protected_function>(Name);
 		}
 
-		Ptr<ScriptEnv> LayerScript = nullptr;
+		Ptr<LuaEnv> LayerScript = nullptr;
 
 	};
 

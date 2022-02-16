@@ -41,8 +41,7 @@ namespace Techless
 		"bool_tonumber", "sign"
 	};
 
-	std::unordered_map<std::string, Script> ScriptEnvironment::CachedScripts{};
-	std::unordered_map<std::string, Script> ScriptEnvironment::CachedCoreScripts{};
+	std::unordered_map<std::string, LuaFunction> ScriptEnvironment::CachedScripts{};
 
 	sol::state ScriptEnvironment::LuaVM{};
 
@@ -87,6 +86,11 @@ namespace Techless
 		}
 	}
 
+	void ScriptEnvironment::End()
+	{
+		CachedScripts.clear();
+	}
+
 	void ScriptEnvironment::Read(const std::string& Path)
 	{
 		for (const auto& File : fs::directory_iterator(Path))
@@ -118,7 +122,8 @@ namespace Techless
 		}
 	}
 
-	void ScriptEnvironment::LoadCoreScripts()
+	// sets up the global environment and all the special functions dedicated to it and stuff and shit like that innit
+	void ScriptEnvironment::LoadGlobalEnvironment()
 	{
 		LuaVM.safe_script_file("assets/core_scripts/global_environment.lua", &sol::script_throw_on_error);
 		sol::protected_function RegisterComponentType = LuaVM["RegisterComponentType"];
@@ -132,6 +137,7 @@ namespace Techless
 		RegisterComponentType(TYPEID_STRING(LuaScriptComponent), "LuaScriptComponent");
 		RegisterComponentType(TYPEID_STRING(ScriptComponent), "ScriptComponent");
 
+		/*
 		const std::vector<std::string> CoreScriptNames = {
 			"RegisterScene", "DeregisterScene",
 			"RegisterEntity", "DeregisterEntity",
@@ -143,8 +149,9 @@ namespace Techless
 		{
 			CachedCoreScripts[Name] = LuaVM[Name];
 		}
+		*/
 
-		Debug::Log("Loaded core scripts!", "ScriptEnvironment");
+		Debug::Log("Loaded global environment!", "ScriptEnvironment");
 	}
 
 	void ScriptEnvironment::Init()
@@ -471,11 +478,6 @@ namespace Techless
 					sol::no_constructor
 				);
 
-			AccessibleLibraries.push_back("Script");
-			LuaVM.new_usertype<Script>("Script",
-					sol::no_constructor
-				);
-
 			AccessibleLibraries.push_back("Sprite");
 			LuaVM.new_usertype<Sprite>("Sprite", 
 					sol::no_constructor,
@@ -600,7 +602,7 @@ namespace Techless
 			);
 		}
 
-		LoadCoreScripts();
+		LoadGlobalEnvironment();
 		Read("assets/scripts");
 
 		AccessibleLibraries.push_back("Application");
@@ -616,61 +618,74 @@ namespace Techless
 		return CachedScripts.find(Name) != CachedScripts.end();
 	}
 
-	Ptr<ScriptEnv> ScriptEnvironment::CreateGlobal(const std::string& Name)
+	// generic scripts return a LuaEnv to play around with because they might need to be accessed from C++
+	UPtr<LuaEnv> ScriptEnvironment::RegisterGenericScript(const std::string& ScriptName)
 	{
-		Ptr<ScriptEnv> NewEnvironment = CreatePtr<ScriptEnv>(LuaVM, sol::create);
-		ScriptEnv& Environment = *NewEnvironment;
+		UPtr<LuaEnv> NewEnvironment = CreateUPtr<LuaEnv>( LuaVM, sol::create );
 
-		for (const auto& entry : AccessibleLibraries)
-			Environment[entry] = LuaVM[entry];
+		for (const std::string& entry : AccessibleLibraries)
+			NewEnvironment->set(entry, LuaVM[entry]);
 
-		Environment.set_on(CachedScripts[Name]);
-		CachedScripts[Name].call();
+		sol::protected_function& FuncRef = CachedScripts[ScriptName];
+
+		NewEnvironment->set_on(FuncRef);
+		CachedScripts[ScriptName].call(FuncRef);
 
 		return NewEnvironment;
 	}
 
-	Ptr<ScriptEnv> ScriptEnvironment::Create(const std::string& Name, Entity* entity)
+	// as entities scripts are managed by lua, nothing has to be returned (as there's no need to call an entities scripts from C++)
+	void ScriptEnvironment::RegisterEntityScript(const std::string& ScriptName, Entity* entity)
 	{
-		sol::table EntityTable = GetEntityBinding(entity->GetScene()->GetScriptEnvID(), entity->GetID());
+		sol::table EntityTable = GetEntityBinding(entity->GetScene()->GetLuaID(), entity->GetID());
 
-		Ptr<ScriptEnv> NewEnvironment = CreatePtr<ScriptEnv>(LuaVM, sol::create, EntityTable);
-		ScriptEnv& Environment = *NewEnvironment;
+		// Build environment
+		LuaEnv NewEnvironment = { LuaVM, sol::create, EntityTable };
 
 		for (const auto& entry : AccessibleLibraries)
-			Environment[entry] = LuaVM[entry];
+			NewEnvironment[entry] = LuaVM[entry];
 		
-		sol::metatable env_metatable = Environment[sol::metatable_key];
+		sol::metatable env_metatable = NewEnvironment[sol::metatable_key];
 		env_metatable["__index"] = EntityTable;
 		env_metatable["__newindex"] = [EntityTable](sol::table t, sol::object k, sol::object v) {
 			sol::table e = EntityTable;
 			e[k] = v;
 		};
 
-		Environment.set_on(CachedScripts[Name]);
-		sol::protected_function_result res = CachedScripts[Name].call();
+		// Run template function
+		sol::protected_function& FuncRef = CachedScripts[ScriptName];
+
+		NewEnvironment.set_on(FuncRef);
+		sol::protected_function_result res = FuncRef.call();
 
 		if (!res.valid())
 		{
 			sol::error err = res;
-			Debug::Error("Ran into an error while initialising " + Name + ": " + err.what(), "ScriptEnvironment");
+			Debug::Error("Error while initialising entity script " + ScriptName + ": " + err.what(), "ScriptEnvironment");
+		}
+		else
+		{
+			NewEnvironment.get<sol::protected_function>("OnCreated")();
 		}
 
 		//LuaVM["inspect"](env_metatable);
 		//LuaVM["inspect"](Environment);
 		//LuaVM["inspect"](EntityTable);
-
-		return NewEnvironment;
 	}
 
 	void ScriptEnvironment::RegisterEntity(int EnvironmentID, Entity* entity) 
 	{ 
-		CachedCoreScripts["RegisterEntity"](EnvironmentID, entity); 
+		LuaVM.get<sol::protected_function>("RegisterEntity")(EnvironmentID, entity); 
 	};
 
 	int ScriptEnvironment::RegisterScene(Ptr<Scene> scene)
 	{ 
-		return CachedCoreScripts["RegisterScene"](scene); 
+		return LuaVM.get<sol::protected_function>("RegisterScene")(scene); 
 	};
+
+	void ScriptEnvironment::ResetEntity(int SceneID, Entity* entity)
+	{
+		LuaVM.get<sol::protected_function>("ResetEntity")(SceneID, entity);
+	}
 
 }

@@ -18,11 +18,6 @@ namespace Techless {
 
     constexpr float UpdateRate = 1.f / 60.f;
 
-    Application::~Application()
-    {
-        glfwTerminate();
-    }
-
     void Application::Init() 
     {
 
@@ -45,12 +40,23 @@ namespace Techless {
 
     void Application::End()
     {
+        ScriptEnvironment::End();
         Running = false;
     }
 
     void Application::PushInputEvent(const InputEvent& inputEvent)
     {
         //Debug::Log("Event " + std::to_string((int)inputEvent.InputType) + " " + std::to_string((int)inputEvent.InputState) + " " + std::to_string((int)inputEvent.KeyCode) + " " + std::to_string((int)inputEvent.MouseCode) + " (" + std::to_string(inputEvent.Delta.x) + ", " + std::to_string(inputEvent.Delta.y) + ") (" + std::to_string(inputEvent.Position.x) + ", " + std::to_string(inputEvent.Position.y) + ")", "Application");
+
+        if (a_ImGuiLayer->GetAbsorbInputs())
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            if (((inputEvent.InputType == Input::Type::Mouse || inputEvent.InputType == Input::Type::Scrolling) && io.WantCaptureMouse) ||
+                (inputEvent.InputType == Input::Type::Keyboard && io.WantCaptureKeyboard))
+            {
+                return;
+            }
+        }
 
         bool Processed = false;
 

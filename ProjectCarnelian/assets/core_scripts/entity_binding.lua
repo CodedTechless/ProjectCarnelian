@@ -28,24 +28,17 @@ function EntityBinding.new(Scene, LinkedEntity) -- LightEntity is a C++ through-
 		return self.Scene:GetComponent(self.ID, ComponentName) ~= nil;
 	end
 
-	function self.OnCreated()
+	function self.HasLuaScript()
+		return self.HasComponent("LuaScriptComponent");
 	end
 
-	function self.OnDestroy()
-	end
+	function self.OnCreated() end
+	function self.OnDestroy() end
+	function self.OnFixedUpdate(Delta) end
+	function self.OnUpdate(Delta) end
+	function self.OnInputEvent(InputEvent, Processed) return InputFilter.Ignore; end
+	function self.OnWindowEvent(WindowEvent) end
 
-	function self.OnFixedUpdate(Delta)
-	end
-
-	function self.OnUpdate(Delta)
-	end
-
-	function self.OnInputEvent(InputEvent, Processed)
-		return InputFilter.Ignore;
-	end
-
-	function self.OnWindowEvent(WindowEvent)
-	end
 
 	return self;
 end

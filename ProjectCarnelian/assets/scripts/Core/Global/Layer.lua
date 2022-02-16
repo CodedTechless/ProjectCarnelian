@@ -24,6 +24,9 @@ function OnCreated()
 	local boxSprite = box.AddComponent("SpriteComponent");
 	boxSprite:SetSprite(SpriteAtlas.Get("checkers"));
 
+--	local boxScript = box.AddComponent("LuaScriptComponent");
+--	boxScript:Bind("test");
+
 end
 
 function OnRemoved()

@@ -18,8 +18,9 @@ namespace Techless
 	public:
 		static Ptr<Scene> Create();
 
+	public:
 		Scene() = default;
-		~Scene();
+		~Scene() = default;
 
 		void Update(const float Delta, bool AllowScriptRuntime = true);
 		void FixedUpdate(const float Delta);
@@ -27,16 +28,17 @@ namespace Techless
 		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
 		void OnWindowEvent(const WindowEvent& windowEvent);
 
-		void Serialise(const std::string& FilePath, const Entity& RootEntity);
 
 	public:
+		void Serialise(const std::string& FilePath, const Entity& RootEntity);
+
 		Entity& CreateEntity(const std::string& TagName = "Entity");
 		Entity& Instantiate(Prefab& prefab);
 
 		void SetActiveCamera(Entity& entity) { ActiveCamera = &entity; };
 		Entity& GetActiveCamera() const { return *ActiveCamera; };
 
-		inline int GetScriptEnvID() const { return ScriptEnvID; };
+		inline int GetLuaID() const { return SceneLuaID; };
 
 		template<typename Type>
 		Ptr<TypedRegistrySet<Type>> GetInstances()
@@ -54,7 +56,7 @@ namespace Techless
 		Entity* ActiveCamera = nullptr;
 		Registry SceneRegistry;
 
-		int ScriptEnvID = 0;
+		int SceneLuaID = 0;
 
 		template<typename Component>
 		void PushSerialisedComponent(JSON& j_ComponentSet, const std::unordered_map<std::string, bool>& ArchivableIndex, const std::string& EntryName)

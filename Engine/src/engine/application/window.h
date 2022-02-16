@@ -11,6 +11,7 @@ namespace Techless
 	{
 	public:
 		Window(const char AppTitle[], glm::vec2 Size);
+		~Window();
 
 		void Clear();
 		void SetVsyncEnabled(bool Enabled);
