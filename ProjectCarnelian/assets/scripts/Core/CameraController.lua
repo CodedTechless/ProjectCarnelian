@@ -23,8 +23,8 @@ function SetSubject(snap, subject, offset)
 	if snap then
 		local Transform = GetComponent("TransformComponent");
 	
-		Transform.LocalPosition = subject.GetComponent("TransformComponent").LocalPosition + Vector3.new(offset, 0);
-		PositionTo = Transform.LocalPosition;
+		Transform.Position = subject.GetComponent("TransformComponent").Position + Vector3.new(offset, 0);
+		PositionTo = Transform.Position;
 	end
 
 	Offset = offset;
@@ -32,12 +32,12 @@ function SetSubject(snap, subject, offset)
 end
 
 function OnCreated()
-	PositionTo = GetComponent("TransformComponent").LocalPosition;
+	PositionTo = GetComponent("TransformComponent").Position;
 end
 
 function OnUpdate(Delta)
 	local Transform = GetComponent("TransformComponent");
-	Transform.LocalPosition = Transform.LocalPosition + (PositionTo - Transform.LocalPosition) * 0.2 * Delta;
+	Transform.Position = Transform.Position + (PositionTo - Transform.Position) * 0.2 * Delta;
 
 	local Camera = GetComponent("CameraComponent");
 	Camera:SetProjection(Window.Size * ZoomLevel, Near, Far);
@@ -52,7 +52,7 @@ function OnFixedUpdate(Delta)
 
 		PositionTo = PositionTo + Vector3.new(Offset.X, Offset.Y, 0) + Vector3.new(Horizontal, Vertical, 0) * CameraSpeed * ZoomLevel * Delta;
 	elseif Subject then
-		PositionTo = Subject.GetComponent("TransformComponent").LocalPosition + Vector3.new(Offset.X, Offset.Y, 0);
+		PositionTo = Subject.GetComponent("TransformComponent").GlobalPosition + Vector3.new(Offset.X, Offset.Y, 0);
 	end
 end
 

@@ -17,6 +17,8 @@ namespace PrefabEditor {
         FSpec.Size = { 128, 72 };
         ActiveFrameBuffer = CreatePtr<FrameBuffer>(FSpec);
 
+        Application::GetActiveApplication().GetImGuiLayer()->SetAbsorbInputs(false);
+
         CreateScene("New Prefab");
         SetScene("New Prefab");
     }
@@ -123,7 +125,6 @@ namespace PrefabEditor {
                 if (ImGui::MenuItem("Save", "Ctrl+S")) 
                 {
                     ActiveEditorScene->Save();
-                    EditorAssetManager.RefreshPrefabs();
 
                     Debug::Log("Saved prefab!", "PrefabEditor");
                 }
@@ -194,10 +195,14 @@ namespace PrefabEditor {
 
                 if (Payload)
                 {
-                    PrefabFileItem* PrefabFileItemData = static_cast<PrefabFileItem*>(Payload->Data);
+                    std::string PrefabPath = (const char*)Payload->Data;
 
-                    auto& Prefab = PrefabAtlas::Get(PrefabFileItemData->FilePath);
-                    CreateScene(PrefabFileItemData->FileName, &Prefab);
+                    Debug::Log(PrefabPath);
+
+                    auto& Prefab = PrefabAtlas::Get(PrefabPath);
+
+                    Debug::Log(Prefab.GetName());
+                    CreateScene(Prefab.GetName(), &Prefab);
                 }
 
                 ImGui::EndDragDropTarget();

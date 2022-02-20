@@ -5,6 +5,7 @@
 
 #include "prefab_atlas.h"
 
+
 namespace Techless
 {
 
@@ -12,17 +13,20 @@ namespace Techless
 
 	Prefab& PrefabAtlas::Get(const std::string& FilePath)
 	{
-		if (Prefabs.find(FilePath) != Prefabs.end())
-			return Prefabs[FilePath];
+		fs::path FullPath = { FilePath };
+		std::string Name = FullPath.stem().generic_string();
+
+		if (Prefabs.find(Name) != Prefabs.end())
+			return Prefabs[Name];
 		
+		Debug::Log("Loaded prefab " + Name, "PrefabAtlas");
 		std::ifstream i(FilePath);
 		JSON json;
 		i >> json;
 
-		Prefabs[FilePath] = { json, FilePath };
-		Debug::Log("Loaded prefab " + FilePath, "PrefabAtlas");
+		Prefabs[Name] = { json, Name };
 
-		return Prefabs[FilePath];
+		return Prefabs[Name];
 	}
 
 	void PrefabAtlas::Unload(const std::string& FilePath)

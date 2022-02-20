@@ -1,7 +1,7 @@
 
 #include "explorer.h"
 
-#include <engine/entity/component/components.h>
+#include <engine/entity/components.h>
 
 namespace Techless
 {
@@ -9,30 +9,33 @@ namespace Techless
     void ExplorerPanel::SetSceneContext(Ptr<Scene> sceneContext)
     {
         SceneContext = sceneContext;
-        Refresh();
     }
 
     void ExplorerPanel::SetSelectedEntity(Entity* entity)
     {
         SelectedEntity = entity;
-        Refresh();
     }
 
     bool ExplorerPanel::RenderExplorerEntity(Entity* entity)
     {
         if (!entity->Archivable)
+        {
             return false;
+        }
 
         bool RequiresRefresh = false;
 
+        // set up the node flags
         ImGuiTreeNodeFlags node_flags = (SelectedEntity && SelectedEntity->GetID() == entity->GetID() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 
-        bool HasChildren = (ParentEntities.find(entity) != ParentEntities.end());
+        // if it has children, turn it into a leaf
+        bool HasChildren = entity->GetChildren().size();
         if (!HasChildren)
         {
             node_flags |= ImGuiTreeNodeFlags_Leaf;
         }
 
+        // create the tree node. also create drag and drop sources and targets for reparenting!
         std::string Tag = entity->GetComponent<TagComponent>().Name;
         bool Opened = ImGui::TreeNodeEx(entity->GetID().c_str(), node_flags, Tag.c_str());
 
@@ -82,9 +85,9 @@ namespace Techless
         {
             if (HasChildren)
             {
-                for (Entity* f_Entity : ParentEntities.at(entity))
+                for (Entity* f_Entity : entity->GetChildren())
                 {
-                    auto NextRequiresRefresh = RenderExplorerEntity(f_Entity);
+                    bool NextRequiresRefresh = RenderExplorerEntity(f_Entity);
 
                     if (NextRequiresRefresh)
                         RequiresRefresh = true;
@@ -106,25 +109,25 @@ namespace Techless
         {
             bool FullRefresh = false;
 
-            for (Entity* entity : TopLevelEntities)
+            for (Entity& entity : *SceneContext->GetInstances<Entity>())
             {
-                bool RequiresRefresh = RenderExplorerEntity(entity);
-
-                if (RequiresRefresh)
-                    FullRefresh = true;
+                if (entity.GetParent() == nullptr)
+                {
+                    RenderExplorerEntity(&entity);
+                }
             }
-
-            if (FullRefresh)
-                Refresh();
             
             if (ImGui::BeginPopupContextWindow())
             {
+                if (ImGui::MenuItem("Duplicate"))
+                {
+
+                }
+
                 if (ImGui::MenuItem("Delete"))
                 {
                     SelectedEntity->Destroy();
                     SelectedEntity = nullptr;
-
-                    Refresh();
                 }
 
                 ImGui::EndPopup();
@@ -140,25 +143,6 @@ namespace Techless
 
         ImGui::End();
 	}
-
-    void ExplorerPanel::Refresh()
-    {
-        TopLevelEntities.clear();
-        ParentEntities.clear();
-
-        auto Entities = SceneContext->GetInstances<Entity>();
-
-        int i = 0;
-        for (Entity& entity : *Entities)
-        {
-            Entity* Parent = entity.GetParent();
-
-            if (Parent == nullptr)
-                TopLevelEntities.emplace_back(&entity);
-            else
-                ParentEntities[Parent].emplace_back(&entity);
-        }
-    }
 
     template<typename Component, typename PropertyFunction>
     static void RenderComponentProperties(const char* Title, Entity* entity, PropertyFunction propertyFunction)

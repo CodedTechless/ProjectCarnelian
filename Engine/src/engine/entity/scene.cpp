@@ -1,16 +1,27 @@
 #include "scene.h"
 
-#include <engine/entity/component/components.h>
+#include <engine/application/application.h>
+
+#include <engine/entity/components.h>
 #include <engine/entity/entity.h>
 #include <engine/entity/prefabs/prefab.h>
-#include <uuid/uuid.hpp>
+#include <engine/entity/serialiser/serialiser.h>
 
 #include <engine/lua/script_environment.h>
 
 #include <render/renderer.h>
 
+#include <uuid/uuid.hpp>
+
 namespace Techless
 {
+
+	struct SceneRenderInfo
+	{
+		SpriteComponent* SpritePtr = nullptr;
+		TransformComponent* TransformPtr = nullptr;
+	};
+
 
 	// Creates a Scene object (a shared_ptr) which has a pre-registered Lua scene counter-part.
 	Ptr<Scene> Scene::Create()
@@ -19,6 +30,16 @@ namespace Techless
 		newScene->SceneLuaID = ScriptEnvironment::RegisterScene(newScene);
 
 		return newScene;
+	}
+
+	Entity& Scene::CreateEntity()
+	{
+		std::string NewUUID = UUID::Generate();
+
+		Entity& Ent = SceneRegistry.Add<Entity>(NewUUID, this, NewUUID);
+		ScriptEnvironment::RegisterEntity(SceneLuaID, &Ent);
+
+		return Ent;
 	}
 
 	Entity& Scene::CreateEntity(const std::string& TagName)
@@ -50,10 +71,14 @@ namespace Techless
 		SceneRegistry.Clear(EntityID);
 	}
 
+	Entity& Scene::DuplicateEntity(Entity& entity, Entity* parent)
+	{
+
+	}
+
 	Entity& Scene::Instantiate(Prefab& prefab)
 	{
-		// to-do: add some sort of checklist for colliding uuids?!?! hello??
-		// the chances are HORRIFICALLY LOW for a collision, but "HORRIFICALLY LOW" =/= none!!
+		// to-do: add some sort of checklist for colliding uuids?!?! hello?? [CRITICAL BUG]
 		
 		Entity* RootEntity = nullptr;
 
@@ -135,12 +160,18 @@ namespace Techless
 
 	void Scene::FixedUpdate(float Delta)
 	{
-		auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
+		SceneRegistry.View<TransformComponent>(
+			[](TransformComponent& Transform)
+			{
+				if (Transform.IsEngineInterpolationEnabled())
+					Transform.ForceReloadPreviousState();
+			});
 
-		for (auto& Script : *ScriptComponents)
-		{
-			Script.Instance->OnFixedUpdate(Delta);
-		}
+		SceneRegistry.View<ScriptComponent>(
+			[&](ScriptComponent& Script)
+			{
+				Script.Instance->OnFixedUpdate(Delta);
+			});
 
 		ScriptEnvironment::CallScene(SceneLuaID, "OnFixedUpdate", Delta);
 	}
@@ -149,12 +180,11 @@ namespace Techless
 	{
 		if (AllowScriptRuntime)
 		{
-			auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
-
-			for (auto& Script : *ScriptComponents)
-			{
-				Script.Instance->OnUpdate(Delta);
-			}
+			SceneRegistry.View<ScriptComponent>(
+				[=](ScriptComponent& Script)
+				{
+					Script.Instance->OnUpdate(Delta);
+				});
 
 			ScriptEnvironment::CallScene(SceneLuaID, "OnUpdate", Delta);
 		}
@@ -173,72 +203,42 @@ namespace Techless
 		Renderer::Begin(CameraProjection, CameraTransform);
 
 		{
-			auto SpriteComponents = SceneRegistry.GetRegistrySet<SpriteComponent>();
-			auto TransformComponents = SceneRegistry.GetRegistrySet<TransformComponent>();
+			std::vector<SceneRenderInfo> SceneSprites{};
 
-			unsigned int i = 0;
-			for (auto& Sprite : *SpriteComponents)
+			SceneRegistry.View<SpriteComponent, TransformComponent>(
+				[&](SpriteComponent& c_Sprite, TransformComponent& c_Transform)
+				{
+					Ptr<Sprite> aSprite = c_Sprite.GetSprite();
+					if (aSprite)
+						SceneSprites.push_back({ &c_Sprite, &c_Transform});
+
+				});
+
+			std::sort(SceneSprites.begin(), SceneSprites.end(), [](SceneRenderInfo& a, SceneRenderInfo& b)
+				{
+					return a.TransformPtr->GetGlobalPosition().z < b.TransformPtr->GetGlobalPosition().z;
+				});
+
+			for (SceneRenderInfo& renderInfo : SceneSprites)
 			{
-				auto EntityID = SpriteComponents->GetIDAtIndex(i);
-				auto& Transform = TransformComponents->Get(EntityID);
-
-				auto aSprite = Sprite.GetSprite();
-				if (aSprite)
-					Renderer::DrawSprite(aSprite, Transform.GetGlobalTransform(), Sprite.SpriteColour);
-
-				++i;
+				Renderer::DrawSprite(renderInfo.SpritePtr->GetSprite(), renderInfo.TransformPtr->GetGlobalTransform(), renderInfo.SpritePtr->SpriteColour);
 			}
 		}
 
 		Renderer::End();
 	}
 
-	static void PushSerialisedChildren(JSON& j_Entities, std::unordered_map<std::string, bool>& ArchivableIndex, const Entity& entity)
+	void Scene::Serialise(const std::string& FilePath, Entity& RootEntity)
 	{
-		if (!entity.Archivable)
-			return;
-		
-		ArchivableIndex[entity.GetID()] = true;
-		j_Entities += entity;
-		
-		for (Entity* child : entity.GetChildren())
-		{
-			PushSerialisedChildren(j_Entities, ArchivableIndex, *child);
-		}
-	}
+		Serialiser l_Serialiser = { RootEntity };
 
-	void Scene::Serialise(const std::string& FilePath, const Entity& RootEntity)
-	{
-		JSON j_SerialisedScene = {
-			{"Scene", {
-				{"RootEntityID", RootEntity.GetID()}
-			}},
-			{"Entities", JSON::array()},
-			{"Components", JSON::object()}
-		};
+		l_Serialiser.AssignComponent<TagComponent>			("Tag");
+		l_Serialiser.AssignComponent<TransformComponent>	("Transform");
+		l_Serialiser.AssignComponent<RigidBodyComponent>	("RigidBody");
+		l_Serialiser.AssignComponent<SpriteComponent>		("Sprite");
+		l_Serialiser.AssignComponent<CameraComponent>		("Camera");
+		l_Serialiser.AssignComponent<LuaScriptComponent>	("LuaScript");
 
-		JSON& j_Entities = j_SerialisedScene.at("Entities");
-		JSON& j_Components = j_SerialisedScene.at("Components");
-
-		std::unordered_map<std::string, bool> ArchivableIndex = {};
-
-		PushSerialisedChildren(j_Entities, ArchivableIndex, RootEntity);
-
-		// to-do: make this system better in some way (combine pull/push?)
-		// this works for now :)
-		// would be nice if i didnt have to assign component types in three different locations but yknoww, it's cooool-
-
-		// [COMPONENT ASSIGNMENT] Prefab Serialisation
-
-		PushSerialisedComponent <TagComponent>			(j_Components, ArchivableIndex, "Tag");
-		PushSerialisedComponent <TransformComponent>	(j_Components, ArchivableIndex, "Transform");
-		PushSerialisedComponent <RigidBodyComponent>	(j_Components, ArchivableIndex, "RigidBody");
-		PushSerialisedComponent <SpriteComponent>		(j_Components, ArchivableIndex, "Sprite");
-//		PushSerialisedComponent <AnimatorComponent>		(j_Components, ArchivableIndex);
-		PushSerialisedComponent <CameraComponent>		(j_Components, ArchivableIndex, "Camera");
-		PushSerialisedComponent <LuaScriptComponent>	(j_Components, ArchivableIndex, "LuaScript");
-
-		std::ofstream o(FilePath);
-		o << j_SerialisedScene << std::endl;
+		l_Serialiser.SaveToFile(FilePath);
 	}
 }

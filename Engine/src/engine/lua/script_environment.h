@@ -19,6 +19,9 @@ namespace Techless
 		static void Init();
 		static void End();
 
+		static void Clean();
+		static size_t GetMemoryUsage();
+
 	public:
 		static void RegisterEntityScript(const std::string& ScriptName, Entity* entity);
 		static UPtr<LuaEnv> RegisterGenericScript(const std::string& ScriptName);

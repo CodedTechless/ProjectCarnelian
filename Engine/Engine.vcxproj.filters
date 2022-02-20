@@ -120,6 +120,9 @@
     <ClCompile Include="src\engine\watchdog\imgui\console\console_panel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\entity\serialiser\serialiser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\dependencies\glm\detail\func_common.inl">
@@ -1435,7 +1438,7 @@
     <ClInclude Include="src\engineincl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\entity\component\components.h">
+    <ClInclude Include="src\engine\entity\components.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\entity\registry\registry.h">
@@ -1520,6 +1523,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\watchdog\imgui\console\console_panel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\entity\serialiser\serialiser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

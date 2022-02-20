@@ -21,14 +21,17 @@ end
 
 function OnCreated()
 	local Transform = GetComponent("TransformComponent");
-	Transform.LocalPosition.Z = 10;
+	Transform:SetEngineInterpolationEnabled(true);
+	Transform.Position = Vector3.new(0, 0, 50);
 
 	local Camera = Scene:GetEntityByTag("Camera");
 	Camera.SetSubject(true, self, Vector2.new(0, -16));
 end
 
 function OnFixedUpdate(Delta)
+
 	local Transform = GetComponent("TransformComponent");
+
 
 	local KeyUp = Input.KeyDown(KeyCode.W);
 	local KeyDown = Input.KeyDown(KeyCode.S);
@@ -61,6 +64,6 @@ function OnFixedUpdate(Delta)
 	end
 
 	if math.abs(Velocity.X) > 0 or math.abs(Velocity.Y) > 0 then
-		Transform.LocalPosition = Transform.LocalPosition + Vector3.new(Velocity.X, Velocity.Y, 0);
+		Transform.Position = Transform.Position + Vector3.new(Velocity.X, Velocity.Y, 0);
 	end
 end

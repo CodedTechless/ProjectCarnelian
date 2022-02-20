@@ -19,6 +19,7 @@ function OnCreated()
 	local playerScript = Player.AddComponent("LuaScriptComponent");
 	playerScript:Bind("PlayerController");
 
+
 	-- box
 	local box = Scene:CreateEntity("Box");
 	local boxSprite = box.AddComponent("SpriteComponent");

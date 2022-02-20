@@ -29,6 +29,8 @@
 
 #include <ctime>
 
+namespace fs = std::filesystem;
+
 namespace Techless
 {
 	template <typename T>

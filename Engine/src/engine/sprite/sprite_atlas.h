@@ -14,6 +14,7 @@ namespace Techless
 		static void Init();
 
 		static Ptr<Sprite> Get(const std::string& Name);
+		static bool Has(const std::string& Name);
 
 		static Ptr<Texture> GetTexturePage(int Index) { return TexturePages[Index]; };
 		static std::unordered_map<std::string, Ptr<Sprite>>& GetSpriteCache() { return SpriteCache; };

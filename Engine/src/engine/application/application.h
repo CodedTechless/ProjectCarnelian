@@ -13,10 +13,12 @@ namespace Techless {
 	struct RuntimeInfo
 	{
 		unsigned int Framerate = 0;
-		unsigned int UpdateRate = 0;
+		unsigned int SimulationRate = 0;
 
-		float UpdateTime = 0;
-		float FixedUpdateTime = 0;
+		size_t LuaMemoryUsage = 0;
+
+		float FrameDelta = 0;
+		float SimulationDelta = 0;
 	};
 
 	class Application 
@@ -25,13 +27,19 @@ namespace Techless {
 		Application() = default;
 		virtual ~Application() = default;
 
-		inline bool IsRunning() const { return Running; };
-		inline Window* GetActiveWindow() const { return aWindow; };
 		inline void SetApplicationTitle(const std::string& nApplicationTitle) { ApplicationTitle = nApplicationTitle; };
 
 		void AddLayer(Layer* NewLayer);
 		void AddOverlay(Layer* NewOverlay);
 
+		inline bool IsRunning() const { return Running; };
+		inline Window* GetActiveWindow() const { return aWindow; };
+
+		inline ImGuiLayer* GetImGuiLayer() const { return a_ImGuiLayer; };
+
+		inline float GetSimulationSpeed() const { return SimulationSpeed; };
+		inline float GetSimulationRatio() const { return SimulationRatio; };
+		
 		static Application& GetActiveApplication() { return *CurrentApplication; };
 		static RuntimeInfo& GetRuntimeData() { return RuntimeData; };
 
@@ -47,6 +55,9 @@ namespace Techless {
 		void PushWindowEvent(const WindowEvent& windowEvent);
 
 		ImGuiLayer* a_ImGuiLayer = nullptr;
+
+		float SimulationRatio = 0.f;
+		float SimulationSpeed = 1.f / 60.f;
 
 	private:
 		static Application* CurrentApplication;

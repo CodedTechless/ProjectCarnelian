@@ -71,7 +71,7 @@ namespace Techless
 			}
 		}
 
-		inline std::string GetIDAtIndex(size_t ID) { return IndexID[ID]; };
+		inline std::string GetIDAtIndex(size_t Index) { return IndexID[Index]; };
 		inline std::array<Type, MaxEntities>& GetInstances() { return Instances; };
 		inline size_t GetSize() { return Index; };
 
@@ -102,6 +102,34 @@ namespace Techless
 			}
 		}
 
+		template<typename Ta, typename ViewFunc>
+		void View(ViewFunc&& viewFunc)
+		{
+			auto& RegA = *GetRegistrySet<Ta>();
+
+			for (Ta& ComponentA : RegA)
+				viewFunc(ComponentA);
+		}
+
+		template<typename Ta, typename Tb, typename ViewFunc>
+		void View(ViewFunc&& viewFunc)
+		{
+			auto& RegA = *GetRegistrySet<Ta>();
+			auto& RegB = *GetRegistrySet<Tb>();
+
+			int i = 0;
+			for (Ta& ComponentA : RegA)
+			{
+				std::string EntityID = RegA.GetIDAtIndex(i);
+
+				if (RegB.Has(EntityID)) {
+					Tb& ComponentB = RegB.Get(EntityID);
+					viewFunc(ComponentA, ComponentB);
+				}
+				++i;
+			}
+		}
+
 		template<typename Type, typename... Args>
 		Type& Add(const std::string& ID, Args&&... args)
 		{
@@ -124,6 +152,12 @@ namespace Techless
 		void Remove(std::string ID)
 		{
 			GetRegistrySet<Type>()->Remove(ID);
+		}
+
+		template <typename Type>
+		int Size()
+		{
+			return GetRegistrySet<Type>()->GetSize();
 		}
 
 		template <typename Type>

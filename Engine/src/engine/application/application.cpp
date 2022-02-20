@@ -16,7 +16,6 @@ namespace Techless {
     Application* Application::CurrentApplication = nullptr;
     RuntimeInfo Application::RuntimeData = {};
 
-    constexpr float UpdateRate = 1.f / 60.f;
 
     void Application::Init() 
     {
@@ -108,12 +107,12 @@ namespace Techless {
         {
             Time = (float)glfwGetTime();
             
-            auto FrameDelta = (Time - LastTime) / UpdateRate;
+            float FrameDelta = (Time - LastTime) / SimulationSpeed;
             Delta += FrameDelta;
-            
+
             while (Delta >= 1.0)
             {
-                RuntimeData.FixedUpdateTime = (Time - LastFixedTime) * 1000.f;
+                RuntimeData.SimulationDelta = (Time - LastFixedTime) * 1000.f;
 
                 for (auto* Layer : Layers)
                 {
@@ -129,6 +128,8 @@ namespace Techless {
 
                 LastFixedTime = Time;
             }
+
+            SimulationRatio = std::clamp(Delta, 0.f, 1.f);
 
             {
                 aWindow->Clear();
@@ -149,16 +150,20 @@ namespace Techless {
 
             if (Time - Timer > 1.f)
             {
+                ScriptEnvironment::Clean();
+
                 Timer++;
 
                 RuntimeData.Framerate = Frames;
-                RuntimeData.UpdateRate = Updates;
+                RuntimeData.SimulationRate = Updates;
                 
                 Frames = 0;
                 Updates = 0;
             }
+
+            RuntimeData.LuaMemoryUsage = ScriptEnvironment::GetMemoryUsage();
             
-            RuntimeData.UpdateTime = (Time - LastTime) * 1000.f;
+            RuntimeData.FrameDelta = (Time - LastTime) * 1000.f;
 
             LastTime = Time;
         }

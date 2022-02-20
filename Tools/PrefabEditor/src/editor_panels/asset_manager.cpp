@@ -13,6 +13,26 @@ namespace fs = std::filesystem;
 namespace PrefabEditor
 {
 
+	static void CreateDirectoryElement(const std::string& Name, fs::path Directory, fs::path& ToDirectory)
+	{
+//		Bounds spriteBounds = sprite->GetAbsoluteBounds();
+
+//		ImTextureID RendererID = (ImTextureID)sprite->GetTexture()->GetRendererID();
+
+		ImGui::PushID((Name + "_dir").c_str());
+//		ImGui::ImageButton(RendererID, { THUMBNAIL_SIZE, THUMBNAIL_SIZE }, { spriteBounds.TopLeft.x, spriteBounds.BottomRight.y }, { spriteBounds.BottomRight.x, spriteBounds.TopLeft.y });
+		ImGui::Button("Directory", { THUMBNAIL_SIZE + THUMBNAIL_PADDING, THUMBNAIL_SIZE + THUMBNAIL_PADDING });
+
+		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+		{
+			ToDirectory = Directory;
+		}
+
+		ImGui::TextWrapped(Name.c_str());
+		
+		ImGui::PopID();
+	}
+
 	template<typename Object>
 	static void CreateFileElement(const std::string& Name, Ptr<Sprite> sprite, std::string PayloadID, Object* PayloadObject, int Size)
 	{
@@ -21,7 +41,11 @@ namespace PrefabEditor
 		ImTextureID RendererID = (ImTextureID)sprite->GetTexture()->GetRendererID();
 
 		ImGui::PushID(Name.c_str());
-		ImGui::ImageButton(RendererID, { THUMBNAIL_SIZE, THUMBNAIL_SIZE }, { spriteBounds.TopLeft.x, spriteBounds.BottomRight.y }, { spriteBounds.BottomRight.x, spriteBounds.TopLeft.y });
+		
+		if (sprite)
+			ImGui::ImageButton(RendererID, { THUMBNAIL_SIZE, THUMBNAIL_SIZE }, { spriteBounds.TopLeft.x, spriteBounds.BottomRight.y }, { spriteBounds.BottomRight.x, spriteBounds.TopLeft.y });
+		else
+			ImGui::Button(Name.c_str(), { THUMBNAIL_SIZE + THUMBNAIL_PADDING, THUMBNAIL_SIZE + THUMBNAIL_PADDING });
 
 		if (ImGui::BeginDragDropSource())
 		{
@@ -38,98 +62,76 @@ namespace PrefabEditor
 
 	AssetManagerPanel::AssetManagerPanel()
 	{
-		RefreshPrefabs();
+		CurrentDirectory = fs::path("assets");
 	}
-
-	void AssetManagerPanel::RefreshSprites()
-	{
-
-	}
-
-	void AssetManagerPanel::RefreshPrefabs(const std::string& Path)
-	{
-		PrefabFiles.clear();
-
-		for (const auto& File : fs::directory_iterator(Path))
-		{
-			auto FsPath = File.path();
-			auto Path = FsPath.generic_string();
-
-			if (File.is_directory())
-			{
-				RefreshPrefabs(Path);
-			}
-			else if (File.is_regular_file() && Path.substr(Path.size() - 7) == ".prefab")
-			{
-				PrefabFiles.push_back({ Path, FsPath.stem().string()});
-			}
-		}
-	}
-
 
 	void AssetManagerPanel::RenderImGuiElements()
 	{
 		ImGui::Begin("Asset Manager");
 
 		ImGui::BeginTabBar("##asset explorer");
+		
+		if (CurrentDirectory != fs::path("assets"))
+		{
+			if (ImGui::Button("<"))
+			{
+				CurrentDirectory = CurrentDirectory.parent_path();
+			}
+		}
 
 		float CellSize = THUMBNAIL_SIZE + THUMBNAIL_PADDING;
 
 		ImVec2 Region = ImGui::GetContentRegionAvail();
 		int Columns = std::max(std::floor(Region.x / CellSize), 1.f);
 
-		if (ImGui::BeginTabItem("Sprites", nullptr, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton))
+		if (ImGui::BeginTable("##asset manager", Columns))
 		{
-			if (ImGui::BeginTable("##asset manager", Columns))
+			int Column = 0;
+			
+			auto prefabSprite = SpriteAtlas::Get("prefab");
+
+			for (auto& Entry : fs::directory_iterator(CurrentDirectory))
 			{
-				int Column = 0;
 
-				for (auto& [spriteName, sprite] : SpriteAtlas::GetSpriteCache())
+				fs::path path = Entry.path();
+				std::string ext = path.extension().generic_string();
+				std::string fileName = path.stem().generic_string();
+
+				if (Entry.is_directory())
 				{
-					if (Column >= Columns)
-					{
-						ImGui::TableNextRow();
-						Column = 0;
-					}
-
 					ImGui::TableNextColumn();
-					CreateFileElement(spriteName, sprite, "SPRITE_ASSET_DRAG", spriteName.c_str(), (spriteName.length() * sizeof(char)) + 1);
+					CreateDirectoryElement(fileName, path, CurrentDirectory);
 
 					++Column;
 				}
+				else if (ext == ".png")
+				{
+					if (SpriteAtlas::Has(fileName))
+					{
+						ImGui::TableNextColumn();
+						CreateFileElement(fileName, SpriteAtlas::Get(fileName), "SPRITE_ASSET_DRAG", fileName.c_str(), (fileName.length() * sizeof(char)) + 1);
 
-				ImGui::EndTable();
-			}
+						++Column;
+					}
+				}
+				else if (ext == ".prefab")
+				{
+					ImGui::TableNextColumn();
+					std::string stringpath = path.generic_string();
 
-			ImGui::EndTabItem();
-		}
+					CreateFileElement(fileName, prefabSprite, "PREFAB_ASSET_DRAG", stringpath.c_str(), (stringpath.length() * sizeof(char)) + 1);
 
-		if (ImGui::BeginTabItem("Prefabs"))
-		{
-			Ptr<Sprite> FileIcon = SpriteAtlas::Get("prefab");
+					++Column;
+				}
+				else if (ext == ".lua")
+				{
+					
+				}
 
-			if (ImGui::BeginTable("##asset manager", Columns))
-			{
-				int Column = 0;
 				
-				for (auto& Item : PrefabFiles)
-				{
-					if (Column >= Columns)
-					{
-						ImGui::TableNextRow();
-						Column = 0;
-					}
-
-					ImGui::TableNextColumn();
-					CreateFileElement(Item.FileName, FileIcon, "PREFAB_ASSET_DRAG", &Item, sizeof(Item));
-
-					++Column;
-				}
-
-				ImGui::EndTable();
 			}
 
-			ImGui::EndTabItem();
+			ImGui::EndTable();
 		}
 
 		ImGui::EndTabBar();

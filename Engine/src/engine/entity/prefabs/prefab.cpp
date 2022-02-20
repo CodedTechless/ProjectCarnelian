@@ -1,13 +1,13 @@
 #include "prefab.h"
 
-#include <engine/entity/component/components.h>
+#include <engine/entity/components.h>
 
 namespace Techless
 {
 
-	Prefab::Prefab(JSON& json, const std::string& filePath)
+	Prefab::Prefab(JSON& json, const std::string& name)
+		: Name(name)
 	{
-		FilePath = filePath;
 		Deserialise(json);
 	}
 
@@ -17,6 +17,8 @@ namespace Techless
 		JSON& j_Components = json["Components"];
 
 		std::string RootEntityID = json["Scene"]["RootEntityID"].get<std::string>();
+
+		Entities.resize(j_Entities.size());
 
 		for (auto& v : j_Entities)
 		{
@@ -37,6 +39,8 @@ namespace Techless
 		PullSerialisedComponents<SpriteComponent>		(j_Components, "Sprite");
 		PullSerialisedComponents<CameraComponent>		(j_Components, "Camera");
 		PullSerialisedComponents<LuaScriptComponent>	(j_Components, "LuaScript");
+
+		Loaded = true;
 	}
 
 }

@@ -2,6 +2,8 @@
 
 #include <engineincl.h>
 
+namespace fs = std::filesystem;
+
 namespace PrefabEditor
 {
 
@@ -17,12 +19,10 @@ namespace PrefabEditor
 		AssetManagerPanel();
 
 		void RenderImGuiElements();
-		
-		void RefreshSprites();
-		void RefreshPrefabs(const std::string& Path = "assets/prefabs");
-		
+
 	private:
-		std::vector<PrefabFileItem> PrefabFiles;
+		fs::path CurrentDirectory;
+
 	};
 
 }

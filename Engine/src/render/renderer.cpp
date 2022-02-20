@@ -75,11 +75,11 @@ namespace Techless {
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
 #endif
 
+		// Enable depth testing (for Z-axis based depth) and blending (for alpha support)
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Enable depth testing (for Z-axis based depth) and blending (for alpha support)
-		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST); //we don't need depth for a 2d game ya doofus!
 
 		GLint glMaxTextureSize;
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glMaxTextureSize);
@@ -362,41 +362,78 @@ namespace Techless {
 
 	void Renderer::ShowRuntimeStatsWindow()
 	{
-		auto Runtime = Application::GetRuntimeData();
-		auto DebugInfo = Renderer::GetDebugInfo();
+		const auto& Runtime = Application::GetRuntimeData();
+		const auto& DebugInfo = Renderer::GetDebugInfo();
 
 		{
 			ImGui::Begin("Render Debug");
 
 			if (ImGui::CollapsingHeader("Performance"))
 			{
-				ImGui::Columns(2, "performance_table");
+				if (ImGui::BeginTable("performance_table", 2))
+				{
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
 
-				std::string PerformanceLabels = "FPS\nUpdate Rate\nLast fixed update took\nLast frame took";
-				ImGui::Text(PerformanceLabels.c_str());
+					ImGui::Text("FPS");
+					ImGui::TableNextColumn();
+					ImGui::Text(std::to_string(Runtime.Framerate).c_str());
+					ImGui::TableNextColumn();
 
-				ImGui::NextColumn();
+					ImGui::Text("Simulation Rate");
+					ImGui::TableNextColumn();
+					ImGui::Text(std::to_string(Runtime.SimulationRate).c_str());
+					ImGui::TableNextColumn();
 
-				std::string PerformanceData = std::to_string(Runtime.Framerate) + "\n" + std::to_string(Runtime.UpdateRate) + "\n" + std::to_string(Runtime.FixedUpdateTime) + "ms\n" + std::to_string(Runtime.UpdateTime) + "ms";
-				ImGui::Text(PerformanceData.c_str());
+					ImGui::Text("Frame Delta");
+					ImGui::TableNextColumn();
+					ImGui::Text((std::to_string(Runtime.FrameDelta) + "ms").c_str());
+					ImGui::TableNextColumn();
 
-				ImGui::Columns();
+					ImGui::Text("Simulation Delta");
+					ImGui::TableNextColumn();
+					ImGui::Text((std::to_string(Runtime.SimulationDelta) + "ms").c_str());
+					ImGui::TableNextColumn();
+
+					ImGui::EndTable();
+				}
 			}
 
 			if (ImGui::CollapsingHeader("Renderer Information"))
 			{
 
-				ImGui::Columns(2, "renderer_info_table");
+				if (ImGui::BeginTable("renderer_info_table", 2))
+				{
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
+					
+					ImGui::Text("Draw calls");
+					ImGui::TableNextColumn();
+					ImGui::Text(std::to_string(DebugInfo.DrawCalls).c_str());
+					ImGui::TableNextColumn();
+				
+					ImGui::Text("Vertex count");
+					ImGui::TableNextColumn();
+					ImGui::Text(std::to_string(DebugInfo.VertexCount).c_str());
 
-				std::string RendererLabels = "Draw calls last frame\nVertex count last frame";
-				ImGui::Text(RendererLabels.c_str());
+					ImGui::EndTable();
+				}
+			}
 
-				ImGui::NextColumn();
+			if (ImGui::CollapsingHeader("Script Runtime"))
+			{
+				if (ImGui::BeginTable("lua_info_table", 2))
+				{
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
 
-				std::string RendererData = std::to_string(DebugInfo.DrawCalls) + " calls\n" + std::to_string(DebugInfo.VertexCount) + " verticies";
-				ImGui::Text(RendererData.c_str());
+					ImGui::Text("Lua VM memory usage");
+					ImGui::TableNextColumn();
+					ImGui::Text((std::to_string(std::floor(Runtime.LuaMemoryUsage / 10000.0) / 100.0) + "MB").c_str());
+					ImGui::TableNextColumn();
 
-				ImGui::Columns();
+					ImGui::EndTable();
+				}
 			}
 
 			ImGui::End();

@@ -94,6 +94,7 @@
   <ItemGroup>
     <ClCompile Include="src\engine\entity\prefabs\prefab.cpp" />
     <ClCompile Include="src\engine\entity\prefabs\prefab_atlas.cpp" />
+    <ClCompile Include="src\engine\entity\serialiser\serialiser.cpp" />
     <ClCompile Include="src\engine\layers\imgui\imgui_layer.cpp" />
     <ClCompile Include="src\engine\layers\layer.cpp" />
     <ClCompile Include="src\engine\lua\script_environment.cpp" />
@@ -267,6 +268,7 @@
     <None Include="src\dependencies\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\entity\serialiser\serialiser.h" />
     <ClInclude Include="src\engine\lua\identities\scriptable_lua_entity.hpp" />
     <ClInclude Include="src\engine\lua\script_environment.h" />
     <ClInclude Include="src\dependencies\sol\config.hpp" />
@@ -294,7 +296,7 @@
     <ClInclude Include="src\dependencies\json\json.hpp" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\engineincl.h" />
-    <ClInclude Include="src\engine\entity\component\components.h" />
+    <ClInclude Include="src\engine\entity\components.h" />
     <ClInclude Include="src\engine\entity\scriptable_entity.h" />
     <ClInclude Include="src\engine\input\input.h" />
     <ClInclude Include="src\engine\entity\scene.h" />

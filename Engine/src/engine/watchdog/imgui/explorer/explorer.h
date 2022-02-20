@@ -22,8 +22,6 @@ namespace Techless
 		void RenderImGuiElements();
 		void RenderProperties();
 
-		void Refresh();
-
 	private:
 		template<class Component>
 		void CreateMenuEntry(const char* Text)
@@ -50,8 +48,6 @@ namespace Techless
 		Ptr<Scene> SceneContext = nullptr;
 		Entity* SelectedEntity = nullptr;
 
-		std::vector<Entity*> TopLevelEntities = {};
-		ExplorerIndex ParentEntities = {};
 	};
 
 }

@@ -154,4 +154,9 @@ namespace Techless
 		
 		return MissingSprite;
 	}
+
+	bool SpriteAtlas::Has(const std::string& Name)
+	{
+		return SpriteCache.find(Name) != SpriteCache.end();
+	}
 }

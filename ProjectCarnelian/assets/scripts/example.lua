@@ -13,7 +13,7 @@ function OnCreated()
 
 	local Transform = GetComponent("TransformComponent");
 	print(Transform)
-	Transform.LocalPosition = Vector3.new(Transform.LocalPosition.X + 100, Transform.LocalPosition.Y, Transform.LocalPosition.Z);
+	Transform.Position = Vector3.new(Transform.Position.X + 100, Transform.Position.Y, Transform.Position.Z);
 
 	print(ID);
 	

@@ -11,6 +11,9 @@ using JSON = nlohmann::json;
 
 namespace Techless 
 {
+	
+
+	
 	class Entity;
 
 	class Scene
@@ -30,15 +33,17 @@ namespace Techless
 
 
 	public:
-		void Serialise(const std::string& FilePath, const Entity& RootEntity);
+		void Serialise(const std::string& FilePath, Entity& RootEntity);
 
+		Entity& CreateEntity();
 		Entity& CreateEntity(const std::string& TagName = "Entity");
+
+		Entity& DuplicateEntity(Entity& entity, Entity* parent);
 		Entity& Instantiate(Prefab& prefab);
 
 		void SetActiveCamera(Entity& entity) { ActiveCamera = &entity; };
 		Entity& GetActiveCamera() const { return *ActiveCamera; };
 
-		inline int GetLuaID() const { return SceneLuaID; };
 
 		template<typename Type>
 		Ptr<TypedRegistrySet<Type>> GetInstances()
@@ -52,33 +57,19 @@ namespace Techless
 			return SceneRegistry.Get<Type>(EntityID);
 		}
 
+	public:
+
+		void SetScriptExecutionEnabled(bool Mode) { ScriptExecutionEnabled = Mode; };
+
+		inline bool IsScriptExecutionEnabled() const { return ScriptExecutionEnabled; };
+		inline int GetLuaID() const { return SceneLuaID; };
+
 	private:
 		Entity* ActiveCamera = nullptr;
 		Registry SceneRegistry;
 
 		int SceneLuaID = 0;
-
-		template<typename Component>
-		void PushSerialisedComponent(JSON& j_ComponentSet, const std::unordered_map<std::string, bool>& ArchivableIndex, const std::string& EntryName)
-		{
-			j_ComponentSet[EntryName] = JSON::object();
-
-			if (!SceneRegistry.HasRegistrySet<Component>())
-				return;
-
-			auto Set = SceneRegistry.GetRegistrySet<Component>();
-
-			int i = 0;
-			for (Component& component : *Set)
-			{
-				std::string EntityID = Set->GetIDAtIndex(i);
-
-				if (ArchivableIndex.find(EntityID) != ArchivableIndex.end() && ArchivableIndex.at(EntityID) == true)
-					j_ComponentSet.at(EntryName)[EntityID] = component;
-
-				++i;
-			}
-		}
+		bool ScriptExecutionEnabled = true;
 
 		template<typename Component>
 		void AssignPrefabComponents(Prefab& prefab)

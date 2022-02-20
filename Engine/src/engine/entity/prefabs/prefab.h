@@ -77,10 +77,12 @@ namespace Techless
 	{
 	public:
 		Prefab() = default;
-		Prefab(JSON& json, const std::string& filePath);
+		Prefab(JSON& json, const std::string& name);
 
 		void Deserialise(JSON& json);
-	
+		
+		inline std::string GetName() const { return Name; };
+
 		template <typename Type>
 		Ptr<PrefabUtil::TypedPrefabRegistry<Type>> GetComponents()
 		{
@@ -113,7 +115,8 @@ namespace Techless
 		}
 
 	private:
-		std::string FilePath = "";
+		std::string Name = "";
+		bool Loaded = false;
 		
 		std::vector<PrefabEntity> Entities{};
 		std::unordered_map<const char*, Ptr<RegistrySet>> Components{};

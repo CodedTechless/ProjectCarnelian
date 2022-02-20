@@ -20,7 +20,7 @@
 #include <engine/entity/scene.h>
 #include <engine/entity/entity.h>
 #include <engine/entity/scriptable_entity.h>
-#include <engine/entity/component/components.h>
+#include <engine/entity/components.h>
 
 // lua
 #include <engine/lua/script_environment.h>

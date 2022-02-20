@@ -8,7 +8,7 @@
 
 #include <engine/watchdog/watchdog.h>
 
-#include <engine/entity/component/components.h>
+#include <engine/entity/components.h>
 #include <engine/entity/prefabs/prefab_atlas.h>
 
 #include <engine/application/application.h>
@@ -89,6 +89,16 @@ namespace Techless
 	void ScriptEnvironment::End()
 	{
 		CachedScripts.clear();
+	}
+
+	size_t ScriptEnvironment::GetMemoryUsage()
+	{
+		return LuaVM.memory_used();
+	}
+
+	void ScriptEnvironment::Clean()
+	{
+		LuaVM.collect_garbage();
 	}
 
 	void ScriptEnvironment::Read(const std::string& Path)
@@ -559,13 +569,15 @@ namespace Techless
 			AccessibleLibraries.push_back("TransformComponent");
 			LuaVM.new_usertype<TransformComponent>("TransformComponent",
 				sol::no_constructor,
-				"LocalPosition", sol::property(&TransformComponent::GetLocalPosition, &TransformComponent::SetLocalPosition),
-				"LocalScale", sol::property(&TransformComponent::GetLocalScale, &TransformComponent::SetLocalScale),
-				"LocalOrientation", sol::property(&TransformComponent::GetLocalOrientation, &TransformComponent::SetLocalOrientation),
+				"Position", sol::property(&TransformComponent::GetLocalPosition, &TransformComponent::SetLocalPosition),
+				"Scale", sol::property(&TransformComponent::GetLocalScale, &TransformComponent::SetLocalScale),
+				"Orientation", sol::property(&TransformComponent::GetLocalOrientation, &TransformComponent::SetLocalOrientation),
 
 				"GlobalPosition", sol::property(&TransformComponent::GetGlobalPosition),
 				"GlobalScale", sol::property(&TransformComponent::GetGlobalScale),
-				"GlobalOrientation", sol::property(&TransformComponent::GetGlobalOrientation)
+				"GlobalOrientation", sol::property(&TransformComponent::GetGlobalOrientation),
+
+				"SetEngineInterpolationEnabled", &TransformComponent::SetEngineInterpolation
 			);
 
 			AccessibleLibraries.push_back("RigidBodyComponent");

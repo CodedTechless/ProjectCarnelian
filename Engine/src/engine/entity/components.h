@@ -2,6 +2,8 @@
 
 #include <engineincl.h>
 
+#include <engine/application/application.h>
+
 #include <engine/sprite/sprite_atlas.h>
 #include <engine/lua/script_environment.h>
 
@@ -11,6 +13,7 @@
 #include <json/json.hpp>
 
 #include <glm/glm.hpp>
+#include <glm/gtx/matrix_interpolation.hpp>
 #include <glm/gtx/transform.hpp>
 
 using JSON = nlohmann::json;
@@ -45,6 +48,8 @@ namespace Techless
 	
 	// i never finished this because i wasn't able to make it work so...
 	*/
+
+	
 
 	struct BaseComponent
 	{
@@ -91,7 +96,21 @@ namespace Techless
 	// Physical Components //
 	/////////////////////////
 
-	// to-do: clean this up
+	struct TransformState
+	{
+		glm::vec3 Position{ 0.f };
+		glm::vec2 Scale{ 0.f };
+		float Orientation = 0.f;
+
+		glm::mat4 Transform{ 1.f };
+	};
+
+	struct TransformRecalculateResult
+	{
+		TransformState GlobalState{};
+		TransformState InterpState{};
+	};
+
 
 	struct TransformComponent : public BaseComponent
 	{
@@ -103,21 +122,188 @@ namespace Techless
 		inline glm::vec2 GetLocalScale() const { return LocalScale; };
 		inline float GetLocalOrientation() const { return LocalOrientation; };
 
-		inline glm::vec3 GetGlobalPosition() { RecalculateTransform(); return GlobalPosition; };
-		inline glm::vec2 GetGlobalScale() { RecalculateTransform(); return GlobalScale; };
-		inline float GetGlobalOrientation() { RecalculateTransform(); return GlobalOrientation; };
+		inline glm::vec3 GetGlobalPosition() { return RecalculateBase().GlobalState.Position; };
+		inline glm::vec2 GetGlobalScale() { return RecalculateBase().GlobalState.Scale; };
+		inline float GetGlobalOrientation() { return RecalculateBase().GlobalState.Orientation; };
 		
-		inline void SetLocalPosition(glm::vec3 Position) { LocalPosition = Position; MarkAsDirty(); };
-		inline void SetLocalScale(glm::vec2 Scale) { LocalScale = Scale; MarkAsDirty(); };
-		inline void SetLocalOrientation(float Rotation) { LocalOrientation = Rotation; MarkAsDirty(); };
+		inline glm::mat4 GetGlobalTransform() 
+		{ 
+			auto Base = RecalculateBase();
+			
+			if (FLAG_DoInterpolation)
+				return Base.InterpState.Transform;
+			else
+				return Base.GlobalState.Transform;
+		};
 
-		/*
-			to-do: find a nicer way to do this please, this is disgusting.
-		*/
+		inline void SetLocalPosition(glm::vec3 Position) { if (LocalPosition == Position) { return; }; LocalPosition = Position; MarkAsDirty(); };
+		inline void SetLocalScale(glm::vec2 Scale) { if (LocalScale == Scale) { return; } LocalScale = Scale; MarkAsDirty(); };
+		inline void SetLocalOrientation(float Orientation) { if (LocalOrientation == Orientation) { return; } LocalOrientation = Orientation; MarkAsDirty(); };
 
-		inline glm::mat4 GetGlobalTransform() { RecalculateTransform(); return GlobalTransform; }
+		inline TransformState GetLocalTransformState()
+		{
+			return { LocalPosition, LocalScale, LocalOrientation };
+		}
+
+		inline TransformState GetGlobalTransformState() 
+		{ 
+			return { GlobalPosition, GlobalScale, GlobalOrientation, GlobalTransform };
+		}
+
+		inline void SetEngineInterpolation(bool Mode) 
+		{ 
+			if (FLAG_DoInterpolation == Mode)
+				return;
+			
+			FLAG_DoInterpolation = Mode; 
+			
+			for (Entity* LinkedChild : LinkedEntity->GetChildren())
+			{
+				LinkedChild->GetComponent<TransformComponent>().SetEngineInterpolation(Mode);
+			}
+		};
+
+		inline bool IsEngineInterpolationEnabled() const { return FLAG_DoInterpolation; };
+
+		inline void ForceReloadPreviousState()
+		{
+			PreviousState = GetGlobalTransformState();
+		}
 
 	private:
+
+		TransformRecalculateResult RecalculateBase()
+		{
+			/*
+
+				to-do: optimise this system [UPDATE 19/02/22: optimised a bit but could probably be better!]
+			*/
+
+			TransformRecalculateResult Result { GetGlobalTransformState() };
+			TransformRecalculateResult ParentTransformState{};
+			bool FetchedBase = false;
+			
+
+			if (FLAG_TransformDirty)
+			{
+				Entity* Parent = LinkedEntity->GetParent();
+
+				if (Parent)
+				{
+					TransformComponent& ParentTransform = Parent->GetComponent<TransformComponent>();
+					ParentTransformState = ParentTransform.RecalculateBase();
+					FetchedBase = true;
+
+					Result.GlobalState = BuildTransformState(GetLocalTransformState(), ParentTransformState.GlobalState);
+				}
+				else
+				{
+					Result.GlobalState = GetLocalTransformState();
+				}
+				
+				GlobalTransform = Result.GlobalState.Transform;
+				GlobalPosition = Result.GlobalState.Position;
+				GlobalScale = Result.GlobalState.Scale;
+				GlobalOrientation = Result.GlobalState.Orientation;
+
+				FLAG_TransformDirty = false;
+			}
+
+			if (FLAG_DoInterpolation && !MatchesState(this, PreviousState))
+			{
+				Entity* Parent = LinkedEntity->GetParent();
+
+				if (Parent)
+				{
+					TransformComponent& ParentTransform = Parent->GetComponent<TransformComponent>();
+					
+					// if the parent transform is an interpolation transform, build my interpolation state based of its interpolation state instead of the global state
+					if (ParentTransform.FLAG_DoInterpolation)
+					{
+						if (!FetchedBase)
+							ParentTransformState = ParentTransform.RecalculateBase();
+						
+						Result.InterpState = BuildTransformState(GetLocalTransformState(), ParentTransformState.InterpState);
+					}
+					// if the parent transform is not interpolated (or there is no parent), then use my previous state and current global state to build an interpolated value!
+					else
+					{
+						Result.InterpState = Interpolate(Result.GlobalState, PreviousState);
+					}
+				}
+				else
+				{
+					Result.InterpState = Interpolate(Result.GlobalState, PreviousState);
+				}
+			}
+			else
+			{
+				Result.InterpState = Result.GlobalState;
+			}
+
+			return Result;
+		}
+
+		static bool MatchesState(TransformComponent* Component, const TransformState& StateToMatch)
+		{
+			return Component->GlobalPosition == StateToMatch.Position && Component->GlobalScale == StateToMatch.Scale && Component->GlobalOrientation == StateToMatch.Orientation;
+		}
+
+		// builds a state where LocalState is relative to ParentState's coordinate space. does not build the state for you.
+		static TransformState BuildTransformState(const TransformState& LocalState, const TransformState& ParentState)
+		{
+			TransformState State{};
+			
+			State.Scale = LocalState.Scale * ParentState.Scale;
+			State.Orientation = LocalState.Orientation + ParentState.Orientation;
+
+			float S = 0, C = 1;
+			if (ParentState.Orientation != 0)
+			{
+				C = cos(ParentState.Orientation);
+				S = sin(ParentState.Orientation);
+			}
+
+			auto ParentPosition = ParentState.Position;
+			auto ScaledPosition = LocalState.Position * glm::vec3(ParentState.Scale, 0.f);
+
+			State.Position = ParentPosition + glm::vec3(ScaledPosition.x * C - ScaledPosition.y * S, ScaledPosition.x * S + ScaledPosition.y * C, LocalState.Position.z);
+
+			BuildTransform(State);
+
+			return State;
+		}
+
+		// builds the transform of any State passed to it
+		static void BuildTransform(TransformState& State)
+		{
+			State.Transform = glm::translate(glm::mat4(1.f), State.Position);
+
+			if (State.Orientation != 0.f)
+			{
+				State.Transform *= glm::rotate(glm::mat4(1.f), State.Orientation, glm::vec3(0.f, 0.f, 1.f));
+			}
+
+			if (State.Scale != glm::vec2(1.f, 1.f))
+			{
+				State.Transform *= glm::scale(glm::mat4(1.f), glm::vec3(State.Scale, 1.f));
+			}
+		}
+
+		// interpolates Last towards Next and returns the result as a TransformState. builds the state for you, too!
+		static TransformState Interpolate(const TransformState& Next, const TransformState& Last)
+		{
+			float Ratio = Application::GetActiveApplication().GetSimulationRatio();
+
+			TransformState State = Last;
+			if (Last.Position != Next.Position) State.Position = glm::mix(Last.Position, Next.Position, Ratio); else State.Position = Last.Position;
+			if (Last.Scale != Next.Scale) State.Scale = glm::mix(Last.Scale, Next.Scale, Ratio); else State.Scale = Last.Scale;
+			if (Last.Orientation != Next.Orientation) State.Orientation = Last.Orientation + Ratio * std::fmodf(Next.Orientation - Last.Orientation, 2.f * M_PI); else State.Orientation = Last.Orientation;
+
+			BuildTransform(State);
+
+			return State;
+		}
 
 		/*
 			This is mainly used by the renderer, as scripts don't really have a need for messing directly
@@ -126,43 +312,7 @@ namespace Techless
 			Recalculates the transform based on parents positions. Stores it so that it doesn't need to be 
 			recalculated every time its requested.
 		*/
-		void RecalculateTransform()
-		{
-			if (FLAG_TransformDirty)
-			{
-				Entity* Parent = LinkedEntity->GetParent();
 
-				if (Parent)
-				{
-					TransformComponent& ParentTransform = Parent->GetComponent<TransformComponent>();
-					ParentTransform.RecalculateTransform();
-
-					GlobalScale = LocalScale * ParentTransform.GlobalScale;
-					GlobalOrientation = LocalOrientation + ParentTransform.GlobalOrientation;
-					
-					auto rad = ParentTransform.GlobalOrientation * M_PI / 180;
-					auto c = cos(rad);
-					auto s = sin(rad);
-					
-					auto ParentGlobalPosition = ParentTransform.GlobalPosition;
-					auto ScaledPosition = LocalPosition * glm::vec3(ParentTransform.GlobalScale, 0.f);
-
-					GlobalPosition = ParentGlobalPosition + glm::vec3(ScaledPosition.x * c - ScaledPosition.y * s , ScaledPosition.x * s + ScaledPosition.y * c, LocalPosition.z);
-				}
-				else
-				{
-					GlobalScale = LocalScale;
-					GlobalOrientation = LocalOrientation;
-					GlobalPosition = LocalPosition;
-				}
-
-				GlobalTransform = glm::translate(glm::mat4(1.f), GlobalPosition)
-					* glm::rotate(glm::mat4(1.f), glm::radians(GlobalOrientation), glm::vec3(0.f, 0.f, 1.f))
-					* glm::scale(glm::mat4(1.f), glm::vec3(GlobalScale, 1.f));
-
-				FLAG_TransformDirty = false;
-			}
-		}
 
 		// using a dirty flag to signify when a global position/scale/orientation does not match up with its parents position or with its own local position.
 		void MarkAsDirty()
@@ -182,17 +332,22 @@ namespace Techless
 		glm::vec2 LocalScale{ 1.f, 1.f };
 		float LocalOrientation = 0.f;
 
-		glm::vec3 GlobalPosition{ 0.f, 0.f, 0.f };
-		glm::vec2 GlobalScale{ 1.f, 1.f };
+		// The final calculated global position, scale and orientation.
+		glm::vec3 GlobalPosition { 0.f, 0.f, 0.f };
+		glm::vec2 GlobalScale { 1.f, 1.f };
 		float GlobalOrientation = 0.f;
 
-		glm::mat4 GlobalTransform{ 1.f };
+		// A TransformState storing the previous state of the transform. This will be the value before it was last updated.
+		TransformState PreviousState{};
 
-		bool FLAG_TransformDirty = true;
+		// The final global transform to be used by the renderer.
+		glm::mat4 GlobalTransform{ 1.f };
+		
+		bool FLAG_TransformDirty = true; // Signifies whether or not the transformation is dirty. If FLAG_DoInterpolation is TRUE, this isn't used and is instead replaced by Last == Next
+		bool FLAG_DoInterpolation = false; // Signifies whether or not to use state interplotation.
 
 		friend class Entity;
 		friend class Scene;
-		friend class ScriptAtlas;
 
 	public: // json serialisation
 		
@@ -269,9 +424,10 @@ namespace Techless
 
 		inline friend void to_json(JSON& json, const SpriteComponent& component)
 		{
+
 			json = JSON{
 				{"SpriteColour", component.SpriteColour}, // warning: if you get an error related to json it's probably this
-				{"SpriteName", component.aSprite->GetName()}
+				{"SpriteName", component.aSprite ? component.aSprite->GetName() : ""}
 			};
 		}
 
@@ -279,8 +435,13 @@ namespace Techless
 		{
 			json.at("SpriteColour").get_to(component.SpriteColour);
 			
-			Ptr<Sprite> Sprite = SpriteAtlas::Get(json.at("SpriteName").get<std::string>());
-			component.SetSprite(Sprite);
+			std::string Name = json.at("SpriteName").get<std::string>();
+			
+			if (SpriteAtlas::Has(Name))
+			{
+				Ptr<Sprite> Sprite = SpriteAtlas::Get(Name);
+				component.SetSprite(Sprite);
+			}
 		}
 	};
 
@@ -461,7 +622,9 @@ namespace Techless
 
 		inline friend void from_json(const JSON& json, LuaScriptComponent& component)
 		{
-			component.Bind(json.at("ScriptName").get<std::string>());
+			std::string Name = json.at("ScriptName").get<std::string>();
+			if (ScriptEnvironment::Has(Name))
+				component.Bind(Name);
 		}
 	};
 }

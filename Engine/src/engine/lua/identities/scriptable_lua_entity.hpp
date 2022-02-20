@@ -2,7 +2,7 @@
 
 
 #include <engine/entity/entity.h>
-#include <engine/entity/component/components.h>
+#include <engine/entity/components.h>
 
 #include <engineincl.h>
 

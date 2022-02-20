@@ -22,6 +22,7 @@ namespace Techless {
 		inline unsigned int GetRendererID() const { return RendererID; };
 	private:
 		void Allocate();
+
 	private:
 		unsigned int RendererID = 0;
 		std::string FilePath = "";
