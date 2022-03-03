@@ -3,6 +3,8 @@
 
 #include <json/json.hpp>
 
+#include <engine/entity/serialiser/serialiser.h>
+
 #include "prefab_atlas.h"
 
 
@@ -18,13 +20,11 @@ namespace Techless
 
 		if (Prefabs.find(Name) != Prefabs.end())
 			return Prefabs[Name];
-		
-		Debug::Log("Loaded prefab " + Name, "PrefabAtlas");
-		std::ifstream i(FilePath);
-		JSON json;
-		i >> json;
 
-		Prefabs[Name] = { json, Name };
+		Deserialiser deserialiser = { FilePath };
+		Prefabs[Name] = deserialiser.Deserialise();
+
+		Debug::Log("Loaded prefab " + Name, "PrefabAtlas");
 
 		return Prefabs[Name];
 	}

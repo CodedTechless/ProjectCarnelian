@@ -71,6 +71,7 @@ namespace Techless
 	public: // json serialisation
 		bool Archivable = true;
 
+		/*
 		inline friend void to_json(JSON& json, const Entity& entity)
 		{
 			json = JSON{
@@ -86,7 +87,7 @@ namespace Techless
 		inline friend void from_json(const JSON& json, Entity& entity)
 		{
 			json.at("EntityID").get_to(entity.EntityID);
-		}
+		}*/
 
 	};
 }

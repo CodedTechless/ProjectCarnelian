@@ -5,12 +5,13 @@
 namespace Techless
 {
 
-	Prefab::Prefab(JSON& json, const std::string& name)
+	Prefab::Prefab(/*JSON& json,*/ const std::string& name)
 		: Name(name)
 	{
-		Deserialise(json);
+//		Deserialise(json);
 	}
 
+	/*
 	void Prefab::Deserialise(JSON& json)
 	{
 		JSON& j_Entities = json["Entities"];
@@ -42,5 +43,5 @@ namespace Techless
 
 		Loaded = true;
 	}
-
+	*/
 }

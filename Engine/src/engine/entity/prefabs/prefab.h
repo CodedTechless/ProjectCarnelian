@@ -23,64 +23,44 @@ namespace Techless
 		class TypedPrefabRegistry : public RegistrySet
 		{
 		public:
-			void Add(const std::string& EntryName, Component component)
+			void Add(uint16_t RegistryID, Component component)
 			{
-				Components[EntryName] = component;
+				Components[RegistryID] = component;
 			}
 
-			Component& Get(const std::string& EntryName)
+			Component& Get(uint16_t RegistryID)
 			{
-				if (Components.find(EntryName) == Components.end())
+				if (Components.find(RegistryID) == Components.end())
 					return NULL;
 
-				return Components[EntryName];
+				return Components[RegistryID];
 			}
 
-			void Clear(std::string ID)
+			void Clear(uint16_t RegistryID)
 			{
-				if (Components.find(ID) != Components.end())
+				if (Components.find(RegistryID) != Components.end())
 				{
-					Components.erase(ID);
+					Components.erase(RegistryID);
 				}
 			}
 
-			std::unordered_map<std::string, Component>::iterator begin() { return Components.begin(); };
-			std::unordered_map<std::string, Component>::iterator end() { return Components.end(); };
+			std::unordered_map<uint16_t, Component>::iterator begin() { return Components.begin(); };
+			std::unordered_map<uint16_t, Component>::iterator end() { return Components.end(); };
 
 		private:
-			std::unordered_map<std::string, Component> Components{};
+			std::unordered_map<uint16_t, Component> Components{};
 
 		};
 	
 	}
 
-	struct PrefabEntity
-	{
-		std::string EntityID = "";
-		std::string ParentEntityID = "";
-
-		bool IsRoot = false;
-
-	public:
-
-		inline friend void from_json(const JSON& json, PrefabEntity& entity)
-		{
-			json.at("EntityID").get_to(entity.EntityID);
-			if (json.at("ParentEntityID").type_name() != "null")
-			{
-				json.at("ParentEntityID").get_to(entity.ParentEntityID);
-			}
-		}
-	};
-
 	class Prefab
 	{
 	public:
 		Prefab() = default;
-		Prefab(JSON& json, const std::string& name);
+//		Prefab(JSON& json, const std::string& name);
+		Prefab(const std::string& name);
 
-		void Deserialise(JSON& json);
-		
 		inline std::string GetName() const { return Name; };
 
 		template <typename Type>
@@ -93,35 +73,37 @@ namespace Techless
 			return std::static_pointer_cast<PrefabUtil::TypedPrefabRegistry<Type>>(Components[TypeName]);
 		}
 
-	private:
+		int Entities = 0;
 
-		/*
-			Pulls all serialised components of type Component from a JSON array (j_Components) containing said
-			serialised components in JSON
-		*/
-		template <typename Component>
-		void PullSerialisedComponents(JSON& j_Components, const std::string& EntryName)
-		{
-			if (j_Components.find(EntryName) == j_Components.end())
-				return;
-
-			auto PrefabComponents = GetComponents<Component>();
-			JSON& j_TypeComponent = j_Components[EntryName];
-
-			for (JSON::iterator it = j_TypeComponent.begin(); it != j_TypeComponent.end(); ++it)
-			{
-				PrefabComponents->Add(it.key(), it.value().get<Component>());
-			}
-		}
+		std::vector<int> ParentalIndex{}; // where "int" is parent index
+		std::unordered_map<const char*, Ptr<RegistrySet>> Components{};
 
 	private:
 		std::string Name = "";
 		bool Loaded = false;
-		
-		std::vector<PrefabEntity> Entities{};
-		std::unordered_map<const char*, Ptr<RegistrySet>> Components{};
 
 		friend class Scene;
 	};
 
 }
+
+
+/*
+
+saving this in case i need it at some other point :)
+
+template <typename Component>
+void PullSerialisedComponents(JSON& j_Components, const std::string& EntryName)
+{
+	if (j_Components.find(EntryName) == j_Components.end())
+		return;
+
+	auto PrefabComponents = GetComponents<Component>();
+	JSON& j_TypeComponent = j_Components[EntryName];
+
+	for (JSON::iterator it = j_TypeComponent.begin(); it != j_TypeComponent.end(); ++it)
+	{
+		PrefabComponents->Add(it.key(), it.value().get<Component>());
+	}
+}
+*/

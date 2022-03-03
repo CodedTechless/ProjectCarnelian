@@ -16,11 +16,7 @@
 namespace Techless
 {
 
-	struct SceneRenderInfo
-	{
-		SpriteComponent* SpritePtr = nullptr;
-		TransformComponent* TransformPtr = nullptr;
-	};
+
 
 
 	// Creates a Scene object (a shared_ptr) which has a pre-registered Lua scene counter-part.
@@ -76,20 +72,21 @@ namespace Techless
 
 	}
 
+	template<typename T>
+	static void AssignComponents(Scene& scene, Prefab& prefab)
+	{
+
+	}
+
 	Entity& Scene::Instantiate(Prefab& prefab)
 	{
 		// to-do: add some sort of checklist for colliding uuids?!?! hello?? [CRITICAL BUG]
 		
-		Entity* RootEntity = nullptr;
+		std::vector<Entity*> Entities = {};
 
-		// Create all the prefab entities with their respective ID's
-		for (const PrefabEntity& prefabEntity : prefab.Entities)
+		for (uint16_t i = 0; i < prefab.Entities; ++i)
 		{
-			Entity& newEntity = SceneRegistry.Add<Entity>(prefabEntity.EntityID, this, prefabEntity.EntityID);
-			ScriptEnvironment::RegisterEntity(SceneLuaID, &newEntity);
-
-			if (prefabEntity.IsRoot)
-				RootEntity = &newEntity;
+			
 		}
 
 		// Set all of the parents of the prefab object
@@ -176,6 +173,13 @@ namespace Techless
 		ScriptEnvironment::CallScene(SceneLuaID, "OnFixedUpdate", Delta);
 	}
 
+
+	struct SceneRenderInfo
+	{
+		SpriteComponent* SpritePtr = nullptr;
+		TransformComponent* TransformPtr = nullptr;
+	};
+
 	void Scene::Update(float Delta, bool AllowScriptRuntime)
 	{
 		if (AllowScriptRuntime)
@@ -231,14 +235,6 @@ namespace Techless
 	void Scene::Serialise(const std::string& FilePath, Entity& RootEntity)
 	{
 		Serialiser l_Serialiser = { RootEntity };
-
-		l_Serialiser.AssignComponent<TagComponent>			("Tag");
-		l_Serialiser.AssignComponent<TransformComponent>	("Transform");
-		l_Serialiser.AssignComponent<RigidBodyComponent>	("RigidBody");
-		l_Serialiser.AssignComponent<SpriteComponent>		("Sprite");
-		l_Serialiser.AssignComponent<CameraComponent>		("Camera");
-		l_Serialiser.AssignComponent<LuaScriptComponent>	("LuaScript");
-
 		l_Serialiser.SaveToFile(FilePath);
 	}
 }
