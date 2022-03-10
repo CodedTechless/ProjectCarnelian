@@ -1,8 +1,12 @@
 
 #include "sprite_atlas.h"
 
-#include <Engine.h>
 #include <engineincl.h>
+
+#include <render/renderer.h>
+
+#include <engine/application/watchdog/watchdog.h>
+#include <engine/application/resource_loader.h>
 
 #include <stb_image/stb_image.h>
 #include <stb_rect_pack/stb_rect_pack.h>
@@ -45,30 +49,6 @@ namespace Techless
 		return Tex;
 	}
 
-	void Read(std::vector<TextureInfo>& TextureBuffers, const std::string& Path)
-	{
-		for (const auto& File : fs::directory_iterator(Path))
-		{
-			auto FsPath = File.path();
-			auto Path = FsPath.generic_string();
-
-			if (File.is_directory())
-			{
-				Read(TextureBuffers, Path);
-			} 
-			else if (File.is_regular_file() && Path.substr(Path.size() - 4) == ".png")
-			{
-				TextureInfo textureInfo;
-
-				stbi_set_flip_vertically_on_load(1);
-				textureInfo.Buffer = stbi_load(Path.c_str(), &textureInfo.Width, &textureInfo.Height, &textureInfo.BitsPerPixel, 4);
-				textureInfo.Name = FsPath.stem().string();
-
-				TextureBuffers.push_back(textureInfo);
-			}
-		}
-	}
-
 	void SpriteAtlas::Init()
 	{
 		Debug::Log("Loading textures...", "SpriteAtlas");
@@ -77,7 +57,21 @@ namespace Techless
 		MissingSprite = CreatePtr<Sprite>( MissingTexture );
 
 		std::vector<TextureInfo> Textures;
-		Read(Textures, "assets/textures");
+
+		ResourceLoader::GetFiles(Resource::Texture,
+			[&](const fs::directory_entry& File)
+			{
+				fs::path Path = File.path();
+				std::string sPath = Path.generic_string();
+
+				TextureInfo textureInfo;
+
+				stbi_set_flip_vertically_on_load(1);
+				textureInfo.Buffer = stbi_load(sPath.c_str(), &textureInfo.Width, &textureInfo.Height, &textureInfo.BitsPerPixel, 4);
+				textureInfo.Name = Path.stem().string();
+
+				Textures.push_back(textureInfo);
+			});
 		
 		auto MaxTextureSize = Renderer::GetMaxTextureSize();
 
@@ -130,8 +124,8 @@ namespace Techless
 						}
 					}
 
-					auto TopLeft = glm::vec2((float)Rect.x, (float)Rect.y);
-					auto BottomRight = glm::vec2((float)(Rect.x + Rect.w), (float)(Rect.y + Rect.h));
+					Vector2 TopLeft = { Rect.x, Rect.y };
+					Vector2 BottomRight = { (Rect.x + Rect.w), (Rect.y + Rect.h) };
 
 					SpriteCache[textureInfo.Name] = CreatePtr<Sprite>( newTexture, TopLeft, BottomRight, textureInfo.Name );
 

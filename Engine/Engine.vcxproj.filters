@@ -42,7 +42,7 @@
     <ClCompile Include="src\dependencies\glm\detail\glm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\layers\layer_set.cpp">
+    <ClCompile Include="src\engine\application\layers\layer_set.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\entity\scene.cpp">
@@ -51,13 +51,13 @@
     <ClCompile Include="src\engine\application\window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\watchdog\watchdog.cpp">
+    <ClCompile Include="src\engine\application\watchdog\watchdog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\sprite\sprite_atlas.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\input\input.cpp">
+    <ClCompile Include="src\engine\application\input\input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\engineincl.cpp">
@@ -99,10 +99,10 @@
     <ClCompile Include="src\render\buffer\frame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\layers\imgui\imgui_layer.cpp">
+    <ClCompile Include="src\engine\application\layers\imgui\imgui_layer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\layers\layer.cpp">
+    <ClCompile Include="src\engine\application\layers\layer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\entity\prefabs\prefab_atlas.cpp">
@@ -114,13 +114,19 @@
     <ClCompile Include="src\engine\lua\script_environment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\watchdog\imgui\explorer\explorer.cpp">
+    <ClCompile Include="src\engine\application\watchdog\imgui\explorer\explorer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\watchdog\imgui\console\console_panel.cpp">
+    <ClCompile Include="src\engine\application\watchdog\imgui\console\console_panel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\engine\entity\serialiser\serialiser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\sprite\animation\animation_atlas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\engine\application\resource_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1408,10 +1414,10 @@
     <ClInclude Include="src\engine\application\application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\layers\layer.h">
+    <ClInclude Include="src\engine\application\layers\layer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\layers\layer_set.h">
+    <ClInclude Include="src\engine\application\layers\layer_set.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\entity\scene.h">
@@ -1420,13 +1426,13 @@
     <ClInclude Include="src\engine\application\window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\watchdog\watchdog.h">
+    <ClInclude Include="src\engine\application\watchdog\watchdog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\sprite\sprite_atlas.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\input\input.h">
+    <ClInclude Include="src\engine\application\input\input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\dependencies\json\json.hpp">
@@ -1462,9 +1468,6 @@
     <ClInclude Include="src\engine\application\event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\maths\colour.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\dependencies\imgui\imconfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1495,7 +1498,7 @@
     <ClInclude Include="src\render\buffer\frame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\layers\imgui\imgui_layer.h">
+    <ClInclude Include="src\engine\application\layers\imgui\imgui_layer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\entity\prefabs\prefab_atlas.h">
@@ -1516,16 +1519,22 @@
     <ClInclude Include="src\engine\lua\script_environment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\lua\identities\scriptable_lua_entity.hpp">
+    <ClInclude Include="src\engine\lua\scriptable_lua_entity.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\watchdog\imgui\explorer\explorer.h">
+    <ClInclude Include="src\engine\application\watchdog\imgui\explorer\explorer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\watchdog\imgui\console\console_panel.h">
+    <ClInclude Include="src\engine\application\watchdog\imgui\console\console_panel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\entity\serialiser\serialiser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\sprite\animation\animation_atlas.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\application\resource_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

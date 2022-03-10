@@ -19,8 +19,7 @@ namespace NativeScript
 			bool AcceptingInput = true;
 
 			// Movement
-			float CameraSpeed = 15.f;
-			float CameraDiffMultiplier = 0.4f;
+			float CameraSpeed = 1000.f;
 
 			glm::vec3 PositionTo = {};
 
@@ -38,20 +37,15 @@ namespace NativeScript
 
 			void OnCreate()
 			{
-				PositionTo = GetComponent<TransformComponent>().GetLocalPosition();
+				auto& Transform = GetComponent<TransformComponent>();
+
+				Transform.SetEngineInterpolation(true);
+				PositionTo = Transform.GetLocalPosition();
 			}
 
 			void OnUpdate(const float Delta)
 			{
-				auto& Transform = GetComponent<TransformComponent>();
-				Transform.SetLocalPosition(Transform.GetLocalPosition() + (PositionTo - Transform.GetLocalPosition()) * 0.2f * Delta);
 
-				auto WindowSize = Application::GetActiveApplication().GetActiveWindow()->Size;
-
-				auto& CameraComp = GetComponent<CameraComponent>();
-				CameraComp.SetProjection(ViewportSize * ZoomLevel, Near, Far);
-
-				ZoomLevel += (ZoomLevelTo - ZoomLevel) * 0.3f * Delta;
 			}
 
 			void OnFixedUpdate(const float Delta)
@@ -75,6 +69,16 @@ namespace NativeScript
 				{
 					PositionTo = Subject->GetLocalPosition();
 				}
+
+				auto& Transform = GetComponent<TransformComponent>();
+				Transform.SetLocalPosition(Transform.GetLocalPosition() + (PositionTo - Transform.GetLocalPosition()) * 0.15f);
+
+				auto WindowSize = Application::GetActiveApplication().GetActiveWindow()->Size;
+
+				auto& CameraComp = GetComponent<CameraComponent>();
+				CameraComp.SetProjection(ViewportSize * ZoomLevel, Near, Far);
+
+				ZoomLevel += ((ZoomLevelTo - ZoomLevel) * 0.3f);
 			}
 
 			Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed)

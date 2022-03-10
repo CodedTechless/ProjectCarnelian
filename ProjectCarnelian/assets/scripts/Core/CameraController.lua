@@ -37,12 +37,12 @@ end
 
 function OnUpdate(Delta)
 	local Transform = GetComponent("TransformComponent");
-	Transform.Position = Transform.Position + (PositionTo - Transform.Position) * 0.2 * Delta;
+	Transform.Position = Transform.Position + (PositionTo - Transform.Position) * 15 * Delta;
 
 	local Camera = GetComponent("CameraComponent");
 	Camera:SetProjection(Window.Size * ZoomLevel, Near, Far);
 
-	ZoomLevel = ZoomLevel + (ZoomLevelTo - ZoomLevel) * 0.3 * Delta;
+	ZoomLevel = ZoomLevel + (ZoomLevelTo - ZoomLevel) * 30 * Delta;
 end
 
 function OnFixedUpdate(Delta)

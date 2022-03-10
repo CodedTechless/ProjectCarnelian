@@ -65,11 +65,9 @@ namespace Techless
 		}
 
 	private:
-		static std::unordered_map<std::string, LuaFunction> CachedScripts;
-		
-		static void Read(const std::string& Path);
 		static void LoadGlobalEnvironment();
-
+		
+		static std::unordered_map<std::string, LuaFunction> CachedScripts;
 		static sol::state LuaVM;
 	};
 

@@ -26,7 +26,7 @@ namespace Techless
         bool RequiresRefresh = false;
 
         // set up the node flags
-        ImGuiTreeNodeFlags node_flags = (SelectedEntity && SelectedEntity->GetID() == entity->GetID() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = (SelectedEntity && SelectedEntity->GetID() == entity->GetID() ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 
         // if it has children, turn it into a leaf
         bool HasChildren = entity->GetChildren().size();
@@ -119,7 +119,13 @@ namespace Techless
             
             if (ImGui::BeginPopupContextWindow())
             {
-                if (ImGui::MenuItem("Duplicate"))
+                if (ImGui::MenuItem("Create Child"))
+                {
+                    Entity& ent = SceneContext->CreateEntity();
+                    ent.SetParent(SelectedEntity);
+                }
+
+                if (ImGui::MenuItem("Duplicate", nullptr, nullptr, false))
                 {
 
                 }
@@ -155,6 +161,16 @@ namespace Techless
 
             if (Open)
             {
+                if (Title != "Tag" && Title != "Transform") // the tag and transform cannot be deleted
+                {
+
+                    if (ImGui::Button("Delete"))
+                    {
+                        entity->RemoveComponent<Component>();
+                    }
+                    ImGui::Separator();
+                }
+
                 propertyFunction(component);
                 ImGui::TreePop();
 
@@ -296,7 +312,7 @@ namespace Techless
 
                 DrawTextLabel("Sprite");
 
-                float col[4] = { Component.SpriteColour.R, Component.SpriteColour.G, Component.SpriteColour.B, Component.SpriteColour.A };
+                float col[4] = { Component.SpriteColour.r, Component.SpriteColour.g, Component.SpriteColour.b, Component.SpriteColour.a };
                 
                 ImGui::PushItemWidth(200.f);
                 ImGui::ColorEdit4("##sprite tint", col);
@@ -305,15 +321,91 @@ namespace Techless
                 ImGui::SameLine(); 
                 ImGui::Text("Colour Tint");
 
-                Component.SpriteColour.R = col[0];
-                Component.SpriteColour.G = col[1];
-                Component.SpriteColour.B = col[2];
-                Component.SpriteColour.A = col[3];
+                Component.SpriteColour.r = col[0];
+                Component.SpriteColour.g = col[1];
+                Component.SpriteColour.b = col[2];
+                Component.SpriteColour.a = col[3];
             });
 
         RenderComponentProperties<CameraComponent>("Camera", SelectedEntity,
             [](CameraComponent& Component)
             {
+                auto ViewportRes = Component.GetViewportResolution();
+
+                DrawVec2("Viewport Resolution", ViewportRes);
+
+                auto Plane = Component.GetZPlane();
+
+                ImGui::PushItemWidth(55.f);
+                ImGui::InputFloat("##near", &Plane.first);
+                ImGui::PopItemWidth();
+
+                ImGui::SameLine();
+                ImGui::Text("Near");
+
+                ImGui::PushItemWidth(55.f);
+                ImGui::InputFloat("##far", &Plane.second);
+                ImGui::PopItemWidth();
+
+                ImGui::SameLine();
+                ImGui::Text("Far");
+
+                Component.SetProjection(ViewportRes, Plane.first, Plane.second);
+            });
+
+        RenderComponentProperties<SpriteAnimatorComponent>("Sprite Animator", SelectedEntity,
+            [](SpriteAnimatorComponent& Component)
+            {
+                auto AnimSet = Component.GetAnimationSet();
+                std::string Text = (AnimSet ? AnimSet->Name : "None");
+
+                DrawReadOnly("##animation", Text);
+
+                if (ImGui::BeginDragDropTarget())
+                {
+                    const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload("SPR_ANIM_ASSET_DRAG");
+
+                    if (Payload)
+                    {
+                        const std::string AnimName = (const char*)Payload->Data;
+
+                        Component.SetAnimationSet(AnimationAtlas::Get(AnimName));
+                    }
+
+                    ImGui::EndDragDropTarget();
+                }
+
+                DrawTextLabel("Animation");
+
+                if (AnimSet)
+                {
+                    auto CurrentAnim = Component.GetCurrentAnimation();
+                    std::string CurrentAnimText = (CurrentAnim ? CurrentAnim->Name : "None");
+
+                    DrawReadOnly("##current anim", CurrentAnimText);
+                    DrawTextLabel("Current Sequence");
+
+                    if (ImGui::BeginCombo("##default anim", AnimSet->Default.c_str(), ImGuiComboFlags_NoArrowButton))
+                    {
+                        for (auto& pair : AnimSet->Sequences)
+                        {
+                            bool IsSelected = (pair.first == AnimSet->Default);
+
+                            if (ImGui::Selectable(pair.first.c_str(), IsSelected))
+                            {
+                                AnimSet->Default = pair.first;
+                                Component.Play(pair.first);
+                            }
+
+                            if (IsSelected)
+                            {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+
+                        ImGui::EndCombo();
+                    }
+                }
 
             });
 
@@ -324,7 +416,23 @@ namespace Techless
                 std::string Text = (ScriptName != "" ? ScriptName : "None");
                 
                 DrawReadOnly("##script", Text);
+
+                if (ImGui::BeginDragDropTarget())
+                {
+                    const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload("SCRIPT_ASSET_DRAG");
+
+                    if (Payload)
+                    {
+                        const std::string ScriptName = (const char*)Payload->Data;
+
+                        Component.Bind(ScriptName);
+                    }
+
+                    ImGui::EndDragDropTarget();
+                }
+
                 DrawTextLabel("Script");
+
             });
 
         auto WindowWidth = ImGui::GetWindowSize().x;
@@ -344,7 +452,7 @@ namespace Techless
             CreateMenuEntry<CameraComponent>("Camera");
             
             CreateMenuEntry<SpriteComponent>("Sprite");
-            CreateMenuEntry<AnimatorComponent>("Animator");
+            CreateMenuEntry<SpriteAnimatorComponent>("Sprite Animator");
 
             ImGui::Separator();
 

@@ -5,51 +5,17 @@
 #include <engine/application/application.h>
 
 #include <engine/sprite/sprite_atlas.h>
+#include <engine/sprite/animation/animation_atlas.h>
 #include <engine/lua/script_environment.h>
 
 #include <engine/entity/scriptable_entity.h>
-#include <engine/maths/colour.hpp>
 
-#include <json/json.hpp>
-
-#include <glm/glm.hpp>
 #include <glm/gtx/matrix_interpolation.hpp>
 #include <glm/gtx/transform.hpp>
 
-using JSON = nlohmann::json;
-
 namespace Techless
 {
-	
-	/*
-	namespace Serialiser
-	{
 
-		template <typename Type>
-		bool CompareTypeForName(const std::string& Name)
-		{
-			return Name == type;
-		}
-
-		template <typename Component>
-		std::string GetTypeEntryName()
-		{
-			std::string Name = typeid(Component).name();
-			
-			if (CompareTypeForName<TagComponent>(Name)) return "Tag";
-			if (CompareTypeForName<TransformComponent>(Name)) return "Transform";
-			if (CompareTypeForName<RigidBodyComponent>(Name)) return "RigidBody";
-			if (CompareTypeForName<SpriteComponent>(Name)) return "Sprite";
-			if (CompareTypeForName<CameraComponent>(Name)) return "Camera";
-
-			assert(false);
-		}
-	}
-	
-	// i never finished this because i wasn't able to make it work so...
-	*/
-
-	
 
 	struct BaseComponent
 	{
@@ -98,8 +64,8 @@ namespace Techless
 
 	struct TransformState
 	{
-		glm::vec3 Position{ 0.f };
-		glm::vec2 Scale{ 0.f };
+		Vector3 Position{ 0.f };
+		Vector2 Scale{ 0.f };
 		float Orientation = 0.f;
 
 		glm::mat4 Transform{ 1.f };
@@ -118,12 +84,12 @@ namespace Techless
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent& component) = default;
 
-		inline glm::vec3 GetLocalPosition() const { return LocalPosition; };
-		inline glm::vec2 GetLocalScale() const { return LocalScale; };
+		inline Vector3 GetLocalPosition() const { return LocalPosition; };
+		inline Vector2 GetLocalScale() const { return LocalScale; };
 		inline float GetLocalOrientation() const { return LocalOrientation; };
 
-		inline glm::vec3 GetGlobalPosition() { return RecalculateBase().GlobalState.Position; };
-		inline glm::vec2 GetGlobalScale() { return RecalculateBase().GlobalState.Scale; };
+		inline Vector3 GetGlobalPosition() { return RecalculateBase().GlobalState.Position; };
+		inline Vector2 GetGlobalScale() { return RecalculateBase().GlobalState.Scale; };
 		inline float GetGlobalOrientation() { return RecalculateBase().GlobalState.Orientation; };
 		
 		inline glm::mat4 GetGlobalTransform() 
@@ -136,8 +102,8 @@ namespace Techless
 				return Base.GlobalState.Transform;
 		};
 
-		inline void SetLocalPosition(glm::vec3 Position) { if (LocalPosition == Position) { return; }; LocalPosition = Position; MarkAsDirty(); };
-		inline void SetLocalScale(glm::vec2 Scale) { if (LocalScale == Scale) { return; } LocalScale = Scale; MarkAsDirty(); };
+		inline void SetLocalPosition(Vector3 Position) { if (LocalPosition == Position) { return; }; LocalPosition = Position; MarkAsDirty(); };
+		inline void SetLocalScale(Vector2 Scale) { if (LocalScale == Scale) { return; } LocalScale = Scale; MarkAsDirty(); };
 		inline void SetLocalOrientation(float Orientation) { if (LocalOrientation == Orientation) { return; } LocalOrientation = Orientation; MarkAsDirty(); };
 
 		inline TransformState GetLocalTransformState()
@@ -265,9 +231,9 @@ namespace Techless
 			}
 
 			auto ParentPosition = ParentState.Position;
-			auto ScaledPosition = LocalState.Position * glm::vec3(ParentState.Scale, 0.f);
+			auto ScaledPosition = LocalState.Position * Vector3(ParentState.Scale, 0.f);
 
-			State.Position = ParentPosition + glm::vec3(ScaledPosition.x * C - ScaledPosition.y * S, ScaledPosition.x * S + ScaledPosition.y * C, LocalState.Position.z);
+			State.Position = ParentPosition + Vector3(ScaledPosition.x * C - ScaledPosition.y * S, ScaledPosition.x * S + ScaledPosition.y * C, LocalState.Position.z);
 
 			BuildTransform(State);
 
@@ -281,12 +247,12 @@ namespace Techless
 
 			if (State.Orientation != 0.f)
 			{
-				State.Transform *= glm::rotate(glm::mat4(1.f), State.Orientation, glm::vec3(0.f, 0.f, 1.f));
+				State.Transform *= glm::rotate(glm::mat4(1.f), State.Orientation, Vector3(0.f, 0.f, 1.f));
 			}
 
-			if (State.Scale != glm::vec2(1.f, 1.f))
+			if (State.Scale != Vector2(1.f, 1.f))
 			{
-				State.Transform *= glm::scale(glm::mat4(1.f), glm::vec3(State.Scale, 1.f));
+				State.Transform *= glm::scale(glm::mat4(1.f), Vector3(State.Scale, 1.f));
 			}
 		}
 
@@ -305,14 +271,6 @@ namespace Techless
 			return State;
 		}
 
-		/*
-			This is mainly used by the renderer, as scripts don't really have a need for messing directly
-			with transformations (as of right now but that might change)
-
-			Recalculates the transform based on parents positions. Stores it so that it doesn't need to be 
-			recalculated every time its requested.
-		*/
-
 
 		// using a dirty flag to signify when a global position/scale/orientation does not match up with its parents position or with its own local position.
 		void MarkAsDirty()
@@ -328,13 +286,13 @@ namespace Techless
 			}
 		}
 
-		glm::vec3 LocalPosition{ 0.f, 0.f, 0.f };
-		glm::vec2 LocalScale{ 1.f, 1.f };
+		Vector3 LocalPosition{ 0.f, 0.f, 0.f };
+		Vector2 LocalScale{ 1.f, 1.f };
 		float LocalOrientation = 0.f;
 
 		// The final calculated global position, scale and orientation.
-		glm::vec3 GlobalPosition { 0.f, 0.f, 0.f };
-		glm::vec2 GlobalScale { 1.f, 1.f };
+		Vector3 GlobalPosition { 0.f, 0.f, 0.f };
+		Vector2 GlobalScale { 1.f, 1.f };
 		float GlobalOrientation = 0.f;
 
 		// A TransformState storing the previous state of the transform. This will be the value before it was last updated.
@@ -353,27 +311,23 @@ namespace Techless
 		
 		inline friend void to_json(JSON& json, const TransformComponent& component)
 		{
+			auto& p = component.LocalPosition;
+			auto& s = component.LocalScale;
+
 			json = JSON{
-				{"LocalPosition", {
-					{"x", component.LocalPosition.x},
-					{"y", component.LocalPosition.y},
-					{"z", component.LocalPosition.z}
-				}},
-				{"LocalScale", {
-					{"x", component.LocalScale.x},
-					{"y", component.LocalScale.y}
-				}},
+				{"LocalPosition", { {"X", p.x}, {"Y", p.y}, {"Z", p.z} }},
+				{"LocalScale", { {"X", s.x}, {"Y", s.y} }},
 				{"LocalOrientation", component.LocalOrientation}
 			};
 		}
 
 		inline friend void from_json(const JSON& json, TransformComponent& component)
 		{
-			auto& LocalPosition = json.at("LocalPosition");
-			component.LocalPosition = glm::vec3(LocalPosition["x"].get<float>(), LocalPosition["y"].get<float>(), LocalPosition["z"].get<float>());
+			const JSON& Position = json.at("LocalPosition");
+			component.LocalPosition = { Position.at("X").get<float>(), Position.at("Y").get<float>(), Position.at("Z").get<float>() };
 
-			auto& LocalScale = json.at("LocalScale");
-			component.LocalScale = glm::vec2(LocalScale["x"].get<float>(), LocalScale["y"].get<float>());
+			const JSON& Scale = json.at("LocalScale");
+			component.LocalScale = { Scale.at("X").get<float>(), Scale.at("Y").get<float>() };
 
 			json.at("LocalOrientation").get_to(component.LocalOrientation);
 
@@ -387,12 +341,32 @@ namespace Techless
 		RigidBodyComponent() = default;
 		RigidBodyComponent(const RigidBodyComponent& component) = default;
 
-		float Velocity = 0.f;
-		float Friction = 100.f;
+		Vector3 Velocity = { 0.f, 0.f, 0.f };
+		
+		float GroundFriction = 100.f;
+		float AirFriction = 30.f;
 
 	public: // json serialisation
 
-		NLOHMANN_DEFINE_TYPE_INTRUSIVE(RigidBodyComponent, Velocity, Friction);
+		inline friend void to_json(JSON& json, const RigidBodyComponent& component)
+		{
+			const Vector3& v = component.Velocity;
+
+			json = JSON{
+				{"Velocity", { { {"X", v.x}, {"Y", v.y}, {"Z", v.z} } }},
+				{"GroundFriction", component.GroundFriction},
+				{"AirFriction", component.AirFriction}
+			};
+		}
+
+		inline friend void from_json(const JSON& json, RigidBodyComponent& component)
+		{
+			const JSON& Velocity = json.at("Velocity");
+			component.Velocity = { Velocity.at("X").get<float>(), Velocity.at("Y").get<float>(), Velocity.at("Z").get<float>() };
+
+			json.at("GroundFriction").get_to(component.GroundFriction);
+			json.at("AirFriction").get_to(component.AirFriction);
+		}
 	};
 
 	/*
@@ -412,7 +386,7 @@ namespace Techless
 		SpriteComponent() = default;
 		SpriteComponent(const SpriteComponent& component) = default;
 
-		Colour SpriteColour{ 1.f, 1.f, 1.f };
+		Colour SpriteColour{ 1.f, 1.f, 1.f, 1.f };
 
 		inline void SetSprite(Ptr<Sprite> sprite) { aSprite = sprite; };
 		inline Ptr<Sprite> GetSprite() const { return aSprite; };
@@ -424,16 +398,18 @@ namespace Techless
 
 		inline friend void to_json(JSON& json, const SpriteComponent& component)
 		{
+			const auto& c = component.SpriteColour;
 
 			json = JSON{
-				{"SpriteColour", component.SpriteColour}, // warning: if you get an error related to json it's probably this
+				{"SpriteColour", { {"R", c.r}, {"G", c.g}, {"B", c.b}, {"A", c.a} }}, // warning: if you get an error related to json it's probably this
 				{"SpriteName", component.aSprite ? component.aSprite->GetName() : ""}
 			};
 		}
 
 		inline friend void from_json(const JSON& json, SpriteComponent& component)
 		{
-			json.at("SpriteColour").get_to(component.SpriteColour);
+			const auto& Colour = json.at("SpriteColour");
+			component.SpriteColour = { Colour.at("R").get<float>(), Colour.at("G").get<float>(), Colour.at("B").get<float>(), Colour.at("A").get<float>() };
 			
 			std::string Name = json.at("SpriteName").get<std::string>();
 			
@@ -445,24 +421,82 @@ namespace Techless
 		}
 	};
 
-	struct AnimatorComponent : public BaseComponent
+	struct SpriteAnimatorComponent : public BaseComponent
 	{
 	public:
-		AnimatorComponent() = default;
-		AnimatorComponent(const AnimatorComponent& component) = default;
+		SpriteAnimatorComponent() = default;
 		
-		/*
-	public: // json serialisation
-
-		inline friend void to_json(JSON& json, const AnimatorComponent& component)
+		void Update(float Delta)
 		{
+			if (!CurrentAnimation)
+				return;
 
+			FrameTime += Delta;
+
+			float AnimFrameTime = CurrentAnimation->GetFrameTime();
+			if (FrameTime >= AnimFrameTime)
+			{
+				FrameTime -= AnimFrameTime;
+				Frame++;
+			}
+
+			if (!Paused && Frame >= CurrentAnimation->GetLength())
+			{
+				Frame = 0;
+
+				if (!CurrentAnimation->Looped)
+					PlayDefault();
+			}
+
+			auto& c_Sprite = LinkedEntity->GetComponent<SpriteComponent>();
+			c_Sprite.SetSprite(CurrentAnimation->GetFrameSprite(Frame));
 		}
 
-		inline friend void from_json(const JSON& json, AnimatorComponent& component)
+		void PlayDefault() { Play(m_AnimationSet->Default); };
+		void Play(const std::string& Name)
 		{
+			FrameTime = 0;
+			Frame = 0;
 
-		}*/
+			CurrentAnimation = m_AnimationSet->Sequences[Name];
+		}
+
+		void SetAnimationSet(Ptr<SpriteAnimationSet> AnimSet) { m_AnimationSet = AnimSet; PlayDefault(); };
+
+		inline Ptr<SpriteAnimationSet> GetAnimationSet() const { return m_AnimationSet; };
+		inline Ptr<SpriteAnimationSequence> GetCurrentAnimation() { return CurrentAnimation; };
+
+		uint Frame = 0;
+		bool Paused = false;
+
+	private:
+		Ptr<SpriteAnimationSet> m_AnimationSet = nullptr;
+		Ptr<SpriteAnimationSequence> CurrentAnimation = nullptr;
+
+		float FrameTime = 0;
+
+	public: // json serialisation
+
+		inline friend void to_json(JSON& json, const SpriteAnimatorComponent& component)
+		{
+			json = JSON{
+				{"AnimationSetName", component.m_AnimationSet->Name},
+				{"CurrentAnimation", component.CurrentAnimation->Name}
+			};
+		}
+
+		inline friend void from_json(const JSON& json, SpriteAnimatorComponent& component)
+		{
+			const JSON& Name = json.at("AnimationSetName");
+			
+			if (Name.is_string())
+				component.SetAnimationSet(AnimationAtlas::Get(Name.get<std::string>()));
+
+			const JSON& AnimName = json.at("CurrentAnimation");
+
+			if (AnimName.is_string())
+				component.Play(AnimName);
+		}
 	};
 
 	//////////////////////
@@ -476,7 +510,7 @@ namespace Techless
 		CameraComponent(const CameraComponent& component) = default;
 
 		// Builds orthographic matrix for the rendering API to use.
-		void SetProjection(glm::vec2 Size, float pNear, float pFar)
+		void SetProjection(Vector2 Size, float pNear, float pFar)
 		{
 			Projection = glm::ortho(0.f, Size.x, Size.y, 0.f, pNear, pFar);
 
@@ -485,34 +519,33 @@ namespace Techless
 			Far = pFar;
 		}
 
-		inline glm::mat4 GetTransform(const glm::vec3& Position) const
+		inline Mat4x4 GetTransform(const Vector3& Position) const
 		{
-			return glm::translate(glm::mat4(1.f), Position - (glm::vec3(GetViewportResolution(), 0.f) / 2.f));
+			return glm::translate(Mat4x4(1.f), Position - (Vector3(GetViewportResolution(), 0.f) / 2.f));
 		}
 
-		inline glm::mat4 GetProjection() const { return Projection; };
+		inline Mat4x4 GetProjection() const { return Projection; };
 		inline std::pair<float, float> GetZPlane() const{ return { Near, Far }; }; // First is Near, second is Far
 		
-		inline glm::vec2 GetViewportResolution() const { return ViewportResolution; };
+		inline Vector2 GetViewportResolution() const { return ViewportResolution; };
 
 	private:
 
-		glm::vec2 ViewportResolution = { 1280.f, 720.f };
+		Vector2 ViewportResolution = { 1280.f, 720.f };
 
 		float Near = -100.f;
 		float Far = 100.f;
 
-		glm::mat4 Projection = glm::ortho(0.f, 1280.f, 720.f, 0.f, -100.f, 100.f);
+		Mat4x4 Projection = glm::ortho(0.f, 1280.f, 720.f, 0.f, -100.f, 100.f);
 
 	public: // json serialisation
 
 		inline friend void to_json(JSON& json, const CameraComponent& component)
 		{
+			const auto& v = component.ViewportResolution;
+
 			json = JSON{
-				{"ViewportResolution", {
-					{"x", component.ViewportResolution.x},
-					{"y", component.ViewportResolution.y},
-				}},
+				{"ViewportResolution", { v.x, v.y } },
 				{"zPlane", {
 					{"Near", component.Near},
 					{"Far", component.Far}
@@ -522,14 +555,14 @@ namespace Techless
 
 		inline friend void from_json(const JSON& json, CameraComponent& component)
 		{
-			auto& ViewportResolution = json.at("ViewportResolution");
-			auto j_ViewportResolution = glm::vec2(ViewportResolution.at("x").get<float>(), ViewportResolution.at("y").get<float>());
+			const JSON& j_VRes = json.at("ViewportResolution");
+			Vector2 VRes = { j_VRes.at("X").get<float>(), j_VRes.at("Y").get<float>() };
 
-			auto& zPlane = json.at("zPlane");
-			auto j_Near = zPlane.at("Near").get<float>();
-			auto j_Far = zPlane.at("Far").get<float>();
+			const JSON& zPlane = json.at("zPlane");
+			float j_Near = zPlane.at("Near").get<float>();
+			float j_Far = zPlane.at("Far").get<float>();
 
-			component.SetProjection(j_ViewportResolution, j_Near, j_Far);
+			component.SetProjection(VRes, j_Near, j_Far);
 		}
 	};
 
@@ -582,8 +615,11 @@ namespace Techless
 			ScriptEnvironment::ResetEntity(LinkedEntity->GetScene()->GetLuaID(), LinkedEntity);
 		}
 
-		void Bind(const std::string& name)
+		void Bind(std::string name)
 		{
+			if (!LinkedEntity)
+				return;
+
 			if (Loaded)
 				Unbind();
 
@@ -622,9 +658,8 @@ namespace Techless
 
 		inline friend void from_json(const JSON& json, LuaScriptComponent& component)
 		{
-			std::string Name = json.at("ScriptName").get<std::string>();
-			if (ScriptEnvironment::Has(Name))
-				component.Bind(Name);
+			std::string name = json.at("ScriptName").get<std::string>();
+			component.Name = name;
 		}
 	};
 }

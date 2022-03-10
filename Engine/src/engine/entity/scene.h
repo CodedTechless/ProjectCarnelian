@@ -5,10 +5,6 @@
 #include <engine/application/event.h>
 #include <engine/entity/prefabs/prefab.h>
 
-#include <json/json.hpp>
-
-using JSON = nlohmann::json;
-
 namespace Techless 
 {
 	
@@ -25,7 +21,7 @@ namespace Techless
 		Scene() = default;
 		~Scene() = default;
 
-		void Update(const float Delta, bool AllowScriptRuntime = true);
+		void Update(const float Delta);
 		void FixedUpdate(const float Delta);
 
 		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
@@ -35,10 +31,10 @@ namespace Techless
 	public:
 		void Serialise(const std::string& FilePath, Entity& RootEntity);
 
-		Entity& CreateEntity();
+		Entity& CreateBlankEntity();
 		Entity& CreateEntity(const std::string& TagName = "Entity");
 
-		Entity& DuplicateEntity(Entity& entity, Entity* parent);
+//		Entity& DuplicateEntity(Entity& entity, Entity* parent);
 		Entity& Instantiate(Prefab& prefab);
 
 		void SetActiveCamera(Entity& entity) { ActiveCamera = &entity; };
@@ -59,9 +55,9 @@ namespace Techless
 
 	public:
 
-		void SetScriptExecutionEnabled(bool Mode) { ScriptExecutionEnabled = Mode; };
+		void SetScriptExecutionEnabled(bool Mode) { FLAG_ScriptExecutionEnabled = Mode; };
 
-		inline bool IsScriptExecutionEnabled() const { return ScriptExecutionEnabled; };
+		inline bool IsScriptExecutionEnabled() const { return FLAG_ScriptExecutionEnabled; };
 		inline int GetLuaID() const { return SceneLuaID; };
 
 	private:
@@ -69,21 +65,13 @@ namespace Techless
 		Registry SceneRegistry;
 
 		int SceneLuaID = 0;
-		bool ScriptExecutionEnabled = true;
-
-		template<typename Component>
-		void AssignPrefabComponents(Prefab& prefab)
-		{
-			auto Components = prefab.GetComponents<Component>();
-			for (auto& pair : *Components)
-			{
-				Entity& entity = SceneRegistry.Get<Entity>(pair.first);
-				entity.AddComponent<Component>(pair.second);
-			}
-		}
 
 		void DestroyEntity(const std::string& EntityID);
 
 		friend class Entity;
+
+	private:
+		bool FLAG_ScriptExecutionEnabled = true;
+
 	};
 }

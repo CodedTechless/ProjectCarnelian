@@ -2,8 +2,8 @@
 
 #include <scriptindex.h>
 
-#include <engine/watchdog/imgui/explorer/explorer.h>
-#include <engine/watchdog/imgui/console/console_panel.h>
+#include <Engine.h>
+
 #include <editor_panels/asset_manager.h>
 #include <editor_scene/editor_scene.h>
 

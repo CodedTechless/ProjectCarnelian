@@ -16,7 +16,7 @@ namespace Techless
 			if (!p_Entity->HasComponent<Component>())
 				return;
 
-			p_Components->at(EntryName) = p_Entity->GetComponent<Component>();
+			p_Components->emplace(EntryName, p_Entity->GetComponent<Component>());
 		}
 
 	private:
@@ -40,9 +40,6 @@ namespace Techless
 
 	JSON Serialiser::SerialiseEntity(Entity& a_Entity)
 	{
-		if (a_Entity.Archivable == false)
-			return;
-
 		// create the element array
 		JSON EntityElement = {
 			{"Components", JSON::object()},
@@ -51,12 +48,15 @@ namespace Techless
 
 		// serialise components
 		{
-			EntitySerialiser s = { a_Entity, EntityElement };
+			EntitySerialiser s = { a_Entity, EntityElement["Components"] };
+
+			// [COMPONENT ASSIGNMENT]
 
 			s.AssignComponent <TagComponent>("Tag");
 			s.AssignComponent <TransformComponent>("Transform");
 			s.AssignComponent <RigidBodyComponent>("RigidBody");
 			s.AssignComponent <SpriteComponent>("Sprite");
+			s.AssignComponent <SpriteAnimatorComponent>("SpriteAnimator");
 			s.AssignComponent <CameraComponent>("Camera");
 			s.AssignComponent <LuaScriptComponent>("LuaScript");
 		}
@@ -65,8 +65,11 @@ namespace Techless
 
 		for (Entity* c_Entity : a_Entity.GetChildren())
 		{
-			EntityElement["Children"] += SerialiseEntity(*c_Entity);
+			if (c_Entity->Archivable)
+				EntityElement["Children"] += SerialiseEntity(*c_Entity);
 		}
+
+		return EntityElement;
 	}
 	
 	void Serialiser::SaveToFile(const std::string& FilePath)
@@ -101,8 +104,9 @@ namespace Techless
 
 	};
 
-	Deserialiser::Deserialiser(const std::string& FilePath)
+	Deserialiser::Deserialiser(const std::string& FilePath, const std::string& PrefabName)
 	{
+		p_Prefab = { PrefabName };
 		LoadFromFile(FilePath);
 	}
 
@@ -126,15 +130,19 @@ namespace Techless
 		JSON& Children = SerialisedEntity["Children"];
 
 		p_Prefab.ParentalIndex.push_back(ParentID);
-		int ThisID = EntityIndex++;
+		uint16_t ThisID = EntityIndex++;
 
 		{
+			
+			// [COMPONENT ASSIGNMENT]
+
 			EntityDeserialiser s = { ThisID, p_Prefab, Components };
 
 			s.AssignComponent <TagComponent>("Tag");
 			s.AssignComponent <TransformComponent>("Transform");
 			s.AssignComponent <RigidBodyComponent>("RigidBody");
 			s.AssignComponent <SpriteComponent>("Sprite");
+			s.AssignComponent <SpriteAnimatorComponent>("SpriteAnimator");
 			s.AssignComponent <CameraComponent>("Camera");
 			s.AssignComponent <LuaScriptComponent>("LuaScript");
 		}

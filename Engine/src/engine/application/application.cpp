@@ -5,11 +5,13 @@
 #include <imgui/imgui.h>
 
 #include <engine/sprite/sprite_atlas.h>
+#include <engine/sprite/animation/animation_atlas.h>
+
 #include <engine/lua/script_environment.h>
 #include <render/renderer.h>
 
-#include <engine/watchdog/watchdog.h>
-#include <engine/input/input.h>
+#include <engine/application/watchdog/watchdog.h>
+#include <engine/application/input/input.h>
 
 namespace Techless {
 
@@ -32,6 +34,7 @@ namespace Techless {
         Renderer::Init();
         SpriteAtlas::Init();
         ScriptEnvironment::Init();
+        AnimationAtlas::Init();
 
         a_ImGuiLayer = new ImGuiLayer();
         Layers.PushOverlay(a_ImGuiLayer);
@@ -106,21 +109,25 @@ namespace Techless {
         while (Running)
         {
             Time = (float)glfwGetTime();
-            
-            float FrameDelta = (Time - LastTime) / SimulationSpeed;
+
+            float SimulationTime = (Time - LastFixedTime);
+            float FrameTime = (Time - LastTime);
+
+            float FrameDelta = FrameTime / SimulationSpeed;
             Delta += FrameDelta;
+
 
             while (Delta >= 1.0)
             {
-                RuntimeData.SimulationDelta = (Time - LastFixedTime) * 1000.f;
+                RuntimeData.SimulationDelta = SimulationTime * 1000.f;
 
                 for (auto* Layer : Layers)
                 {
-                    Layer->OnUpdateFixed(Delta);
+                    Layer->OnUpdateFixed(SimulationTime);
                 }
 
                 for (auto* Layer : Layers) {
-                    Layer->OnUpdateFixedEnd(Delta);
+                    Layer->OnUpdateFixedEnd(SimulationTime);
                 }
 
                 Updates++;
@@ -136,11 +143,11 @@ namespace Techless {
                 a_ImGuiLayer->Begin();
 
                 for (auto* Layer : Layers) {
-                    Layer->OnUpdate(FrameDelta);
+                    Layer->OnUpdate(FrameTime);
                 }
 
                 for (auto* Layer : Layers) {
-                    Layer->OnUpdateEnd(FrameDelta);
+                    Layer->OnUpdateEnd(FrameTime);
                 }
                 Frames++;
 
@@ -163,7 +170,7 @@ namespace Techless {
 
             RuntimeData.LuaMemoryUsage = ScriptEnvironment::GetMemoryUsage();
             
-            RuntimeData.FrameDelta = (Time - LastTime) * 1000.f;
+            RuntimeData.FrameDelta = FrameTime * 1000.f;
 
             LastTime = Time;
         }

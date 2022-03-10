@@ -1,5 +1,9 @@
 {
     "Lua.diagnostics.globals": [
-        "bool_tonumber"
+        "bool_tonumber",
+        "QueryMode"
+    ],
+    "Lua.diagnostics.disable": [
+        "undefined-global"
     ]
 }

@@ -79,7 +79,7 @@ namespace PrefabEditor {
         Renderer::SetClearColour({ 0.1f, 0.1f, 0.1f, 1.f });
         Renderer::Clear();
 
-        ActiveEditorScene->LinkedScene->Update(Delta, false);
+        ActiveEditorScene->LinkedScene->Update(Delta);
         ActiveFrameBuffer->Unbind();
         
         UpdateRate = Delta;

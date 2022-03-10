@@ -1,11 +1,9 @@
 #pragma once
 
-#include <engine/layers/layer_set.h>
-#include <engine/layers/imgui/imgui_layer.h>
-#include <engine/application/window.h>
+#include "layers/layer_set.h"
+#include "layers/imgui/imgui_layer.h"
 
-
-
+#include "window.h"
 #include "event.h"
 
 namespace Techless {

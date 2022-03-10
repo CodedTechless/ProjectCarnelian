@@ -8,6 +8,7 @@ namespace PrefabEditor
 		: SceneName(sceneName)
 	{
 		LinkedScene = Scene::Create();
+		LinkedScene->SetScriptExecutionEnabled(false);
 
 		if (LoadWithPrefab)
 		{

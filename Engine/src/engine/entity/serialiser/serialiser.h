@@ -1,7 +1,6 @@
 #pragma once
 
 #include <engine/entity/entity.h>
-#include <engine/entity/components.h>
 
 namespace Techless
 {
@@ -29,7 +28,7 @@ namespace Techless
 	class Deserialiser
 	{
 	public:
-		Deserialiser(const std::string& FilePath);
+		Deserialiser(const std::string& FilePath, const std::string& PrefabName);
 
 		Prefab Deserialise();
 
@@ -42,7 +41,7 @@ namespace Techless
 		Prefab p_Prefab;
 		JSON p_JSON;
 
-		int EntityIndex = 0;
+		uint16_t EntityIndex = 0;
 
 
 	};

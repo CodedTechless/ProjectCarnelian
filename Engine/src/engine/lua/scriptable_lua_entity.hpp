@@ -68,6 +68,7 @@ namespace Techless
 			DefineQuery(TransformComponent);
 			DefineQuery(RigidBodyComponent);
 			DefineQuery(SpriteComponent);
+			DefineQuery(SpriteAnimatorComponent);
 			DefineQuery(CameraComponent);
 			DefineQuery(LuaScriptComponent);
 

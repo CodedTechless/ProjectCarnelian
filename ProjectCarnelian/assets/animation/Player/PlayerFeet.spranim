@@ -1,0 +1,29 @@
+{
+    "Default" : "Idle",
+    "Sequences" : {
+        "Idle" : {
+            "FrameRate" : 1,
+            "Looped" : true,
+            "Frames" : [
+                {
+                    "Sprite" : "FeetIdle",
+                    "Length" : 1
+                }
+            ]
+        },
+        "Walking" : {
+            "FrameRate" : 3,
+            "Looped" : true,
+            "Frames" : [
+                {
+                    "Sprite" : "FeetStep1",
+                    "Length" : 1
+                },
+                {
+                    "Sprite" : "FeetStep2",
+                    "Length" : 1
+                }
+            ]
+        }
+    }
+}

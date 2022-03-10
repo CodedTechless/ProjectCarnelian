@@ -33,7 +33,6 @@ namespace Carnelian
 
         SceneExplorer.SetSceneContext(ActiveScene);
         BuildEnvironment();
-        SceneExplorer.Refresh();
 
         Renderer::SetClearColour(glm::vec4(0.1f, 0.1f, 0.1f, 1.f));
 	}

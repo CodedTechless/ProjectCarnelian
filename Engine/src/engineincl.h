@@ -29,10 +29,38 @@
 
 #include <ctime>
 
+#include <glm/glm.hpp>
+#include <json/json.hpp>
+
 namespace fs = std::filesystem;
+using JSON = nlohmann::json;
 
 namespace Techless
 {
+	// shorteners!! because i'm a typical c++ programmer.
+
+	using uint = unsigned int;
+
+	// neat vector types for my monke brain to make it easier to handle :))
+
+	using Vector2 = glm::vec<2, float>;
+	using Vector3 = glm::vec<3, float>;
+	using Vector4 = glm::vec<4, float>;
+	
+	using Vector2i = glm::vec<2, int>;
+	using Vector3i = glm::vec<3, int>;
+	using Vector4i = glm::vec<4, int>;
+
+	using Vector2u = glm::vec<2, uint>;
+	using Vector3u = glm::vec<3, uint>;
+	using Vector4u = glm::vec<4, uint>;
+
+	using Colour = Vector4;
+
+	using Mat4x4 = glm::mat<4, 4, glm::f32, glm::defaultp>;
+
+	// neat smart pointers (might change this because idk!)
+
 	template <typename T>
 	using Ptr = std::shared_ptr<T>;
 

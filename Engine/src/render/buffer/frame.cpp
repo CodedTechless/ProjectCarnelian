@@ -1,7 +1,7 @@
 
 #include "frame.h"
 
-#include <engine/watchdog/watchdog.h>
+#include <engine/application/watchdog/watchdog.h>
 
 #include <GL/glew.h>
 
@@ -177,7 +177,7 @@ namespace Techless
 	{
 		//Debug::Log("Resized Frame Buffer: " + std::to_string(Specification.Size.x) + ", " + std::to_string(Specification.Size.y));
 
-		Specification.Size = Size;
+		Specification.Size = glm::max(glm::u32vec2(1, 1), Size);
 
 		Invalidate();
 	}

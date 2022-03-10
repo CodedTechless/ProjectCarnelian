@@ -1,12 +1,19 @@
+
 #include "script_environment.h"
+
+// Lua Initialisation
 
 #include <lua.hpp>
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
-#include <engine/lua/identities/scriptable_lua_entity.hpp>
 
-#include <engine/watchdog/watchdog.h>
+// Engine
+
+#include <engine/lua/scriptable_lua_entity.hpp>
+
+#include <engine/application/resource_loader.h>
+#include <engine/application/watchdog/watchdog.h>
 
 #include <engine/entity/components.h>
 #include <engine/entity/prefabs/prefab_atlas.h>
@@ -101,37 +108,6 @@ namespace Techless
 		LuaVM.collect_garbage();
 	}
 
-	void ScriptEnvironment::Read(const std::string& Path)
-	{
-		for (const auto& File : fs::directory_iterator(Path))
-		{
-			auto FsPath = File.path();
-			auto Path = FsPath.generic_string();
-
-			if (File.is_directory())
-			{
-				Read(Path);
-			}
-			else if (File.is_regular_file() && Path.substr(Path.size() - 4) == ".lua")
-			{
-				std::string Name = FsPath.stem().string();
-				sol::load_result LoadResult = LuaVM.load_file(Path);
-				
-				CachedScripts[Name] = LoadResult;
-
-				if (!LoadResult.valid())
-				{
-					sol::error err = LoadResult;
-					Debug::Error("Error while loading " + Path + ": " + err.what(), "ScriptEnvironment");
-
-					continue;
-				}
-
-				Debug::Log("Loaded " + Path + " to " + Name, "ScriptEnvironment");
-			}
-		}
-	}
-
 	// sets up the global environment and all the special functions dedicated to it and stuff and shit like that innit
 	void ScriptEnvironment::LoadGlobalEnvironment()
 	{
@@ -143,6 +119,7 @@ namespace Techless
 		RegisterComponentType(TYPEID_STRING(TransformComponent), "TransformComponent");
 		RegisterComponentType(TYPEID_STRING(RigidBodyComponent), "RigidBodyComponent");
 		RegisterComponentType(TYPEID_STRING(SpriteComponent), "SpriteComponent");
+		RegisterComponentType(TYPEID_STRING(SpriteAnimatorComponent), "SpriteAnimatorComponent");
 		RegisterComponentType(TYPEID_STRING(CameraComponent), "CameraComponent");
 		RegisterComponentType(TYPEID_STRING(LuaScriptComponent), "LuaScriptComponent");
 		RegisterComponentType(TYPEID_STRING(ScriptComponent), "ScriptComponent");
@@ -409,78 +386,77 @@ namespace Techless
 			// #### Integral Types / Constructable ####
 
 			AccessibleLibraries.push_back("Vector2");
-			LuaVM.new_usertype<glm::vec2>("Vector2",
-					sol::constructors<glm::vec2(), glm::vec2(float, float)>(),
+			LuaVM.new_usertype<Vector2>("Vector2",
+					sol::constructors<Vector2(), Vector2(float, float)>(),
 
-					"X", & glm::vec2::x,
-					"Y", & glm::vec2::y,
+					"X", & Vector2::x,
+					"Y", & Vector2::y,
 
 					sol::meta_function::addition, sol::overload(
-						[](glm::vec2 A, glm::vec2 B) -> glm::vec2 { return A + B; },
-						[](glm::vec2 A, float B) -> glm::vec2 { return A + B; },
-						[](float A, glm::vec2 B) -> glm::vec2 { return A + B; }
+						[](Vector2 A, Vector2 B) -> Vector2 { return A + B; },
+						[](Vector2 A, float B) -> Vector2 { return A + B; },
+						[](float A, Vector2 B) -> Vector2 { return A + B; }
 					),
 					sol::meta_function::subtraction, sol::overload( 
-						[](glm::vec2 A, glm::vec2 B) -> glm::vec2 { return A - B; },
-						[](glm::vec2 A, float B) -> glm::vec2 { return A - B; },
-						[](float A, glm::vec2 B) -> glm::vec2 { return A - B; }
+						[](Vector2 A, Vector2 B) -> Vector2 { return A - B; },
+						[](Vector2 A, float B) -> Vector2 { return A - B; },
+						[](float A, Vector2 B) -> Vector2 { return A - B; }
 					),
 					sol::meta_function::multiplication, sol::overload(
-						[](glm::vec2 A, glm::vec2 B) -> glm::vec2 { return A * B; },
-						[](glm::vec2 A, float B) -> glm::vec2 { return A * B; },
-						[](float A, glm::vec2 B) -> glm::vec2 { return A * B; }
+						[](Vector2 A, Vector2 B) -> Vector2 { return A * B; },
+						[](Vector2 A, float B) -> Vector2 { return A * B; },
+						[](float A, Vector2 B) -> Vector2 { return A * B; }
 					),
 					sol::meta_function::division, sol::overload(
-						[](glm::vec2 A, glm::vec2 B) -> glm::vec2 { return A / B; },
-						[](glm::vec2 A, float B) -> glm::vec2 { return A / B; },
-						[](float A, glm::vec2 B) -> glm::vec2 { return A / B; }
+						[](Vector2 A, Vector2 B) -> Vector2 { return A / B; },
+						[](Vector2 A, float B) -> Vector2 { return A / B; },
+						[](float A, Vector2 B) -> Vector2 { return A / B; }
 					),
 
-					sol::meta_function::unary_minus, [](glm::vec2 A) -> glm::vec2 { return -A; }
+					sol::meta_function::unary_minus, [](Vector2 A) -> Vector2 { return -A; }
 
 				);
 
 			AccessibleLibraries.push_back("Vector3");
-			LuaVM.new_usertype<glm::vec3>("Vector3",
-					sol::constructors<glm::vec3(), glm::vec3(float, float, float), glm::vec3(glm::vec2, float)>(),
+			LuaVM.new_usertype<Vector3>("Vector3",
+					sol::constructors<Vector3(), Vector3(float, float, float), Vector3(Vector2, float)>(),
 
-					"X", &glm::vec3::x,
-					"Y", &glm::vec3::y,
-					"Z", &glm::vec3::z,
+					"X", &Vector3::x,
+					"Y", &Vector3::y,
+					"Z", &Vector3::z,
 
 					sol::meta_function::addition, sol::overload(
-						[](glm::vec3 A, glm::vec3 B) -> glm::vec3 { return A + B; },
-						[](glm::vec3 A, float B) -> glm::vec3 { return A + B; },
-						[](float A, glm::vec3 B) -> glm::vec3 { return A + B; }
+						[](Vector3 A, Vector3 B) -> Vector3 { return A + B; },
+						[](Vector3 A, float B) -> Vector3 { return A + B; },
+						[](float A, Vector3 B) -> Vector3 { return A + B; }
 					),
 					sol::meta_function::subtraction, sol::overload(
-						[](glm::vec3 A, glm::vec3 B) -> glm::vec3 { return A - B; },
-						[](glm::vec3 A, float B) -> glm::vec3 { return A - B; },
-						[](float A, glm::vec3 B) -> glm::vec3 { return A - B; }
+						[](Vector3 A, Vector3 B) -> Vector3 { return A - B; },
+						[](Vector3 A, float B) -> Vector3 { return A - B; },
+						[](float A, Vector3 B) -> Vector3 { return A - B; }
 					),
 					sol::meta_function::multiplication, sol::overload(
-						[](glm::vec3 A, glm::vec3 B) -> glm::vec3 { return A * B; },
-						[](glm::vec3 A, float B) -> glm::vec3 { return A * B; },
-						[](float A, glm::vec3 B) -> glm::vec3 { return A * B; }
+						[](Vector3 A, Vector3 B) -> Vector3 { return A * B; },
+						[](Vector3 A, float B) -> Vector3 { return A * B; },
+						[](float A, Vector3 B) -> Vector3 { return A * B; }
 					),
 					sol::meta_function::division, sol::overload(
-						[](glm::vec3 A, glm::vec3 B) -> glm::vec3 { return A / B; },
-						[](glm::vec3 A, float B) -> glm::vec3 { return A / B; },
-						[](float A, glm::vec3 B) -> glm::vec3 { return A / B; }
+						[](Vector3 A, Vector3 B) -> Vector3 { return A / B; },
+						[](Vector3 A, float B) -> Vector3 { return A / B; },
+						[](float A, Vector3 B) -> Vector3 { return A / B; }
 					),
 
-					sol::meta_function::unary_minus, [](glm::vec3 A) -> glm::vec3 { return -A; }
+					sol::meta_function::unary_minus, [](Vector3 A) -> Vector3 { return -A; }
 				);
 
-			AccessibleLibraries.push_back("Colour");
-			LuaVM.new_usertype<Colour>("Colour",
-					sol::constructors<Colour(), Colour(float, float, float), Colour(float, float, float, float), Colour(int, int, int), Colour(int, int, int, int)>(),
+			AccessibleLibraries.push_back("Vector4");
+			LuaVM.new_usertype<Vector4>("Vector4",
+					sol::constructors<Colour(), Colour(float, float, float, float)>(),
 					
-					"R", &Colour::R,
-					"G", &Colour::G,
-					"B", &Colour::B,
-					"A", &Colour::A,
-					"SetRGBColour", &Colour::SetRGBColour
+					"R", &Colour::r,
+					"G", &Colour::g,
+					"B", &Colour::b,
+					"A", &Colour::a
 				);
 
 			AccessibleLibraries.push_back("Prefab");
@@ -494,6 +470,34 @@ namespace Techless
 
 					"Name", sol::property(&Sprite::GetName),
 					"Size", sol::property(&Sprite::GetSize)
+				);
+
+			AccessibleLibraries.push_back("SpriteAnimationSet");
+			LuaVM.new_usertype<SpriteAnimationSet>("SpriteAnimationSet",
+					sol::constructors<SpriteAnimationSet(std::string)>(),
+
+					"Sequences", &SpriteAnimationSet::Sequences,
+					"Default", &SpriteAnimationSet::Default,
+					"Name", sol::readonly(&SpriteAnimationSet::Name)
+				);
+
+			AccessibleLibraries.push_back("SpriteAnimationSequence");
+			LuaVM.new_usertype<SpriteAnimationSequence>("SpriteAnimationSequence",
+					sol::constructors<SpriteAnimationSequence()>(),
+
+					"Name", sol::readonly(&SpriteAnimationSequence::Name),
+					"Add", &SpriteAnimationSequence::Add,
+
+					"FrameRate", sol::property( &SpriteAnimationSequence::GetFrameRate, &SpriteAnimationSequence::SetFrameRate ),
+					"Looped", &SpriteAnimationSequence::Looped
+				);
+
+			AccessibleLibraries.push_back("SpriteAnimationFrame");
+			LuaVM.new_usertype<SpriteAnimationFrame>("SpriteAnimationFrame",
+					sol::constructors<SpriteAnimationFrame()>(),
+					
+					"Sprite", &SpriteAnimationFrame::FrameSprite,
+					"Length", &SpriteAnimationFrame::Length
 				);
 		}
 
@@ -519,6 +523,13 @@ namespace Techless
 			LuaVM.new_usertype<SpriteAtlas>("SpriteAtlas", 
 					sol::no_constructor,
 					"Get", &SpriteAtlas::Get
+				);
+
+			AccessibleLibraries.push_back("AnimationAtlas");
+			LuaVM.new_usertype<AnimationAtlas>("AnimationAtlas",
+					sol::no_constructor,
+					
+					"Get", &AnimationAtlas::Get
 				);
 		}
 
@@ -551,7 +562,9 @@ namespace Techless
 					"Instantiate", &Scene::Instantiate,
 					
 					"GetActiveCamera", &Scene::GetActiveCamera,
-					"SetActiveCamera", &Scene::SetActiveCamera
+					"SetActiveCamera", &Scene::SetActiveCamera,
+					
+					"ScriptRuntimeEnabled", sol::property( &Scene::IsScriptExecutionEnabled , &Scene::SetScriptExecutionEnabled )
 				);
 		}
 
@@ -584,7 +597,8 @@ namespace Techless
 			LuaVM.new_usertype<RigidBodyComponent>("RigidBodyComponent",
 				sol::no_constructor,
 				"Velocity", &RigidBodyComponent::Velocity,
-				"Friction", &RigidBodyComponent::Friction
+				"GroundFriction", &RigidBodyComponent::GroundFriction,
+				"AirFriction", &RigidBodyComponent::AirFriction
 			);
 
 			AccessibleLibraries.push_back("SpriteComponent");
@@ -593,6 +607,18 @@ namespace Techless
 				"TintColour", &SpriteComponent::SpriteColour,
 				"SetSprite", &SpriteComponent::SetSprite,
 				"GetSprite", &SpriteComponent::GetSprite
+			);
+			
+			AccessibleLibraries.push_back("SpriteAnimatorComponent");
+			LuaVM.new_usertype<SpriteAnimatorComponent>("SpriteAnimatorComponent",
+				sol::no_constructor,
+
+				"Frame", &SpriteAnimatorComponent::Frame,
+				"Paused", &SpriteAnimatorComponent::Paused,
+				"Play", &SpriteAnimatorComponent::Play,
+				
+				"AnimationSet", sol::property( &SpriteAnimatorComponent::GetAnimationSet , &SpriteAnimatorComponent::SetAnimationSet ),
+				"CurrentAnimation", sol::property( &SpriteAnimatorComponent::GetCurrentAnimation )
 			);
 
 			AccessibleLibraries.push_back("CameraComponent");
@@ -615,7 +641,28 @@ namespace Techless
 		}
 
 		LoadGlobalEnvironment();
-		Read("assets/scripts");
+		
+		ResourceLoader::GetFiles(Resource::LuaScript,
+			[](const fs::directory_entry& File)
+			{
+				fs::path Path = File.path();
+				std::string sPath = Path.generic_string();
+
+				std::string Name = Path.stem().string();
+				sol::load_result LoadResult = LuaVM.load_file(sPath);
+
+				CachedScripts[Name] = LoadResult;
+
+				if (!LoadResult.valid())
+				{
+					sol::error err = LoadResult;
+					Debug::Error("Error while loading " + sPath + ": " + err.what(), "ScriptEnvironment");
+
+					return;
+				}
+
+				Debug::Log("Loaded " + sPath + " to " + Name, "ScriptEnvironment");
+			});
 
 		AccessibleLibraries.push_back("Application");
 		LuaVM["Application"] = Application::GetActiveApplication();
@@ -677,7 +724,8 @@ namespace Techless
 		}
 		else
 		{
-			NewEnvironment.get<sol::protected_function>("OnCreated")();
+			if (entity->GetScene()->IsScriptExecutionEnabled())
+				NewEnvironment.get<sol::protected_function>("OnCreated")();
 		}
 
 		//LuaVM["inspect"](env_metatable);

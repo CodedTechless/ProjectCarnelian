@@ -1,17 +1,18 @@
 #pragma once
 
-#include <engine/entity/registry/registry.h>
 #include <engineincl.h>
-
-#include <json/json.hpp>
-
-using JSON = nlohmann::json;
 
 namespace Techless
 {
 
 	namespace PrefabUtil
 	{
+
+		class RegistrySet
+		{
+		public:
+			virtual ~RegistrySet() = default;
+		};
 
 		/*
 			this is a very simple child of RegistrySet specifically used to store Prefab contents.
@@ -20,7 +21,7 @@ namespace Techless
 		*/
 
 		template <typename Component>
-		class TypedPrefabRegistry : public RegistrySet
+		class TypedPrefabRegistry : public PrefabUtil::RegistrySet
 		{
 		public:
 			void Add(uint16_t RegistryID, Component component)
@@ -34,14 +35,6 @@ namespace Techless
 					return NULL;
 
 				return Components[RegistryID];
-			}
-
-			void Clear(uint16_t RegistryID)
-			{
-				if (Components.find(RegistryID) != Components.end())
-				{
-					Components.erase(RegistryID);
-				}
 			}
 
 			std::unordered_map<uint16_t, Component>::iterator begin() { return Components.begin(); };
@@ -76,7 +69,7 @@ namespace Techless
 		int Entities = 0;
 
 		std::vector<int> ParentalIndex{}; // where "int" is parent index
-		std::unordered_map<const char*, Ptr<RegistrySet>> Components{};
+		std::unordered_map<const char*, Ptr<PrefabUtil::RegistrySet>> Components{};
 
 	private:
 		std::string Name = "";

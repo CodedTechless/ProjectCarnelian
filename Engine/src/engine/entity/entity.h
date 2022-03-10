@@ -1,12 +1,9 @@
 #pragma once
 
 #include <engineincl.h>
-#include <json/json.hpp>
 
 #include <engine/lua/script_environment.h>
 #include <engine/entity/scene.h>
-
-using JSON = nlohmann::json;
 
 namespace Techless
 {

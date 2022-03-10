@@ -15,13 +15,13 @@ namespace PrefabEditor
 
 	static void CreateDirectoryElement(const std::string& Name, fs::path Directory, fs::path& ToDirectory)
 	{
-//		Bounds spriteBounds = sprite->GetAbsoluteBounds();
+		Ptr<Sprite> sprite = SpriteAtlas::Get("directory");
+		Bounds spriteBounds = sprite->GetAbsoluteBounds();
 
-//		ImTextureID RendererID = (ImTextureID)sprite->GetTexture()->GetRendererID();
+		ImTextureID RendererID = (ImTextureID)sprite->GetTexture()->GetRendererID();
 
 		ImGui::PushID((Name + "_dir").c_str());
-//		ImGui::ImageButton(RendererID, { THUMBNAIL_SIZE, THUMBNAIL_SIZE }, { spriteBounds.TopLeft.x, spriteBounds.BottomRight.y }, { spriteBounds.BottomRight.x, spriteBounds.TopLeft.y });
-		ImGui::Button("Directory", { THUMBNAIL_SIZE + THUMBNAIL_PADDING, THUMBNAIL_SIZE + THUMBNAIL_PADDING });
+		ImGui::ImageButton(RendererID, { THUMBNAIL_SIZE, THUMBNAIL_SIZE }, { spriteBounds.TopLeft.x, spriteBounds.BottomRight.y }, { spriteBounds.BottomRight.x, spriteBounds.TopLeft.y });
 
 		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 		{
@@ -89,6 +89,7 @@ namespace PrefabEditor
 			int Column = 0;
 			
 			auto prefabSprite = SpriteAtlas::Get("prefab");
+			auto scriptSprite = SpriteAtlas::Get("script");
 
 			for (auto& Entry : fs::directory_iterator(CurrentDirectory))
 			{
@@ -125,7 +126,23 @@ namespace PrefabEditor
 				}
 				else if (ext == ".lua")
 				{
-					
+					if (ScriptEnvironment::Has(fileName))
+					{
+						ImGui::TableNextColumn();
+						CreateFileElement(fileName, scriptSprite, "SCRIPT_ASSET_DRAG", fileName.c_str(), (fileName.length() * sizeof(char)) + 1);
+						
+						++Column;
+					}
+				}
+				else if (ext == ".spranim")
+				{
+					if (AnimationAtlas::Has(fileName))
+					{
+						ImGui::TableNextColumn();
+						CreateFileElement(fileName, prefabSprite, "SPR_ANIM_ASSET_DRAG", fileName.c_str(), (fileName.length() * sizeof(char)) + 1);
+
+						++Column;
+					}
 				}
 
 				

@@ -2,7 +2,7 @@
 
 #include "entity.h"
 
-#include <engine/input/input.h>
+#include <engine/application/input/input.h>
 #include <engine/application/event.h>
 
 namespace Techless 

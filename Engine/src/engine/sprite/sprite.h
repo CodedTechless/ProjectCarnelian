@@ -1,8 +1,7 @@
 #pragma once
 
 #include <render/texture/texture.h>
-
-#include <glm/glm.hpp>
+#include <engineincl.h>
 
 namespace Techless
 {

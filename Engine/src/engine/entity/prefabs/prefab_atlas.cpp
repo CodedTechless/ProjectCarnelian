@@ -21,7 +21,7 @@ namespace Techless
 		if (Prefabs.find(Name) != Prefabs.end())
 			return Prefabs[Name];
 
-		Deserialiser deserialiser = { FilePath };
+		Deserialiser deserialiser = { FilePath, Name };
 		Prefabs[Name] = deserialiser.Deserialise();
 
 		Debug::Log("Loaded prefab " + Name, "PrefabAtlas");

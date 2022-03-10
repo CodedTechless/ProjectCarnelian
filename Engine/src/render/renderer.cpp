@@ -9,21 +9,24 @@
 #include <imgui/imgui.h>
 
 #include <engine/application/application.h>
-#include <engine/watchdog/watchdog.h>
+#include <engine/application/watchdog/watchdog.h>
 
 #include "renderer.h"
 // {0.f, 0.f}, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f }
 
-namespace Techless {
+namespace Techless 
+{
 
-	struct QuadFormat {
-		glm::vec3 Position;
-		glm::vec4 Colour;
-		glm::vec2 TexCoords;
+	struct QuadFormat 
+	{
+		Vector3 Position;
+		Vector4 Colour;
+		Vector2 TexCoords;
 		float TexIndex;
 	};
 
-	struct RendererDataSet {
+	struct RendererDataSet 
+	{
 		static const uint32_t MaxQuads = 20000;
 		static const uint32_t MaxVerts = MaxQuads * 4;
 		static const uint32_t MaxInds = MaxQuads * 6;
@@ -31,7 +34,7 @@ namespace Techless {
 		QuadFormat* QuadArray = nullptr;
 		QuadFormat* QuadArrayPointer = nullptr;
 
-		unsigned int CurrentVertexIndex = 0;
+		uint CurrentVertexIndex = 0;
 
 		Ptr<VertexArray> QuadVertexArray;
 
@@ -43,18 +46,18 @@ namespace Techless {
 		Ptr<Shader> ActiveShader;
 		Ptr<FrameBuffer> ActiveFrameBuffer;
 
-		unsigned int NextTextureSlot = 1;
+		uint NextTextureSlot = 1;
 		static const int ActiveTextureSlots = 16;
-		std::array<std::shared_ptr<Texture>, 16> ActiveTextures;
+		std::array<Ptr<Texture>, 16> ActiveTextures;
 
-		glm::vec4 VertexDefault[4] = {};
+		Vector4 VertexDefault[4] = {};
 	};
 
 	static RendererDataSet RendererData;
 	RendererDebug Renderer::DebugInfo = {};
 
 	int Renderer::MaxTextureSize = 1024;
-	std::shared_ptr<Texture> Renderer::DefaultTexture = nullptr;
+	Ptr<Texture> Renderer::DefaultTexture = nullptr;
 
 	void OpenGLDebugMessage(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 	{
@@ -65,15 +68,11 @@ namespace Techless {
 	{
 		Debug::Log("Initialising OpenGL...", "Renderer");
 
-#if DEBUG
-		Debug::Log("OpenGL debug mode is enabled in this build.", "Renderer");
-
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback(OpenGLDebugMessage, nullptr);
 
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
-#endif
 
 		// Enable depth testing (for Z-axis based depth) and blending (for alpha support)
 		glEnable(GL_BLEND);
@@ -101,10 +100,10 @@ namespace Techless {
 		RendererData.QuadArray = new QuadFormat[RendererDataSet::MaxVerts];
 		
 		// Set up an empty unsigned int array to hold our quad indicies in the correct format.
-		auto IndexBufferTemplate = new unsigned int[RendererDataSet::MaxInds];
+		auto IndexBufferTemplate = new uint[RendererDataSet::MaxInds];
 
-		unsigned int QuadOffset = 0;
-		for (auto i = 0; i < RendererDataSet::MaxInds; i += 6) {
+		uint QuadOffset = 0;
+		for (uint i = 0; i < RendererDataSet::MaxInds; i += 6) {
 			IndexBufferTemplate[i + 0] = 0 + QuadOffset;
 			IndexBufferTemplate[i + 1] = 1 + QuadOffset;
 			IndexBufferTemplate[i + 2] = 2 + QuadOffset;
@@ -164,32 +163,32 @@ namespace Techless {
 	// Quad Rendering //
 	////////////////////
 
-	void Renderer::DrawQuad(const glm::vec3& Position, const glm::vec2& Size, float Orientation, const Colour& colour)
+	void Renderer::DrawQuad(const Vector3& Position, const Vector2& Size, float Orientation, const Colour& colour)
 	{
-		glm::mat4 Transform = 
-			glm::translate(glm::mat4(1.0f), Position)
-			* glm::rotate(glm::mat4(1.0f), glm::radians(Orientation), glm::vec3(0.f, 0.f, 1.f))
-			* glm::scale(glm::mat4(1.0f), glm::vec3(Size.x, Size.y, 1.f));
+		Mat4x4 Transform = 
+			glm::translate(Mat4x4(1.0f), Position)
+			* glm::rotate(Mat4x4(1.0f), glm::radians(Orientation), Vector3(0.f, 0.f, 1.f))
+			* glm::scale(Mat4x4(1.0f), Vector3(Size.x, Size.y, 1.f));
 
-		glm::vec2 TexCoords[] = { { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f } };
+		Vector2 TexCoords[] = { { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f } };
 		DrawTexturedQuad(RendererData.ActiveTextures[0], TexCoords, Transform, colour);
 	}
 
-	void Renderer::DrawSprite(Ptr<Sprite> sprite, const glm::mat4& Transform, const Colour& colour)
+	void Renderer::DrawSprite(Ptr<Sprite> sprite, const Mat4x4& Transform, const Colour& colour)
 	{
 		auto texture = sprite->GetTexture();
 		auto SpriteBounds = sprite->GetAbsoluteBounds();
 
-		glm::vec2 TopLeft = SpriteBounds.TopLeft;
-		glm::vec2 BottomRight = SpriteBounds.BottomRight;
+		Vector2 TopLeft = SpriteBounds.TopLeft;
+		Vector2 BottomRight = SpriteBounds.BottomRight;
 
-		glm::vec2 TexCoords[4] = { { TopLeft.x, TopLeft.y }, { BottomRight.x, TopLeft.y }, { BottomRight.x, BottomRight.y }, {TopLeft.x, BottomRight.y} };
+		Vector2 TexCoords[4] = { { TopLeft.x, TopLeft.y }, { BottomRight.x, TopLeft.y }, { BottomRight.x, BottomRight.y }, {TopLeft.x, BottomRight.y} };
 
-		DrawTexturedQuad(texture, TexCoords, Transform * glm::scale(glm::mat4(1.f), glm::vec3(sprite->GetSize(), 1.f)), colour);
+		DrawTexturedQuad(texture, TexCoords, Transform * glm::scale(Mat4x4(1.f), Vector3(sprite->GetSize(), 1.f)), colour);
 	}
 
 	// Draw a quad using matricies
-	void Renderer::DrawTexturedQuad(Ptr<Texture> Tex, const glm::vec2 TexCoords[4], const glm::mat4& Transform, const glm::vec4& Colour)
+	void Renderer::DrawTexturedQuad(Ptr<Texture> Tex, const Vector2 TexCoords[4], const Mat4x4& Transform, const Colour& Colour)
 	{
 		if (RendererData.CurrentVertexIndex >= RendererDataSet::MaxInds)
 		{
@@ -232,7 +231,7 @@ namespace Techless {
 		RendererData.CurrentVertexIndex += 6;
 	}
 
-	void Renderer::DrawQuadArray(Ptr<Texture> Tex, const glm::vec2 TexCoords[4], Quad* QuadArray, unsigned int Count)
+	void Renderer::DrawQuadArray(Ptr<Texture> Tex, const Vector2 TexCoords[4], Quad* QuadArray, unsigned int Count)
 	{
 		if (RendererData.CurrentVertexIndex >= RendererDataSet::MaxInds)
 		{
@@ -266,7 +265,7 @@ namespace Techless {
 			for (size_t i = 0; i < 4; i++)
 			{
 				RendererData.QuadArrayPointer->Position = NextQuad.Transform * RendererData.VertexDefault[i];
-				RendererData.QuadArrayPointer->Colour = NextQuad.Colour;
+				RendererData.QuadArrayPointer->Colour = NextQuad.m_Colour;
 				RendererData.QuadArrayPointer->TexCoords = TexCoords[i];
 				RendererData.QuadArrayPointer->TexIndex = TexIndex;
 
@@ -286,9 +285,9 @@ namespace Techless {
 	///////////
 	// Scene //
 	///////////
-	void Renderer::Begin(glm::mat4 Projection, glm::mat4 Transform, Ptr<Shader> shader, Ptr<FrameBuffer> frameBuffer)
+	void Renderer::Begin(Mat4x4 Projection, Mat4x4 Transform, Ptr<Shader> shader, Ptr<FrameBuffer> frameBuffer)
 	{	
-		glm::mat4 Proj = Projection * glm::inverse(Transform);
+		Mat4x4 Proj = Projection * glm::inverse(Transform);
 
 		RendererData.ActiveShader = shader ? shader : RendererData.DefaultTextureShader;
 		RendererData.ActiveShader->SetUniformMat4f("CameraProjection", Proj);
@@ -350,9 +349,9 @@ namespace Techless {
 		DebugInfo.DrawCalls++;
 	}
 
-	void Renderer::SetClearColour(glm::vec4 Colour)
+	void Renderer::SetClearColour(Colour colour)
 	{
-		glClearColor(Colour.r, Colour.g, Colour.b, Colour.a);
+		glClearColor(colour.r, colour.g, colour.b, colour.a);
 	}
 
 	void Renderer::Clear()

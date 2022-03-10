@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Engine.h>
-#include <engine/watchdog/imgui/console/console_panel.h>
 
 using namespace Techless;
 

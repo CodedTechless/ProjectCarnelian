@@ -92,14 +92,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\engine\application\resource_loader.cpp" />
     <ClCompile Include="src\engine\entity\prefabs\prefab.cpp" />
     <ClCompile Include="src\engine\entity\prefabs\prefab_atlas.cpp" />
     <ClCompile Include="src\engine\entity\serialiser\serialiser.cpp" />
-    <ClCompile Include="src\engine\layers\imgui\imgui_layer.cpp" />
-    <ClCompile Include="src\engine\layers\layer.cpp" />
+    <ClCompile Include="src\engine\application\layers\imgui\imgui_layer.cpp" />
+    <ClCompile Include="src\engine\application\layers\layer.cpp" />
     <ClCompile Include="src\engine\lua\script_environment.cpp" />
-    <ClCompile Include="src\engine\watchdog\imgui\console\console_panel.cpp" />
-    <ClCompile Include="src\engine\watchdog\imgui\explorer\explorer.cpp" />
+    <ClCompile Include="src\engine\sprite\animation\animation_atlas.cpp" />
+    <ClCompile Include="src\engine\application\watchdog\imgui\console\console_panel.cpp" />
+    <ClCompile Include="src\engine\application\watchdog\imgui\explorer\explorer.cpp" />
     <ClCompile Include="src\render\buffer\frame.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui.cpp" />
     <ClCompile Include="src\dependencies\imgui\imgui_demo.cpp" />
@@ -112,9 +114,9 @@
     <ClCompile Include="src\engine\entity\entity.cpp" />
     <ClCompile Include="src\engineincl.cpp" />
     <ClCompile Include="src\engine\entity\registry\registry.cpp" />
-    <ClCompile Include="src\engine\input\input.cpp" />
+    <ClCompile Include="src\engine\application\input\input.cpp" />
     <ClCompile Include="src\engine\entity\scene.cpp" />
-    <ClCompile Include="src\engine\layers\layer_set.cpp" />
+    <ClCompile Include="src\engine\application\layers\layer_set.cpp" />
     <ClCompile Include="src\dependencies\glm\detail\glm.cpp" />
     <ClCompile Include="src\dependencies\stb_image\stb_image.cpp" />
     <ClCompile Include="src\engine\sprite\sprite.cpp" />
@@ -126,7 +128,7 @@
     <ClCompile Include="src\render\array\vertex_array.cpp" />
     <ClCompile Include="src\render\texture\texture.cpp" />
     <ClCompile Include="src\engine\application\window.cpp" />
-    <ClCompile Include="src\engine\watchdog\watchdog.cpp" />
+    <ClCompile Include="src\engine\application\watchdog\watchdog.cpp" />
     <ClCompile Include="src\engine\sprite\sprite_atlas.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -268,17 +270,19 @@
     <None Include="src\dependencies\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\engine\application\resource_loader.h" />
     <ClInclude Include="src\engine\entity\serialiser\serialiser.h" />
-    <ClInclude Include="src\engine\lua\identities\scriptable_lua_entity.hpp" />
+    <ClInclude Include="src\engine\lua\scriptable_lua_entity.hpp" />
     <ClInclude Include="src\engine\lua\script_environment.h" />
     <ClInclude Include="src\dependencies\sol\config.hpp" />
     <ClInclude Include="src\dependencies\sol\forward.hpp" />
     <ClInclude Include="src\dependencies\sol\sol.hpp" />
     <ClInclude Include="src\engine\entity\prefabs\prefab.h" />
     <ClInclude Include="src\engine\entity\prefabs\prefab_atlas.h" />
-    <ClInclude Include="src\engine\layers\imgui\imgui_layer.h" />
-    <ClInclude Include="src\engine\watchdog\imgui\console\console_panel.h" />
-    <ClInclude Include="src\engine\watchdog\imgui\explorer\explorer.h" />
+    <ClInclude Include="src\engine\application\layers\imgui\imgui_layer.h" />
+    <ClInclude Include="src\engine\sprite\animation\animation_atlas.h" />
+    <ClInclude Include="src\engine\application\watchdog\imgui\console\console_panel.h" />
+    <ClInclude Include="src\engine\application\watchdog\imgui\explorer\explorer.h" />
     <ClInclude Include="src\render\buffer\frame.h" />
     <ClInclude Include="src\dependencies\imgui\imconfig.h" />
     <ClInclude Include="src\dependencies\imgui\imgui.h" />
@@ -298,10 +302,10 @@
     <ClInclude Include="src\engineincl.h" />
     <ClInclude Include="src\engine\entity\components.h" />
     <ClInclude Include="src\engine\entity\scriptable_entity.h" />
-    <ClInclude Include="src\engine\input\input.h" />
+    <ClInclude Include="src\engine\application\input\input.h" />
     <ClInclude Include="src\engine\entity\scene.h" />
-    <ClInclude Include="src\engine\layers\layer_set.h" />
-    <ClInclude Include="src\engine\layers\layer.h" />
+    <ClInclude Include="src\engine\application\layers\layer_set.h" />
+    <ClInclude Include="src\engine\application\layers\layer.h" />
     <ClInclude Include="src\engine\application\application.h" />
     <ClInclude Include="src\dependencies\glm\common.hpp" />
     <ClInclude Include="src\dependencies\glm\detail\compute_common.hpp" />
@@ -586,7 +590,6 @@
     <ClInclude Include="src\dependencies\glm\vec4.hpp" />
     <ClInclude Include="src\dependencies\glm\vector_relational.hpp" />
     <ClInclude Include="src\dependencies\stb_image\stb_image.h" />
-    <ClInclude Include="src\engine\maths\colour.hpp" />
     <ClInclude Include="src\engine\sprite\sprite.h" />
     <ClInclude Include="src\render\dep\stb_image\stb_image.h" />
     <ClInclude Include="src\render\shader\shader.h" />
@@ -596,7 +599,7 @@
     <ClInclude Include="src\render\array\vertex_array.h" />
     <ClInclude Include="src\render\texture\texture.h" />
     <ClInclude Include="src\engine\application\window.h" />
-    <ClInclude Include="src\engine\watchdog\watchdog.h" />
+    <ClInclude Include="src\engine\application\watchdog\watchdog.h" />
     <ClInclude Include="src\engine\sprite\sprite_atlas.h" />
     <ClInclude Include="src\engine\application\event.h" />
   </ItemGroup>

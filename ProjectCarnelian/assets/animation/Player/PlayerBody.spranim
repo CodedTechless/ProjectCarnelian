@@ -1,0 +1,19 @@
+{
+    "Default" : "Idle",
+    "Sequences" : {
+        "Idle" : {
+            "FrameRate" : 2,
+            "Looped" : true,
+            "Frames" : [
+                {
+                    "Sprite" : "TorsoBreatheIn",
+                    "Length" : 1
+                },
+				{
+                    "Sprite" : "TorsoBreatheOut",
+                    "Length" : 1
+                }
+            ]
+        }
+    }
+}

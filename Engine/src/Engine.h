@@ -5,10 +5,15 @@
 #include <engine/application/event.h>
 
 // layers
-#include <engine/layers/layer_set.h>
+#include <engine/application/layers/layer_set.h>
 
 // input
-#include <engine/input/input.h>
+#include <engine/application/input/input.h>
+
+// debug logging
+#include <engine/application/watchdog/watchdog.h>
+#include <engine/application/watchdog/imgui/console/console_panel.h>
+#include <engine/application/watchdog/imgui/explorer/explorer.h>
 
 // sprites
 #include <engine/sprite/sprite_atlas.h>
@@ -24,11 +29,6 @@
 
 // lua
 #include <engine/lua/script_environment.h>
-
-// debug logging
-#include <engine/watchdog/watchdog.h>
-#include <engine/watchdog/imgui/console/console_panel.h>
-#include <engine/watchdog/imgui/explorer/explorer.h>
 
 // renderer
 #include <render/renderer.h>

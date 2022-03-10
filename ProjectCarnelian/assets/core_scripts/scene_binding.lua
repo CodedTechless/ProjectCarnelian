@@ -16,6 +16,10 @@ function SceneBinding.new(LinkedScene)
 end
 
 function SceneBinding:OnUpdate(Delta)
+	if not self.LinkedScene.ScriptRuntimeEnabled then
+		return
+	end
+
 	for _, e in next, self.Entities do
 		if e.HasLuaScript() then
             e.OnUpdate(Delta);
@@ -24,6 +28,10 @@ function SceneBinding:OnUpdate(Delta)
 end
 
 function SceneBinding:OnFixedUpdate(Delta)
+	if not self.LinkedScene.ScriptRuntimeEnabled then
+		return
+	end
+
 	for _, e in next, self.Entities do
 		if e.HasLuaScript() then
             e.OnFixedUpdate(Delta);
@@ -33,6 +41,10 @@ end
 
 function SceneBinding:OnInputEvent(InputObject, Processed)
 	local FinalFilter = InputFilter.Ignore;
+
+	if not self.LinkedScene.ScriptRuntimeEnabled then
+		return FinalFilter
+	end
 
 	for _, e in next, self.Entities do
 		if e.HasLuaScript() then
@@ -54,6 +66,10 @@ function SceneBinding:OnInputEvent(InputObject, Processed)
 end
 
 function SceneBinding:OnWindowEvent(WindowEventObject)
+	if not self.LinkedScene.ScriptRuntimeEnabled then
+		return
+	end
+
 	for _, e in next, self.Entities do
         if e.HasLuaScript() then
 		    e.OnWindowEvent(WindowEventObject);
