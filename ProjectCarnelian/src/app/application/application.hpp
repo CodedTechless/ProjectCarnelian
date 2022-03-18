@@ -17,7 +17,7 @@ namespace Carnelian
 		{
 			SetApplicationTitle("Project Carnelian");
 
-			Init();
+			Init("carnelian.ini");
 
 			Core* Main = new Core();
 			Layers.PushLayer(Main);

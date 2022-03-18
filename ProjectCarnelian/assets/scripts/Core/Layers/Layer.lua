@@ -15,11 +15,18 @@ function OnCreated()
 
 	-- Player
 	local Player = Scene:Instantiate(PlayerPrefab);
+	local Eli = Scene:Instantiate(PrefabAtlas.Get("assets/prefabs/Eli.prefab"));
+--	Player.AddComponent("SpriteComponent").Sprite = SpriteAtlas.Get("Hand")
+
+--	local test = Scene:CreateEntity("test");
+--	test.AddComponent("LuaScriptComponent"):Bind("InterpolationTest");
 
 	-- box
 	local box = Scene:CreateEntity("Box");
 	local boxSprite = box.AddComponent("SpriteComponent");
-	boxSprite:SetSprite(SpriteAtlas.Get("checkers"));
+	boxSprite.Sprite = SpriteAtlas.Get("checkers");
+
+	box.GetComponent("TransformComponent").Position = Vector3.new(100, 0, 0);
 
 --	local boxScript = box.AddComponent("LuaScriptComponent");
 --	boxScript:Bind("test");

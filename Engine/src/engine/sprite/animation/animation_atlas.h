@@ -161,7 +161,7 @@ namespace Techless
 	{
 	public:
 
-		static void Init();
+		static void Load(const std::string& Directory);
 
 		static Ptr<SpriteAnimationSet> Get(const std::string& Name);
 		static bool Has(const std::string& Name);

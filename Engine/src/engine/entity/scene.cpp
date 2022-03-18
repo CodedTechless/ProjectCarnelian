@@ -102,7 +102,6 @@ namespace Techless
 
 	Entity& Scene::Instantiate(Prefab& prefab)
 	{
-
 		std::unordered_map<uint16_t, Entity*> Entities = {};
 
 		// [COMPONENT ASSIGNMENT]
@@ -114,8 +113,6 @@ namespace Techless
 		AssignComponents<SpriteAnimatorComponent>	(*this, Entities, prefab);
 		AssignComponents<CameraComponent>			(*this, Entities, prefab);
 		AssignComponents<LuaScriptComponent>		(*this, Entities, prefab);
-
-
 
 		for (int i = 0; i < prefab.ParentalIndex.size(); ++i)
 		{
@@ -145,8 +142,21 @@ namespace Techless
 		return *Entities[0];
 	}
 
-	Input::Filter Scene::OnInputEvent(const InputEvent& inputEvent, bool Processed)
+	Input::Filter Scene::OnInputEvent(InputEvent inputEvent, bool Processed)
 	{
+		if (inputEvent.InputType == Input::Type::Mouse)
+		{
+			auto& c_Camera = ActiveCamera->GetComponent<CameraComponent>();
+
+			Viewport viewport = c_Camera.GetViewport();
+			inputEvent.Position -= Vector3(c_Camera.GetViewport().Position, 0.f);
+
+			if (inputEvent.Position.x > viewport.Size.x || inputEvent.Position.y > viewport.Size.y || inputEvent.Position.x < 0 || inputEvent.Position.y < 0)
+			{
+				return Input::Filter::Ignore;
+			}
+		}
+
 		/*
 			to-do: (list)
 			 - make it so inputs propagate from positive to negative depths
@@ -173,6 +183,11 @@ namespace Techless
 			if (FinalFilter != Input::Filter::Stop)
 			{
 				Input::Filter LuaFilter = ScriptEnvironment::CallScene(SceneLuaID, "OnInputEvent", inputEvent, Processed).as<Input::Filter>();
+
+				if (LuaFilter == Input::Filter::Stop)
+					FinalFilter = Input::Filter::Stop;
+				else if (LuaFilter == Input::Filter::Continue)
+					Processed = true;
 			}
 
 			return FinalFilter;
@@ -183,6 +198,14 @@ namespace Techless
 
 	void Scene::OnWindowEvent(const WindowEvent& windowEvent)
 	{
+		if (ActiveCamera)
+		{
+			auto& c_Camera = ActiveCamera->GetComponent<CameraComponent>();
+
+			if (c_Camera.AutoViewportResizeToWindow)
+				c_Camera.SetViewportSize(windowEvent.Size);
+		}
+
 		if (FLAG_ScriptExecutionEnabled)
 		{
 			auto ScriptComponents = SceneRegistry.GetRegistrySet<ScriptComponent>();
@@ -198,14 +221,21 @@ namespace Techless
 
 	void Scene::FixedUpdate(float Delta)
 	{
+		SceneRegistry.View<TransformComponent>(
+			[](TransformComponent& Transform)
+			{
+				Transform.ForceInterpolationUpdate();
+			});
+
+		SceneRegistry.View<RigidBodyComponent>(
+			[](RigidBodyComponent& RigidBody)
+			{
+
+			});
+
 		if (FLAG_ScriptExecutionEnabled)
 		{
-			SceneRegistry.View<TransformComponent>(
-				[](TransformComponent& Transform)
-				{
-					if (Transform.IsEngineInterpolationEnabled())
-						Transform.ForceReloadPreviousState();
-				});
+
 
 			SceneRegistry.View<ScriptComponent>(
 				[&](ScriptComponent& Script)
@@ -226,6 +256,7 @@ namespace Techless
 
 	void Scene::Update(float Delta)
 	{
+
 		if (FLAG_ScriptExecutionEnabled)
 		{
 			SceneRegistry.View<ScriptComponent>(
@@ -247,15 +278,21 @@ namespace Techless
 				c_SpriteAnimator.Update(Delta);
 			});
 
-
-		CameraComponent& CameraComp = ActiveCamera->GetComponent<CameraComponent>();
-		TransformComponent& CameraTransformComp = ActiveCamera->GetComponent<TransformComponent>();
-		glm::vec3 CameraPosition = CameraTransformComp.GetGlobalPosition();
+		CameraComponent& cam_Camera = ActiveCamera->GetComponent<CameraComponent>();
+		TransformComponent& cam_Transform = ActiveCamera->GetComponent<TransformComponent>();
 		
-		glm::mat4 CameraProjection = CameraComp.GetProjection();
-		glm::mat4 CameraTransform = CameraComp.GetTransform(CameraPosition);
+		if (cam_Camera.IsFramebufferMode())
+		{
+			cam_Camera.m_FrameBuffer->Bind();
+			Renderer::ResetClearColour();
+			Renderer::Clear();
+		}
+		else
+		{
+			Renderer::SetViewport(cam_Camera.GetViewport());
+		}
 		
-		Renderer::Begin(CameraProjection, CameraTransform);
+		Renderer::Begin(cam_Camera.GetProjection(), cam_Camera.GetTransform(cam_Transform.GetGlobalPosition()));
 
 		{
 			std::vector<SceneRenderInfo> SceneSprites{};
@@ -263,8 +300,10 @@ namespace Techless
 			SceneRegistry.View<SpriteComponent, TransformComponent>(
 				[&](SpriteComponent& c_Sprite, TransformComponent& c_Transform)
 				{
-					if (c_Sprite.SpriteColour.a == 0.f)
-						return; // don't bother rendering it if it's invisible
+					if (c_Sprite.Visible == false || c_Sprite.SpriteColour.a == 0.f)
+						return; // don't bother rendering it if it's not visible
+
+
 
 					Ptr<Sprite> aSprite = c_Sprite.GetSprite();
 					if (aSprite)
@@ -283,7 +322,22 @@ namespace Techless
 			}
 		}
 
+		/*
+		SceneRegistry.View<TransformComponent>(
+			[&](TransformComponent& c_Transform)
+			{
+				Renderer::DrawQuad({ glm::vec2(c_Transform.GetGlobalTransformState().Position), 80.f }, { 1.f, 1.f }, 0.f, { 0.f, 1.f, 0.f, 0.5f });
+				Renderer::DrawQuad({ glm::vec2(c_Transform.GetPreviousState().Position), 80.f }, { 1.f, 1.f }, 0.f, { 0.f, 0.f, 1.f, 0.5f });
+				Renderer::DrawQuad({ glm::vec2(c_Transform.GetCurrentState().Position), 80.f }, { 1.f, 1.f }, 0.f, { 1.f, 0.f, 0.f, 0.5f });
+			});
+		*/
+
 		Renderer::End();
+
+		if (cam_Camera.IsFramebufferMode())
+		{
+			cam_Camera.m_FrameBuffer->Unbind();
+		}
 	}
 
 	void Scene::Serialise(const std::string& FilePath, Entity& RootEntity)

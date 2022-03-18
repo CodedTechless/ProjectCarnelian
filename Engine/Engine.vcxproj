@@ -93,6 +93,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\engine\application\resource_loader.cpp" />
+    <ClCompile Include="src\engine\application\watchdog\imgui\panel\debug_panel.cpp" />
     <ClCompile Include="src\engine\entity\prefabs\prefab.cpp" />
     <ClCompile Include="src\engine\entity\prefabs\prefab_atlas.cpp" />
     <ClCompile Include="src\engine\entity\serialiser\serialiser.cpp" />
@@ -271,6 +272,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\application\resource_loader.h" />
+    <ClInclude Include="src\engine\application\watchdog\imgui\panel\debug_panel.h" />
     <ClInclude Include="src\engine\entity\serialiser\serialiser.h" />
     <ClInclude Include="src\engine\lua\scriptable_lua_entity.hpp" />
     <ClInclude Include="src\engine\lua\script_environment.h" />

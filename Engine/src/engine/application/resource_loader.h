@@ -23,10 +23,10 @@ namespace Techless
 
 //		static std::vector<Resource> Load(Resource ResourceType);
 		template <typename Func>
-		static void GetFiles(const Resource& ResourceType, Func&& ReadFunc)
+		static void GetFiles(const Resource& ResourceType, Func&& ReadFunc, const std::string& Directory = "assets")
 		{
 			std::vector<fs::directory_entry> Entries = {};
-			ReadFiles(Entries, GetExtension(ResourceType));
+			ReadFiles(Entries, GetExtension(ResourceType), Directory);
 
 			for (auto& File : Entries)
 				ReadFunc(File);

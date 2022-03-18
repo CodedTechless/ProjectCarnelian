@@ -27,9 +27,9 @@ namespace Techless {
 		void Bind() const;
 		void Unbind() const;
 
-		void SetUniform4f(const std::string& Name, float v0, float v1, float v2, float v3);
-		void SetUniform1i(const std::string& Name, int v0);
 		void SetUniform1iv(const std::string& Name, int* Values, int Size);
+		void SetUniform1i(const std::string& Name, int v0);
+		void SetUniform4f(const std::string& Name, float v0, float v1, float v2, float v3);
 		void SetUniformMat4f(const std::string& Name, const glm::mat4& Matrix);
 	private:
 		unsigned int RendererID;

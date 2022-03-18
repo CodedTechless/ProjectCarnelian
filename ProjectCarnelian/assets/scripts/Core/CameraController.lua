@@ -5,7 +5,7 @@ FreeCamera = false;
 local Subject = nil;
 
 -- Movement
-CameraSpeed = 15;
+CameraSpeed = 600;
 
 local PositionTo = Vector3.new();
 local Offset = Vector2.new();
@@ -23,7 +23,7 @@ function SetSubject(snap, subject, offset)
 	if snap then
 		local Transform = GetComponent("TransformComponent");
 	
-		Transform.Position = subject.GetComponent("TransformComponent").Position + Vector3.new(offset, 0);
+		Transform.Position = subject.GetComponent("TransformComponent").Position + Vector3.new(offset.X, offset.Y, 0);
 		PositionTo = Transform.Position;
 	end
 
@@ -32,41 +32,51 @@ function SetSubject(snap, subject, offset)
 end
 
 function OnCreated()
-	PositionTo = GetComponent("TransformComponent").Position;
-end
+	local Transform = GetComponent("TransformComponent")
+	Transform:SetEngineInterpolationEnabled(true);
 
-function OnUpdate(Delta)
-	local Transform = GetComponent("TransformComponent");
-	Transform.Position = Transform.Position + (PositionTo - Transform.Position) * 15 * Delta;
-
-	local Camera = GetComponent("CameraComponent");
-	Camera:SetProjection(Window.Size * ZoomLevel, Near, Far);
-
-	ZoomLevel = ZoomLevel + (ZoomLevelTo - ZoomLevel) * 30 * Delta;
+	PositionTo = Transform.Position;
 end
 
 function OnFixedUpdate(Delta)
 	if FreeCamera then
-		local Horizontal = bool_tonumber(Input.KeyDown(KeyCode.D)) - bool_tonumber(Input.KeyDown(KeyCode.A));
-		local Vertical = bool_tonumber(Input.KeyDown(KeyCode.S)) - bool_tonumber(Input.KeyDown(KeyCode.W));
+		local Horizontal = bool_tonumber(Input.KeyDown(Enum.KeyCode.Right)) - bool_tonumber(Input.KeyDown(Enum.KeyCode.Left));
+		local Vertical = bool_tonumber(Input.KeyDown(Enum.KeyCode.Down)) - bool_tonumber(Input.KeyDown(Enum.KeyCode.Up));
 
-		PositionTo = PositionTo + Vector3.new(Offset.X, Offset.Y, 0) + Vector3.new(Horizontal, Vertical, 0) * CameraSpeed * ZoomLevel * Delta;
+		PositionTo = PositionTo + Vector3.new(Horizontal, Vertical, 0) * CameraSpeed * ZoomLevel * Delta;
 	elseif Subject then
 		PositionTo = Subject.GetComponent("TransformComponent").GlobalPosition + Vector3.new(Offset.X, Offset.Y, 0);
 	end
+
+	local Transform = GetComponent("TransformComponent");
+	Transform.Position = Transform.Position + ((PositionTo - Transform.Position) / 0.1) * Delta;
+end
+
+function OnUpdate(Delta)
+	local Camera = GetComponent("CameraComponent");
+	Camera.Size = Window.Size * ZoomLevel;
+
+	ZoomLevel = ZoomLevel + ((ZoomLevelTo - ZoomLevel) / 0.08) * Delta;
 end
 
 function OnInputEvent(InputEvent, Processed)
-	if InputEvent.InputType == InputType.Scrolling then
+	if InputEvent.InputType == Enum.InputType.Scrolling then
 		ZoomLevelTo = ZoomLevelTo + (-InputEvent.Delta.Y * ZoomSpeed * ZoomLevelTo);
 
-		return InputFilter.Continue;
+		return Enum.InputFilter.Continue;
+	elseif InputEvent.InputType == Enum.InputType.Keyboard then
+		if InputEvent.KeyCode == Enum.KeyCode.E and InputEvent.InputState == Enum.InputState.Begin then
+			FreeCamera = not FreeCamera;
+
+			cprint("Freecam " .. (FreeCamera and "Enabled" or "Disabled"));
+		end
 	end
 
-	return InputFilter.Ignore;
+
+	return Enum.InputFilter.Ignore;
 end
 
 function OnWindowEvent(WindowEvent)
 	local Camera = GetComponent("CameraComponent");
-	Camera:SetProjection(WindowEvent.Size * ZoomLevel, Near, Far);
+	Camera.Size = WindowEvent.Size * ZoomLevel;
 end

@@ -20,8 +20,12 @@ namespace PrefabEditor
 		}
 
 		auto& SceneCamera = LinkedScene->CreateEntity("techless_EditorCamera");
-		SceneCamera.AddComponent<CameraComponent>();
+		//SceneCamera.GetComponent<TransformComponent>().SetEngineInterpolation(true);
 		SceneCamera.Archivable = false;
+		
+		auto& CameraComp = SceneCamera.AddComponent<CameraComponent>();
+		CameraComp.SetFramebufferEnabled(true);
+		CameraComp.AutoViewportResizeToWindow = false;
 
 		auto& Script = SceneCamera.AddComponent<ScriptComponent>();
 		ActiveCameraScript = Script.Bind<NativeScript::Core::Camera>(SceneCamera);

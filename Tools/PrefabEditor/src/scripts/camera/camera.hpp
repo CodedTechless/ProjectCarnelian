@@ -39,13 +39,21 @@ namespace NativeScript
 			{
 				auto& Transform = GetComponent<TransformComponent>();
 
-				Transform.SetEngineInterpolation(true);
+				//Transform.SetEngineInterpolation(true);
 				PositionTo = Transform.GetLocalPosition();
 			}
 
 			void OnUpdate(const float Delta)
 			{
+				auto& Transform = GetComponent<TransformComponent>();
+				Transform.SetLocalPosition(Transform.GetLocalPosition() + (PositionTo - Transform.GetLocalPosition()) * 0.15f);
 
+				auto WindowSize = Application::GetActiveApplication().GetActiveWindow()->Size;
+
+				auto& CameraComp = GetComponent<CameraComponent>();
+				CameraComp.SetOrthoSize(ViewportSize * ZoomLevel);
+
+				ZoomLevel += ((ZoomLevelTo - ZoomLevel) * 0.3f);
 			}
 
 			void OnFixedUpdate(const float Delta)
@@ -69,16 +77,6 @@ namespace NativeScript
 				{
 					PositionTo = Subject->GetLocalPosition();
 				}
-
-				auto& Transform = GetComponent<TransformComponent>();
-				Transform.SetLocalPosition(Transform.GetLocalPosition() + (PositionTo - Transform.GetLocalPosition()) * 0.15f);
-
-				auto WindowSize = Application::GetActiveApplication().GetActiveWindow()->Size;
-
-				auto& CameraComp = GetComponent<CameraComponent>();
-				CameraComp.SetProjection(ViewportSize * ZoomLevel, Near, Far);
-
-				ZoomLevel += ((ZoomLevelTo - ZoomLevel) * 0.3f);
 			}
 
 			Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed)
@@ -98,7 +96,7 @@ namespace NativeScript
 				ViewportSize = windowEvent.Size;
 
 				auto& CameraComp = GetComponent<CameraComponent>();
-				CameraComp.SetProjection(ViewportSize * ZoomLevel, Near, Far);
+				CameraComp.SetOrthoSize(ViewportSize * ZoomLevel);
 			}
 		};
 

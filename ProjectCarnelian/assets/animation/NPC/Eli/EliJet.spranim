@@ -1,0 +1,27 @@
+{
+    "Default" : "Idle",
+    "Sequences" : {
+        "Idle" : {
+            "FrameRate" : 0.25,
+            "Looped" : true,
+            "Frames" : [
+                {
+                    "Sprite" : "Jet",
+                    "Length" : 1
+                },
+				{
+                    "Sprite" : "Jet1",
+                    "Length" : 1
+                },
+ 				{
+                    "Sprite" : "Jet2",
+                    "Length" : 1
+                },
+ 				{
+                    "Sprite" : "Jet1",
+                    "Length" : 1
+                }
+            ]
+        }
+    }
+}

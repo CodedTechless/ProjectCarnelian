@@ -59,6 +59,35 @@ namespace Techless
 
 	using Mat4x4 = glm::mat<4, 4, glm::f32, glm::defaultp>;
 
+	// extras
+
+	struct ZPlane
+	{
+		float Near = -100.f;
+		float Far = 100.f;
+	};
+
+	struct Viewport
+	{
+		Vector2 Position = { 0.f, 0.f };
+		Vector2 Size = { 0.f, 0.f };
+	};
+
+	// json util
+
+	namespace JSONUtil
+	{
+		Vector2 JSONToVec2(const JSON& json);
+		Vector3 JSONToVec3(const JSON& json);
+		Vector4 JSONToVec4(const JSON& json);
+		Colour JSONToColour(const JSON& json);
+
+		JSON Vec2ToJSON(const Vector2& vec);
+		JSON Vec3ToJSON(const Vector3& vec);
+		JSON Vec4ToJSON(const Vector4& vec);
+		JSON ColourToJSON(const Colour& vec);
+	}
+
 	// neat smart pointers (might change this because idk!)
 
 	template <typename T>

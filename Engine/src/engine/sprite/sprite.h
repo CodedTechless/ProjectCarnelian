@@ -18,10 +18,11 @@ namespace Techless
 		Sprite(Ptr<Texture> Tex, const glm::vec2& topLeft = { 0, 0 }, const glm::vec2& bottomRight = { INFINITY, INFINITY }, const std::string& Name = "Sprite");
 
 		void SetBounds(glm::vec2 topLeft, glm::vec2 bottomRight);
+		void SetTexture(Ptr<Texture> texture) { BaseTexture = texture; };
 
 		inline Bounds GetBounds() const { return { TopLeft, BottomRight }; };
 		inline Bounds GetAbsoluteBounds() const { return { AbsoluteTopLeft, AbsoluteBottomRight }; };
-		
+
 		inline Ptr<Texture> GetTexture() const { return BaseTexture; };
 		inline glm::vec2 GetSize() const { return Size; };
 

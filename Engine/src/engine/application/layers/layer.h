@@ -25,8 +25,8 @@ namespace Techless {
 		virtual void OnUpdateFixed(const float Delta) {};
 		virtual void OnUpdateFixedEnd(const float Delta) {};
 
-		virtual Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed) { return Input::Filter::Ignore; };
-		virtual void OnWindowEvent(const WindowEvent& inputEvent) {};
+		virtual Input::Filter OnInputEvent(InputEvent inputEvent, bool Processed) { return Input::Filter::Ignore; };
+		virtual void OnWindowEvent(WindowEvent inputEvent) {};
 
 	protected:
 		std::string LayerName = "Layer";

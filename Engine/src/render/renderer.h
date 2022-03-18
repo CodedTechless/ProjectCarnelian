@@ -39,7 +39,7 @@ namespace Techless {
 		static void DrawQuadArray(Ptr<Texture> Tex, const Vector2 TexCoords[4], Quad* QuadArray, unsigned int Count);
 
 	public:
-		static void Begin(Mat4x4 Projection, Mat4x4 Transform, Ptr<Shader> shader = nullptr, Ptr<FrameBuffer> frameBuffer = nullptr);
+		static void Begin(Mat4x4 Projection, Mat4x4 Transform, Ptr<Shader> shader = nullptr);
 		static void End();
 
 		static void BeginBatch();
@@ -47,7 +47,14 @@ namespace Techless {
 
 		static void Flush();
 
-		static void SetClearColour(Colour colour);
+	public:
+		static void SetViewport(Viewport viewport);
+		static void SetClearColour(Colour colour);	
+
+		void SetShader(Ptr<Shader> shader);
+		void ResetShader();
+
+		static void ResetClearColour();
 		static void Clear();
 
 	public:

@@ -21,7 +21,7 @@ namespace PrefabEditor
 		void OnUpdateEnd(const float Delta);
 		void OnUpdateFixed(const float Delta);
 
-		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
+		Input::Filter OnInputEvent(InputEvent inputEvent, bool Processed);
 		//void OnWindowEvent(const WindowEvent& windowEvent);
 
 		void CreateScene(const std::string& SceneName, Prefab* LoadWithPrefab = nullptr);
@@ -40,8 +40,6 @@ namespace PrefabEditor
 		int NewScenes = 1;
 
 	private:
-		Ptr<FrameBuffer> ActiveFrameBuffer = nullptr;
-		
 		glm::u32vec2 ViewportSize = { 0.f, 0.f };
 		bool ViewportFocused = false;
 

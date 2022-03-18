@@ -40,7 +40,7 @@ function SceneBinding:OnFixedUpdate(Delta)
 end
 
 function SceneBinding:OnInputEvent(InputObject, Processed)
-	local FinalFilter = InputFilter.Ignore;
+	local FinalFilter = Enum.InputFilter.Ignore;
 
 	if not self.LinkedScene.ScriptRuntimeEnabled then
 		return FinalFilter
@@ -50,13 +50,13 @@ function SceneBinding:OnInputEvent(InputObject, Processed)
 		if e.HasLuaScript() then
             local Filter = e.OnInputEvent(InputObject, Processed);
 
-            if Filter ~= InputFilter.Ignore then
-                FinalFilter = InputFilter;
+            if Filter ~= Enum.InputFilter.Ignore then
+                FinalFilter = Enum.InputFilter;
             end
     
-            if Filter == InputFilter.Stop then
+            if Filter == Enum.InputFilter.Stop then
                 break;
-            elseif Filter == InputFilter.Continue then
+            elseif Filter == Enum.InputFilter.Continue then
                 Processed = true;
             end
 		end

@@ -1,7 +1,7 @@
 
 #include <app/application/application.hpp>
 
-int main() {
+int WinMain() {
 	auto App = new PrefabEditor::PrefabEditor();
 
 	delete App;

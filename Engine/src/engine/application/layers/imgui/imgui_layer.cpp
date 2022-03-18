@@ -4,6 +4,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_glfw.h>
 
+#include <engine/application/watchdog/watchdog.h>
 #include <GLFW/glfw3.h>
 
 #include "imgui_layer.h"
@@ -11,8 +12,11 @@
 namespace Techless
 {
 
-	ImGuiLayer::ImGuiLayer()
-		: Layer("ImGuiLayer") {}
+	ImGuiLayer::ImGuiLayer(const std::string& iniFileName)
+		: Layer("ImGuiLayer"), IniFileName(iniFileName)
+	{
+
+	}
 
 	void ImGuiLayer::OnCreated()
 	{
@@ -21,7 +25,10 @@ namespace Techless
 		ImGui::CreateContext();											// create the ImGui context
 
 		ImGuiIO& io = ImGui::GetIO();
+		io.IniFilename = NULL;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+		ImGui::LoadIniSettingsFromDisk(IniFileName.c_str());
 
 		ImGui::StyleColorsDark();										// sets the window colour style to dark mode
 
@@ -31,6 +38,9 @@ namespace Techless
 
 	void ImGuiLayer::OnRemoved()
 	{
+		Debug::Log("Cleaned up ImGuiLayer");
+		ImGui::SaveIniSettingsToDisk(IniFileName.c_str());
+
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();

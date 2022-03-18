@@ -7,9 +7,9 @@ namespace Techless
 {
 	std::unordered_map<std::string, Ptr<SpriteAnimationSet>> AnimationAtlas::Animations = {};
 
-	void AnimationAtlas::Init()
+	void AnimationAtlas::Load(const std::string& Directory)
 	{
-		Debug::Log("Loading sprite animations...", "AnimationAtlas");
+		Debug::Log("Loading sprite animations from: " + Directory, "AnimationAtlas");
 
 		ResourceLoader::GetFiles(Resource::SpriteAnimation,
 			[](const fs::directory_entry& File)
@@ -24,7 +24,7 @@ namespace Techless
 
 				AnimSet->Name = Name;
 				Animations[Name] = AnimSet;
-			});
+			}, Directory);
 	}
 
 

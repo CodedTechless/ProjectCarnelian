@@ -51,6 +51,7 @@ namespace Techless
 		std::array<Ptr<Texture>, 16> ActiveTextures;
 
 		Vector4 VertexDefault[4] = {};
+		Colour ClearColour = { 0.1f, 0.1f, 0.1f, 1.f };
 	};
 
 	static RendererDataSet RendererData;
@@ -132,11 +133,13 @@ namespace Techless
 
 		// Initialise the texture shader and import the basic shader.
 		RendererData.DefaultTextureShader = std::make_shared<Shader>();
-		RendererData.DefaultTextureShader->ImportShader("assets/shaders/basic.shader");
+		RendererData.DefaultTextureShader->ImportShader("srcassets/shaders/basic.shader");
 		RendererData.DefaultTextureShader->Bind();
 
+		RendererData.ActiveShader = RendererData.DefaultTextureShader;
+
 		// Assign texture slot 1 to the white "default" texture.
-		RendererData.ActiveTextures[0] = std::make_shared<Texture>("assets/default.png");
+		RendererData.ActiveTextures[0] = std::make_shared<Texture>("srcassets/textures/default.png");
 		RendererData.ActiveTextures[0]->Bind();
 		DefaultTexture = RendererData.ActiveTextures[0];
 
@@ -285,18 +288,11 @@ namespace Techless
 	///////////
 	// Scene //
 	///////////
-	void Renderer::Begin(Mat4x4 Projection, Mat4x4 Transform, Ptr<Shader> shader, Ptr<FrameBuffer> frameBuffer)
+	void Renderer::Begin(Mat4x4 Projection, Mat4x4 Transform, Ptr<Shader> shader)
 	{	
 		Mat4x4 Proj = Projection * glm::inverse(Transform);
 
-		RendererData.ActiveShader = shader ? shader : RendererData.DefaultTextureShader;
 		RendererData.ActiveShader->SetUniformMat4f("CameraProjection", Proj);
-
-		if (frameBuffer)
-		{
-			RendererData.ActiveFrameBuffer = frameBuffer;
-			RendererData.ActiveFrameBuffer->Bind();
-		}
 
 		DebugInfo.DrawCalls = 0;
 		DebugInfo.VertexCount = 0;
@@ -307,12 +303,6 @@ namespace Techless
 	void Renderer::End()
 	{
 		Flush();
-		
-		if (RendererData.ActiveFrameBuffer)
-		{
-			RendererData.ActiveFrameBuffer->Unbind();
-			RendererData.ActiveFrameBuffer = nullptr;
-		}
 	}
 
 	void Renderer::BeginBatch()
@@ -349,8 +339,32 @@ namespace Techless
 		DebugInfo.DrawCalls++;
 	}
 
+	void Renderer::ResetClearColour()
+	{
+		auto colour = RendererData.ClearColour;
+		glClearColor(colour.r, colour.g, colour.b, colour.a);
+	}
+
+	void Renderer::SetShader(Ptr<Shader> shader)
+	{
+		ResetBatch();
+		RendererData.ActiveShader = shader;
+	}
+
+	void Renderer::ResetShader()
+	{
+		ResetBatch();
+		RendererData.ActiveShader = RendererData.DefaultTextureShader;
+	}
+
+	void Renderer::SetViewport(Viewport viewport)
+	{
+		glViewport(viewport.Position.x, -viewport.Position.y, viewport.Size.x, viewport.Size.y);
+	}
+
 	void Renderer::SetClearColour(Colour colour)
 	{
+		RendererData.ClearColour = colour;
 		glClearColor(colour.r, colour.g, colour.b, colour.a);
 	}
 

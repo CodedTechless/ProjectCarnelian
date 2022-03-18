@@ -330,27 +330,27 @@ namespace Techless
         RenderComponentProperties<CameraComponent>("Camera", SelectedEntity,
             [](CameraComponent& Component)
             {
-                auto ViewportRes = Component.GetViewportResolution();
+                Vector2 OrthoSize = Component.GetOrthoSize();
+                DrawVec2("Orthographic Size", OrthoSize);
 
-                DrawVec2("Viewport Resolution", ViewportRes);
-
-                auto Plane = Component.GetZPlane();
+                ZPlane Plane = Component.GetOrthoZPlane();
 
                 ImGui::PushItemWidth(55.f);
-                ImGui::InputFloat("##near", &Plane.first);
+                ImGui::InputFloat("##near", &Plane.Near);
                 ImGui::PopItemWidth();
 
                 ImGui::SameLine();
                 ImGui::Text("Near");
 
                 ImGui::PushItemWidth(55.f);
-                ImGui::InputFloat("##far", &Plane.second);
+                ImGui::InputFloat("##far", &Plane.Far);
                 ImGui::PopItemWidth();
 
                 ImGui::SameLine();
                 ImGui::Text("Far");
 
-                Component.SetProjection(ViewportRes, Plane.first, Plane.second);
+                Component.SetOrthoSize(OrthoSize);
+                Component.SetOrthoZPlane(Plane.Near, Plane.Far);
             });
 
         RenderComponentProperties<SpriteAnimatorComponent>("Sprite Animator", SelectedEntity,
@@ -410,7 +410,7 @@ namespace Techless
             });
 
         RenderComponentProperties<LuaScriptComponent>("Lua Script", SelectedEntity,
-            [](LuaScriptComponent& Component)
+            [&](LuaScriptComponent& Component)
             {
                 std::string ScriptName = Component.GetScriptName();
                 std::string Text = (ScriptName != "" ? ScriptName : "None");
@@ -432,6 +432,37 @@ namespace Techless
                 }
 
                 DrawTextLabel("Script");
+
+                ImGui::Separator();
+
+                sol::table Binding = ScriptEnvironment::GetEntityBinding(SelectedEntity->GetScene()->GetLuaID(), SelectedEntity->GetID());
+                for (auto& [k, v] : Binding)
+                {
+                    if (k.is<std::string>())
+                    {
+                        std::string k_Name = k.as<std::string>();
+
+                        switch (v.get_type())
+                        {
+                            case sol::type::number: 
+                            {
+
+                                float f = v.as<float>();
+
+                                ImGui::PushItemWidth(55.f);
+                                ImGui::InputFloat(("##lua_number_" + k_Name).c_str(), &f);
+                                ImGui::PopItemWidth();
+
+                                ImGui::SameLine();
+                                ImGui::Text(k_Name.c_str());
+
+                                Binding[k] = v;
+
+                                break;
+                            }
+                        }
+                    }
+                }
 
             });
 

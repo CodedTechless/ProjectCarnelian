@@ -12,6 +12,8 @@ using namespace Techless;
 namespace Carnelian 
 {
 
+    //static float clock = 0.f;
+
     void Core::BuildEnvironment()
     {
         if (ScriptEnvironment::Has(LayerName))
@@ -50,7 +52,27 @@ namespace Carnelian
         GetFunction("OnUpdate")(Delta);
         ActiveScene->Update(Delta);
 
+
         //Debug::Log(std::to_string(LayerScript.use_count()));
+
+        /*
+        if (clock > 1.f)
+        {
+            clock--;
+
+            auto tags = ActiveScene->GetInstances<TagComponent>();
+
+            for (auto& transform : *ActiveScene->GetInstances<TransformComponent>())
+            {
+                auto& e = transform.GetLinkedEntity()->GetComponent<TagComponent>();
+
+                Debug::Log(e.Name + " " + std::to_string(transform.InterpolatedFrames));
+
+                transform.InterpolatedFrames = 0;
+            }
+        }
+
+        clock += Delta;*/
 
         UpdateRate = Delta;
     }
@@ -59,13 +81,21 @@ namespace Carnelian
     {
         GetFunction("OnUpdateEnd");
 
-        //SceneExplorer.RenderImGuiElements();
+        SceneExplorer.RenderImGuiElements();
         SceneConsole.RenderImGuiElements();
+
+        /*ImGui::Begin("test");
+
+        SimRatio = Application::GetActiveApplication().GetSimulationRatio();
+
+        ImGui::Text(std::to_string(SimRatio).c_str()); 
+
+        ImGui::End();*/
 
         Renderer::ShowRuntimeStatsWindow();
     }
 
-    Input::Filter Core::OnInputEvent(const InputEvent& inputEvent, bool Processed)
+    Input::Filter Core::OnInputEvent(InputEvent inputEvent, bool Processed)
     {
         Input::Filter res = GetFunction("OnInputEvent")(inputEvent, Processed);
 
@@ -77,10 +107,8 @@ namespace Carnelian
         return ActiveScene->OnInputEvent(inputEvent, Processed);
     }
 
-    void Core::OnWindowEvent(const WindowEvent& windowEvent)
+    void Core::OnWindowEvent(WindowEvent windowEvent)
     {
-        glViewport(0, 0, windowEvent.Size.x, windowEvent.Size.y);
-
         GetFunction("OnWindowEvent")(windowEvent);
 
         ActiveScene->OnWindowEvent(windowEvent);

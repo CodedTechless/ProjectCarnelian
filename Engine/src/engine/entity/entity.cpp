@@ -28,11 +28,15 @@ namespace Techless
 
 	void Entity::AddChild(Entity* entity)
 	{
+		ScriptEnvironment::RegisterChild(ActiveScene->GetLuaID(), EntityID, entity->EntityID);
+
 		Children.push_back(entity);
 	}
 
 	void Entity::RemoveChild(Entity* entity)
 	{
+		ScriptEnvironment::DeregisterChild(ActiveScene->GetLuaID(), EntityID, entity->EntityID);
+
 		auto it = std::find(Children.begin(), Children.end(), entity);
 		if (it != Children.end())
 		{

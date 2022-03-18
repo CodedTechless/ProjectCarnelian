@@ -10,11 +10,14 @@
 
 #include <engine/entity/scriptable_entity.h>
 
+#include <render/buffer/frame.h>
+
 #include <glm/gtx/matrix_interpolation.hpp>
 #include <glm/gtx/transform.hpp>
 
 namespace Techless
 {
+
 
 
 	struct BaseComponent
@@ -88,11 +91,11 @@ namespace Techless
 		inline Vector2 GetLocalScale() const { return LocalScale; };
 		inline float GetLocalOrientation() const { return LocalOrientation; };
 
-		inline Vector3 GetGlobalPosition() { return RecalculateBase().GlobalState.Position; };
-		inline Vector2 GetGlobalScale() { return RecalculateBase().GlobalState.Scale; };
-		inline float GetGlobalOrientation() { return RecalculateBase().GlobalState.Orientation; };
+		inline Vector3 GetGlobalPosition() { if (FLAG_DoInterpolation) return RecalculateBase().InterpState.Position; else return RecalculateBase().GlobalState.Position; };
+		inline Vector2 GetGlobalScale() { if (FLAG_DoInterpolation) return RecalculateBase().InterpState.Scale; else return RecalculateBase().GlobalState.Scale; };
+		inline float GetGlobalOrientation() { if (FLAG_DoInterpolation) return RecalculateBase().InterpState.Orientation; else return RecalculateBase().GlobalState.Orientation; };
 		
-		inline glm::mat4 GetGlobalTransform() 
+		glm::mat4 GetGlobalTransform() 
 		{ 
 			auto Base = RecalculateBase();
 			
@@ -102,21 +105,31 @@ namespace Techless
 				return Base.GlobalState.Transform;
 		};
 
-		inline void SetLocalPosition(Vector3 Position) { if (LocalPosition == Position) { return; }; LocalPosition = Position; MarkAsDirty(); };
-		inline void SetLocalScale(Vector2 Scale) { if (LocalScale == Scale) { return; } LocalScale = Scale; MarkAsDirty(); };
-		inline void SetLocalOrientation(float Orientation) { if (LocalOrientation == Orientation) { return; } LocalOrientation = Orientation; MarkAsDirty(); };
+		void SetLocalPosition(Vector3 Position) { if (LocalPosition == Position) { return; }; LocalPosition = Position; MarkAsDirty(); };
+		void SetLocalScale(Vector2 Scale) { if (LocalScale == Scale) { return; } LocalScale = Scale; MarkAsDirty(); };
+		void SetLocalOrientation(float Orientation) { if (LocalOrientation == Orientation) { return; } LocalOrientation = Orientation; MarkAsDirty(); };
 
-		inline TransformState GetLocalTransformState()
+		TransformState GetLocalTransformState()
 		{
 			return { LocalPosition, LocalScale, LocalOrientation };
 		}
 
-		inline TransformState GetGlobalTransformState() 
+		TransformState GetGlobalTransformState()
 		{ 
 			return { GlobalPosition, GlobalScale, GlobalOrientation, GlobalTransform };
 		}
 
-		inline void SetEngineInterpolation(bool Mode) 
+		TransformState GetPreviousState()
+		{
+			return PreviousState;
+		}
+
+		TransformState GetCurrentState() // grabs the latest calculated interp/global state WITHOUT forcing an update. mainly used for debug ops
+		{
+			return CurrentState;
+		}
+
+		void SetEngineInterpolation(bool Mode) 
 		{ 
 			if (FLAG_DoInterpolation == Mode)
 				return;
@@ -131,24 +144,28 @@ namespace Techless
 
 		inline bool IsEngineInterpolationEnabled() const { return FLAG_DoInterpolation; };
 
-		inline void ForceReloadPreviousState()
+		void ForceInterpolationUpdate()
 		{
-			PreviousState = GetGlobalTransformState();
+			if (FLAG_DoInterpolation)
+			{
+				PreviousState = CurrentState;
+			}
 		}
+
+		//uint InterpolatedFrames = 0;
+
 
 	private:
 
 		TransformRecalculateResult RecalculateBase()
 		{
 			/*
-
 				to-do: optimise this system [UPDATE 19/02/22: optimised a bit but could probably be better!]
 			*/
 
 			TransformRecalculateResult Result { GetGlobalTransformState() };
 			TransformRecalculateResult ParentTransformState{};
 			bool FetchedBase = false;
-			
 
 			if (FLAG_TransformDirty)
 			{
@@ -166,6 +183,8 @@ namespace Techless
 				{
 					Result.GlobalState = GetLocalTransformState();
 				}
+
+				BuildTransform(Result.GlobalState);
 				
 				GlobalTransform = Result.GlobalState.Transform;
 				GlobalPosition = Result.GlobalState.Position;
@@ -173,6 +192,8 @@ namespace Techless
 				GlobalOrientation = Result.GlobalState.Orientation;
 
 				FLAG_TransformDirty = false;
+
+				CurrentState = Result.GlobalState;
 			}
 
 			if (FLAG_DoInterpolation && !MatchesState(this, PreviousState))
@@ -201,6 +222,10 @@ namespace Techless
 				{
 					Result.InterpState = Interpolate(Result.GlobalState, PreviousState);
 				}
+
+				BuildTransform(Result.InterpState);
+
+				//InterpolatedFrames++;
 			}
 			else
 			{
@@ -256,7 +281,7 @@ namespace Techless
 			}
 		}
 
-		// interpolates Last towards Next and returns the result as a TransformState. builds the state for you, too!
+		// interpolates Last towards Next and returns the result as a TransformState.
 		static TransformState Interpolate(const TransformState& Next, const TransformState& Last)
 		{
 			float Ratio = Application::GetActiveApplication().GetSimulationRatio();
@@ -265,8 +290,6 @@ namespace Techless
 			if (Last.Position != Next.Position) State.Position = glm::mix(Last.Position, Next.Position, Ratio); else State.Position = Last.Position;
 			if (Last.Scale != Next.Scale) State.Scale = glm::mix(Last.Scale, Next.Scale, Ratio); else State.Scale = Last.Scale;
 			if (Last.Orientation != Next.Orientation) State.Orientation = Last.Orientation + Ratio * std::fmodf(Next.Orientation - Last.Orientation, 2.f * M_PI); else State.Orientation = Last.Orientation;
-
-			BuildTransform(State);
 
 			return State;
 		}
@@ -286,6 +309,7 @@ namespace Techless
 			}
 		}
 
+
 		Vector3 LocalPosition{ 0.f, 0.f, 0.f };
 		Vector2 LocalScale{ 1.f, 1.f };
 		float LocalOrientation = 0.f;
@@ -296,6 +320,7 @@ namespace Techless
 		float GlobalOrientation = 0.f;
 
 		// A TransformState storing the previous state of the transform. This will be the value before it was last updated.
+		TransformState CurrentState{};
 		TransformState PreviousState{};
 
 		// The final global transform to be used by the renderer.
@@ -335,6 +360,15 @@ namespace Techless
 		}
 	};
 
+	struct YSortComponent : public BaseComponent
+	{
+	public:
+		YSortComponent() = default;
+		YSortComponent(const YSortComponent& component) = default;
+
+
+	};
+
 	struct RigidBodyComponent : public BaseComponent
 	{
 	public:
@@ -350,10 +384,8 @@ namespace Techless
 
 		inline friend void to_json(JSON& json, const RigidBodyComponent& component)
 		{
-			const Vector3& v = component.Velocity;
-
 			json = JSON{
-				{"Velocity", { { {"X", v.x}, {"Y", v.y}, {"Z", v.z} } }},
+				{"Velocity", JSONUtil::Vec3ToJSON(component.Velocity) },
 				{"GroundFriction", component.GroundFriction},
 				{"AirFriction", component.AirFriction}
 			};
@@ -361,20 +393,22 @@ namespace Techless
 
 		inline friend void from_json(const JSON& json, RigidBodyComponent& component)
 		{
-			const JSON& Velocity = json.at("Velocity");
-			component.Velocity = { Velocity.at("X").get<float>(), Velocity.at("Y").get<float>(), Velocity.at("Z").get<float>() };
+			component.Velocity = JSONUtil::JSONToVec3(json.at("Velocity"));
 
 			json.at("GroundFriction").get_to(component.GroundFriction);
 			json.at("AirFriction").get_to(component.AirFriction);
 		}
 	};
 
-	/*
-	struct CollisionMeshComponent
+	struct BoxColliderComponent : public BaseComponent
 	{
+	public:
+		BoxColliderComponent() = default;
+		BoxColliderComponent(const BoxColliderComponent& component) = default;
+
+		Vector2 Bounds = { 100.f, 100.f };
 
 	};
-	*/
 
 	////////////////////
 	// Sprite-related //
@@ -386,6 +420,7 @@ namespace Techless
 		SpriteComponent() = default;
 		SpriteComponent(const SpriteComponent& component) = default;
 
+		bool Visible = true;
 		Colour SpriteColour{ 1.f, 1.f, 1.f, 1.f };
 
 		inline void SetSprite(Ptr<Sprite> sprite) { aSprite = sprite; };
@@ -461,6 +496,8 @@ namespace Techless
 			CurrentAnimation = m_AnimationSet->Sequences[Name];
 		}
 
+		bool IsPlaying(const std::string& Name) const { return CurrentAnimation && CurrentAnimation->Name == Name; };
+
 		void SetAnimationSet(Ptr<SpriteAnimationSet> AnimSet) { m_AnimationSet = AnimSet; PlayDefault(); };
 
 		inline Ptr<SpriteAnimationSet> GetAnimationSet() const { return m_AnimationSet; };
@@ -503,66 +540,136 @@ namespace Techless
 	// Viewport related //
 	//////////////////////
 
+
+
 	struct CameraComponent : public BaseComponent
 	{
 	public:
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent& component) = default;
 
-		// Builds orthographic matrix for the rendering API to use.
-		void SetProjection(Vector2 Size, float pNear, float pFar)
-		{
-			Projection = glm::ortho(0.f, Size.x, Size.y, 0.f, pNear, pFar);
+		bool AutoViewportResizeToWindow = true;
 
-			ViewportResolution = Size;
-			Near = pNear;
-			Far = pFar;
+		void SetOrthoSize(Vector2 Res)
+		{
+			m_OrthoSize = Res;
+			RecalculateProjection();
 		}
 
-		inline Mat4x4 GetTransform(const Vector3& Position) const
+		void SetOrthoZPlane(float Near, float Far)
 		{
-			return glm::translate(Mat4x4(1.f), Position - (Vector3(GetViewportResolution(), 0.f) / 2.f));
+			m_OrthoZPlane = { Near, Far };
+			RecalculateProjection();
 		}
 
-		inline Mat4x4 GetProjection() const { return Projection; };
-		inline std::pair<float, float> GetZPlane() const{ return { Near, Far }; }; // First is Near, second is Far
+		void SetViewportPosition(Vector2 Position)
+		{
+			m_ViewportPosition = Position;
+		}
 		
-		inline Vector2 GetViewportResolution() const { return ViewportResolution; };
+		void SetViewportSize(Vector2 Size)
+		{
+			m_ViewportSize = Size;
+
+			if (m_FramebufferMode && m_FrameBuffer)
+			{
+				m_FrameBuffer->Resize(m_ViewportSize);
+			}
+		}
+
+		void SetFramebufferEnabled(bool Mode)
+		{
+			if (Mode)
+			{
+				FrameBufferSpecification FSpec;
+				FSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth };
+				FSpec.Size = m_ViewportSize;
+
+				m_FrameBuffer = CreatePtr<FrameBuffer>(FSpec);
+			}
+			else
+			{
+				m_FrameBuffer = nullptr;
+			}
+
+			m_FramebufferMode = Mode;
+		}
+
+		Vector3 ScreenToWorldCoordinates(Vector3 ScreenCoords)
+		{
+			auto& Transform = LinkedEntity->GetComponent<TransformComponent>();
+
+			auto o = Vector3(m_OrthoSize, 0);
+			auto v = Vector3(m_ViewportSize, 0);
+
+			return (Transform.GetGlobalPosition() - (o / 2.f)) + ScreenCoords * (o / v);
+		}
+
+		Mat4x4 GetTransform(const Vector3& Position) const
+		{
+			return glm::translate(Mat4x4(1.f), Position - (Vector3(m_OrthoSize, 0.f) / 2.f));
+		}
+
+		Ptr<FrameBuffer> GetFrameBuffer() { return m_FrameBuffer; };
+
+		inline Viewport GetViewport() const { return { m_ViewportPosition, m_ViewportSize }; };
+		inline Mat4x4 GetProjection() const { return Projection; };
+		inline ZPlane GetOrthoZPlane() const{ return m_OrthoZPlane; }; // First is Near, second is Far
+		
+		inline Vector2 GetOrthoSize() const { return m_OrthoSize; };
+		inline bool IsFramebufferMode() const { return m_FramebufferMode; };
 
 	private:
 
-		Vector2 ViewportResolution = { 1280.f, 720.f };
+		void RecalculateProjection()
+		{
+			Projection = glm::ortho(0.f, m_OrthoSize.x, m_OrthoSize.y, 0.f, m_OrthoZPlane.Near, m_OrthoZPlane.Far);
+		}
 
-		float Near = -100.f;
-		float Far = 100.f;
+		Ptr<FrameBuffer> m_FrameBuffer = nullptr;
+		bool m_FramebufferMode = false;
+
+		Vector2 m_ViewportPosition = { 0.f, 0.f };
+		Vector2 m_ViewportSize = { 1280.f, 720.f };
+
+		Vector2 m_OrthoSize = { 1280.f, 720.f };
+		ZPlane m_OrthoZPlane = {};
 
 		Mat4x4 Projection = glm::ortho(0.f, 1280.f, 720.f, 0.f, -100.f, 100.f);
+
+		friend class Scene;
 
 	public: // json serialisation
 
 		inline friend void to_json(JSON& json, const CameraComponent& component)
 		{
-			const auto& v = component.ViewportResolution;
-
 			json = JSON{
-				{"ViewportResolution", { v.x, v.y } },
-				{"zPlane", {
-					{"Near", component.Near},
-					{"Far", component.Far}
+				{"ViewportPosition", JSONUtil::Vec2ToJSON(component.m_ViewportPosition) },
+				{"ViewportSize", JSONUtil::Vec2ToJSON(component.m_ViewportSize) },
+				{"OrthoSize", JSONUtil::Vec2ToJSON(component.m_OrthoSize) },
+				{"OrthoZPlane", {
+					{"Near", component.m_OrthoZPlane.Near},
+					{"Far", component.m_OrthoZPlane.Far}
 				}}
 			};
 		}
 
 		inline friend void from_json(const JSON& json, CameraComponent& component)
 		{
-			const JSON& j_VRes = json.at("ViewportResolution");
-			Vector2 VRes = { j_VRes.at("X").get<float>(), j_VRes.at("Y").get<float>() };
+			Vector2 CameraResolution = JSONUtil::JSONToVec2(json.at("CameraResolution"));
 
 			const JSON& zPlane = json.at("zPlane");
 			float j_Near = zPlane.at("Near").get<float>();
 			float j_Far = zPlane.at("Far").get<float>();
 
-			component.SetProjection(VRes, j_Near, j_Far);
+			component.SetOrthoSize(CameraResolution);
+			component.SetOrthoZPlane(j_Near, j_Far);
+
+			Vector2 ViewportPos = JSONUtil::JSONToVec2(json.at("ViewportPosition"));
+			Vector2 ViewportSize = JSONUtil::JSONToVec2(json.at("ViewportSize"));
+
+			component.SetViewportPosition(ViewportPos);
+			component.SetViewportSize(ViewportSize);
 		}
 	};
 

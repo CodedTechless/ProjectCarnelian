@@ -1,0 +1,43 @@
+{
+    "Default" : "Idle",
+    "Sequences" : {
+        "Idle" : {
+            "FrameRate" : 8,
+            "Looped" : true,
+            "Frames" : [
+                {
+                    "Sprite" : "FloatingRobot",
+                    "Length" : 1
+                },
+				{
+                    "Sprite" : "FloatingRobot1",
+                    "Length" : 1
+                },
+ 				{
+                    "Sprite" : "FloatingRobot2",
+                    "Length" : 1
+                },
+ 				{
+                    "Sprite" : "FloatingRobot3",
+                    "Length" : 1
+                },
+ 				{
+                    "Sprite" : "FloatingRobot4",
+                    "Length" : 1
+                },
+ 				{
+                    "Sprite" : "FloatingRobot5",
+                    "Length" : 1
+                },
+ 				{
+                    "Sprite" : "FloatingRobot6",
+                    "Length" : 1
+                },
+ 				{
+                    "Sprite" : "FloatingRobot7",
+                    "Length" : 1
+                }
+            ]
+        }
+    }
+}

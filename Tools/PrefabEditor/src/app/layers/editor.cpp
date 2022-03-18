@@ -12,11 +12,6 @@ namespace PrefabEditor {
 
 	void Editor::OnCreated()
 	{
-        FrameBufferSpecification FSpec;
-        FSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth };
-        FSpec.Size = { 128, 72 };
-        ActiveFrameBuffer = CreatePtr<FrameBuffer>(FSpec);
-
         Application::GetActiveApplication().GetImGuiLayer()->SetAbsorbInputs(false);
 
         CreateScene("New Prefab");
@@ -35,7 +30,6 @@ namespace PrefabEditor {
         }
 
         auto NewScene = CreatePtr<EditorScene>( SceneName, LoadWithPrefab );
-        NewScene->ActiveCameraScript->OnWindowEvent({ ViewportSize });
         
         Scenes.push_back(NewScene);
     }
@@ -63,24 +57,18 @@ namespace PrefabEditor {
 
     void Editor::OnUpdate(const float Delta)
     {
-        auto Spec = ActiveFrameBuffer->GetSpecification();
-        if ((Spec.Size.x != ViewportSize.x or Spec.Size.y != ViewportSize.y) 
+        auto& Camera = ActiveEditorScene->LinkedScene->GetActiveCamera();
+        auto& c_Camera = Camera.GetComponent<CameraComponent>();
+
+        if ((c_Camera.GetViewport().Size.x != ViewportSize.x or c_Camera.GetViewport().Size.y != ViewportSize.y)
             and (ViewportSize.x > 0 and ViewportSize.y > 0))
         {
-            ActiveFrameBuffer->Resize(ViewportSize);
-
-            for (auto& scene : Scenes)
-                scene->ActiveCameraScript->OnWindowEvent({ ViewportSize });
+            c_Camera.SetViewportSize(ViewportSize);
+            ActiveEditorScene->ActiveCameraScript->OnWindowEvent({ ViewportSize });
         }
 
         ActiveEditorScene->ActiveCameraScript->OnUpdate(Delta);
-
-        ActiveFrameBuffer->Bind();
-        Renderer::SetClearColour({ 0.1f, 0.1f, 0.1f, 1.f });
-        Renderer::Clear();
-
         ActiveEditorScene->LinkedScene->Update(Delta);
-        ActiveFrameBuffer->Unbind();
         
         UpdateRate = Delta;
     }
@@ -178,6 +166,9 @@ namespace PrefabEditor {
         }
 
         {
+            auto& Camera = ActiveEditorScene->LinkedScene->GetActiveCamera();
+            auto& c_Camera = Camera.GetComponent<CameraComponent>();
+
             ViewportFocused = ImGui::IsWindowFocused() && ImGui::IsWindowHovered();
             ActiveEditorScene->ActiveCameraScript->AcceptingInput = ImGui::IsWindowFocused();
 
@@ -186,9 +177,13 @@ namespace PrefabEditor {
 
             ImGui::PushID("ViewportDropZone");
 
-            uint32_t rID = ActiveFrameBuffer->GetColourAttachmentRendererID();
+            uint32_t rID = c_Camera.GetFrameBuffer()->GetColourAttachmentRendererID();
+
+            ImVec2 CursorScreenPos = ImGui::GetCursorScreenPos();
+            c_Camera.SetViewportPosition({ CursorScreenPos.x, CursorScreenPos.y });
             ImGui::Image((ImTextureID)rID, ImVec2{ (float)ViewportSize.x, (float)ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-        
+            
+
             if (ImGui::BeginDragDropTarget())
             {
                 const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload("PREFAB_ASSET_DRAG");
@@ -237,11 +232,27 @@ namespace PrefabEditor {
         Renderer::ShowRuntimeStatsWindow();
     }
 
-    Input::Filter Editor::OnInputEvent(const InputEvent& inputEvent, bool Processed)
+    Input::Filter Editor::OnInputEvent(InputEvent inputEvent, bool Processed)
     {
         if (ViewportFocused)
+        {
+            if (inputEvent.InputType == Input::Type::Mouse)
+            {
+                auto& Camera = ActiveEditorScene->LinkedScene->GetActiveCamera();
+                auto& c_Camera = Camera.GetComponent<CameraComponent>();
+
+                Viewport viewport = c_Camera.GetViewport();
+                inputEvent.Position -= Vector3(viewport.Position, 0.f);
+
+                if (inputEvent.Position.x > viewport.Size.x || inputEvent.Position.y > viewport.Size.y || inputEvent.Position.x < 0 || inputEvent.Position.y < 0)
+                {
+                    return Input::Filter::Ignore;
+                }
+            }
+
             return ActiveEditorScene->ActiveCameraScript->OnInputEvent(inputEvent, Processed);
-    
+        }
+
         return Input::Filter::Ignore;
     }
 

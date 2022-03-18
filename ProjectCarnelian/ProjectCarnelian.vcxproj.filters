@@ -38,12 +38,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\scripts\example.lua" />
-    <None Include="assets\core_scripts\scene_binding.lua" />
-    <None Include="assets\core_scripts\entity_binding.lua" />
-    <None Include="assets\core_scripts\global_environment.lua" />
-    <None Include="assets\scripts\Core\PlayerController.lua" />
+    <None Include="srcassets\scripts\scene_binding.lua" />
+    <None Include="srcassets\scripts\entity_binding.lua" />
+    <None Include="srcassets\scripts\global_environment.lua" />
+    <None Include="assets\scripts\Player\PlayerController.lua" />
     <None Include="assets\scripts\Core\CameraController.lua" />
-    <None Include="assets\scripts\Core\Global\Layer.lua" />
+    <None Include="assets\scripts\Core\Layers\Layer.lua" />
     <None Include="assets\scripts\test.lua" />
+    <None Include="assets\scripts\Modules\HumanoidPoses.lua" />
+    <None Include="assets\scripts\InterpolationTest.lua" />
+    <None Include="assets\shaders\circle.shader" />
   </ItemGroup>
 </Project>

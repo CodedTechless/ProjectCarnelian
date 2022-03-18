@@ -15,13 +15,11 @@ namespace fs = std::filesystem;
 
 namespace Techless
 {
-	std::unordered_map<std::string, Ptr<Sprite>> SpriteAtlas::SpriteCache{};
-	std::array<Ptr<Texture>, 8> SpriteAtlas::TexturePages{};
+	SpriteCache SpriteAtlas::m_SpriteCache{};
+	TextureAtlas SpriteAtlas::m_TextureAtlas{};
 
 	Ptr<Texture> SpriteAtlas::MissingTexture = nullptr;
 	Ptr<Sprite> SpriteAtlas::MissingSprite = nullptr;
-
-	unsigned int SpriteAtlas::TexturePageIndex = 0;
 
 	// Sprite Atlas
 
@@ -51,10 +49,15 @@ namespace Techless
 
 	void SpriteAtlas::Init()
 	{
-		Debug::Log("Loading textures...", "SpriteAtlas");
+		MissingTexture = CreatePtr<Texture>("srcassets/textures/missing_texture.png");
+		MissingSprite = CreatePtr<Sprite>(MissingTexture);
 
-		MissingTexture = CreatePtr<Texture>( "assets/missing_texture.png" );
-		MissingSprite = CreatePtr<Sprite>( MissingTexture );
+		SpriteAtlas::Load("srcassets");
+	}
+
+	void SpriteAtlas::Load(const std::string& Directory)
+	{
+		Debug::Log("Loading sprites from: " + Directory, "SpriteAtlas");
 
 		std::vector<TextureInfo> Textures;
 
@@ -71,15 +74,15 @@ namespace Techless
 				textureInfo.Name = Path.stem().string();
 
 				Textures.push_back(textureInfo);
-			});
+			}, Directory);
 		
-		auto MaxTextureSize = Renderer::GetMaxTextureSize();
+		int MaxTextureSize = Renderer::GetMaxTextureSize();
 
 		bool Success = false;
 		while (!Success)
 		{
 			auto* PageBuffer = AllocateBuffer(MaxTextureSize);
-			Debug::Log("Allocated a " + std::to_string(MaxTextureSize) + "x" + std::to_string(MaxTextureSize) + " texture page (" + std::to_string(MaxTextureSize * MaxTextureSize * 4) + " bytes)", "SpriteAtlas");
+			Debug::Log("Allocated a " + std::to_string(MaxTextureSize) + "x" + std::to_string(MaxTextureSize) + " texture page (" + std::to_string(MaxTextureSize * MaxTextureSize * 4) + " bytes)", "SpriteAtlas/" + Directory);
 
 			size_t TextureCount = Textures.size();
 
@@ -101,8 +104,18 @@ namespace Techless
 			stbrp_init_target(&NewContext, MaxTextureSize, MaxTextureSize, Nodes, TextureCount);
 			Success = stbrp_pack_rects(&NewContext, Rects, TextureCount);
 
-			auto newTexture = CreatePtr<Texture>(glm::i32vec2(MaxTextureSize, MaxTextureSize), 4);
-			TexturePages[TexturePageIndex++] = newTexture;
+			// if there's already an entry in the atlas, delete it so we can reload all of the related textures.
+			if (m_TextureAtlas.find(Directory) != m_TextureAtlas.end())
+			{
+				m_TextureAtlas[Directory].clear();
+			}
+			else
+			{
+				m_TextureAtlas[Directory] = {};
+			}
+
+			Ptr<Texture> newTexture = CreatePtr<Texture>(glm::i32vec2(MaxTextureSize, MaxTextureSize), 4);
+			m_TextureAtlas[Directory].push_back(newTexture);
 
 			for (TextureInfo& textureInfo : Textures)
 			{
@@ -127,7 +140,18 @@ namespace Techless
 					Vector2 TopLeft = { Rect.x, Rect.y };
 					Vector2 BottomRight = { (Rect.x + Rect.w), (Rect.y + Rect.h) };
 
-					SpriteCache[textureInfo.Name] = CreatePtr<Sprite>( newTexture, TopLeft, BottomRight, textureInfo.Name );
+					// if this sprite is already cached, then we just have to reload it.
+					if (m_SpriteCache.find(textureInfo.Name) != m_SpriteCache.end())
+					{
+						auto CachedSprite = m_SpriteCache[textureInfo.Name];
+						CachedSprite->SetTexture(newTexture);
+						CachedSprite->SetBounds(TopLeft, BottomRight);
+					}
+					else
+					// if it's not cached, then create a new sprite.
+					{
+						m_SpriteCache[textureInfo.Name] = CreatePtr<Sprite>(newTexture, TopLeft, BottomRight, textureInfo.Name);
+					}
 
 					stbi_image_free(textureInfo.Buffer);
 					textureInfo.Packed = true;
@@ -135,22 +159,20 @@ namespace Techless
 			}
 
 			newTexture->Push(PageBuffer);
-			TexturePageIndex++;
-
 			delete[] PageBuffer;
 		}
 	}
 
 	Ptr<Sprite> SpriteAtlas::Get(const std::string& Name)
 	{
-		if (SpriteCache.find(Name) != SpriteCache.end())
-			return SpriteCache[Name];
+		if (Has(Name))
+			return m_SpriteCache[Name];
 		
 		return MissingSprite;
 	}
 
 	bool SpriteAtlas::Has(const std::string& Name)
 	{
-		return SpriteCache.find(Name) != SpriteCache.end();
+		return m_SpriteCache.find(Name) != m_SpriteCache.end();
 	}
 }

@@ -8,7 +8,7 @@ namespace Techless
 	class ImGuiLayer : public Layer
 	{
 	public:
-		ImGuiLayer();
+		ImGuiLayer(const std::string& iniFileName = "imgui.ini");
 
 		void OnCreated();
 		void OnRemoved();
@@ -21,6 +21,8 @@ namespace Techless
 
 	private:
 		bool AbsorbInputs = true;
+
+		std::string IniFileName = "imgui.ini";
 	};
 
 

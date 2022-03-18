@@ -8,16 +8,19 @@ function EntityBinding.new(Scene, LinkedEntity) -- LightEntity is a C++ through-
 	self.LinkedEntity = LinkedEntity; -- wrapped type
 	self.ID = LinkedEntity.ID;
 
+	self.Parent = nil;
+	self.Children = {};
+
 	self.Scene = Scene;
 
 	self.self = self;
 
 	function self.AddComponent(ComponentName)
-		return self.Scene:ChangeComponent(self.LinkedEntity, ComponentName, QueryMode.Add);
+		return self.Scene:ChangeComponent(self.LinkedEntity, ComponentName, Enum.QueryMode.Add);
 	end
 
 	function self.RemoveComponent(ComponentName)
-		self.Scene:ChangeComponent(self.LinkedEntity, ComponentName, QueryMode.Remove);
+		self.Scene:ChangeComponent(self.LinkedEntity, ComponentName, Enum.QueryMode.Remove);
 	end
 
 	function self.GetComponent(ComponentName)
@@ -36,9 +39,18 @@ function EntityBinding.new(Scene, LinkedEntity) -- LightEntity is a C++ through-
 	function self.OnDestroy() end
 	function self.OnFixedUpdate(Delta) end
 	function self.OnUpdate(Delta) end
-	function self.OnInputEvent(InputEvent, Processed) return InputFilter.Ignore; end
+	function self.OnInputEvent(InputEvent, Processed) return Enum.InputFilter.Ignore; end
 	function self.OnWindowEvent(WindowEvent) end
 
+	function self.GetChildByTag(Name)
+		for _, v in next, self.Children do
+			local Tag = v.GetComponent("TagComponent");
+		
+			if Tag.Name == Name then
+				return v;
+			end
+		end
+	end
 
 	return self;
 end

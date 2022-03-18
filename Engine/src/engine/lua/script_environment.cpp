@@ -41,7 +41,8 @@ c++ does:
 namespace Techless
 {
 	static std::vector<std::string> AccessibleLibraries = { 
-		"print", "warn", "error", 
+		"print", "warn", "error",
+		"cprint", "cwarn", "cerror",
 		"math", "coroutine", "string", 
 		"require", "assert", "tostring", 
 		"tonumber", "pcall", "inspect",
@@ -52,7 +53,7 @@ namespace Techless
 
 	sol::state ScriptEnvironment::LuaVM{};
 
-	namespace ScriptEnvironmentLogger
+	namespace ScriptEnvironmentUtil
 	{
 
 		int LuaException(lua_State* L, sol::optional<const std::exception&> maybe_exception, sol::string_view description)
@@ -91,6 +92,18 @@ namespace Techless
 		{
 			Debug::Error(String, "Lua");
 		}
+
+		sol::object Require(const std::string& ModuleName)
+		{
+			sol::state& State = ScriptEnvironment::GetGlobalEnvironment();
+
+			if (State["Modules"][ModuleName] == sol::lua_nil)
+			{
+				State["Modules"][ModuleName] = ScriptEnvironment::GetCachedScript(ModuleName)();
+			}
+
+			return State["Modules"][ModuleName];
+		}
 	}
 
 	void ScriptEnvironment::End()
@@ -111,7 +124,7 @@ namespace Techless
 	// sets up the global environment and all the special functions dedicated to it and stuff and shit like that innit
 	void ScriptEnvironment::LoadGlobalEnvironment()
 	{
-		LuaVM.safe_script_file("assets/core_scripts/global_environment.lua", &sol::script_throw_on_error);
+		LuaVM.safe_script_file("srcassets/scripts/global_environment.lua", &sol::script_throw_on_error);
 		sol::protected_function RegisterComponentType = LuaVM["RegisterComponentType"];
 
 		// [COMPONENT ASSIGNMENT] LUA
@@ -145,8 +158,10 @@ namespace Techless
 	{
 		Debug::Log("Initialising Lua...", "ScriptEnvironment");
 
-		LuaVM.open_libraries(sol::lib::base, sol::lib::package, sol::lib::coroutine, sol::lib::string, sol::lib::math, sol::lib::table, sol::lib::utf8);
-		LuaVM.set_exception_handler(ScriptEnvironmentLogger::LuaException);
+		LuaVM.open_libraries(sol::lib::base, sol::lib::coroutine, sol::lib::string, sol::lib::math, sol::lib::table, sol::lib::utf8);
+		LuaVM.set_exception_handler(ScriptEnvironmentUtil::LuaException);
+
+		Debug::Log(LuaVM.get<std::string>("e"));
 
 		LuaVM.script(R"(
 			function ErrorHandler(string)
@@ -158,33 +173,37 @@ namespace Techless
 		sol::protected_function::set_default_handler(LuaVM["ErrorHandler"]);
 
 		// to-do: make these binaries/combine them with source :)
-		LuaVM.require_file("SceneBinding", "assets/core_scripts/scene_binding.lua", true, sol::load_mode::text);
-		LuaVM.require_file("EntityBinding", "assets/core_scripts/entity_binding.lua", true, sol::load_mode::text);
+		LuaVM.require_file("SceneBinding", "srcassets/scripts/scene_binding.lua", true, sol::load_mode::text);
+		LuaVM.require_file("EntityBinding", "srcassets/scripts/entity_binding.lua", true, sol::load_mode::text);
 
-		LuaVM.set_function("cprint", ScriptEnvironmentLogger::Log);
-		LuaVM.set_function("cwarn", ScriptEnvironmentLogger::Warn);
-		LuaVM.set_function("cerror", ScriptEnvironmentLogger::Error);
+		LuaVM["Modules"] = sol::new_table();
+
+		LuaVM.set_function("require", ScriptEnvironmentUtil::Require);
+		LuaVM.set_function("cprint", ScriptEnvironmentUtil::Log);
+		LuaVM.set_function("cwarn", ScriptEnvironmentUtil::Warn);
+		LuaVM.set_function("cerror", ScriptEnvironmentUtil::Error);
 
 		{
+			LuaVM["Enum"] = sol::new_table();
+			sol::table Enum = LuaVM["Enum"];
+			AccessibleLibraries.push_back("Enum");
+
 			// #### Integral Types / Enums ####
 
-			AccessibleLibraries.push_back("QueryMode");
-			LuaVM.new_enum<QueryMode>("QueryMode", 
+			Enum.new_enum<QueryMode>("QueryMode",
 				{
 					{ "Add", QueryMode::Add },
 					{ "Remove", QueryMode::Remove }
 				});
 
-			AccessibleLibraries.push_back("InputFilter");
-			LuaVM.new_enum<Input::Filter>("InputFilter",
+			Enum.new_enum<Input::Filter>("InputFilter",
 				{
 					{"Continue", Input::Filter::Continue},
 					{"Ignore", Input::Filter::Stop},
 					{"Stop", Input::Filter::Ignore}
 				});
 
-			AccessibleLibraries.push_back("InputState");
-			LuaVM.new_enum<Input::State>("InputState",
+			Enum.new_enum<Input::State>("InputState",
 				{
 					{"None", Input::State::None},
 					{"Begin", Input::State::Begin},
@@ -192,8 +211,7 @@ namespace Techless
 					{"End", Input::State::End}
 				});
 
-			AccessibleLibraries.push_back("InputType");
-			LuaVM.new_enum<Input::Type>("InputType",
+			Enum.new_enum<Input::Type>("InputType",
 				{
 					{"None", Input::Type::None},
 					{"Mouse", Input::Type::Mouse},
@@ -201,8 +219,7 @@ namespace Techless
 					{"Keyboard", Input::Type::Keyboard}
 				});
 
-			AccessibleLibraries.push_back("KeyCode");
-			LuaVM.new_enum<Input::KeyCode>("KeyCode",
+			Enum.new_enum<Input::KeyCode>("KeyCode",
 				{
 					{"Keypad4", Input::KeyCode::Keypad4},
 					{"KeypadAdd", Input::KeyCode::KeypadAdd},
@@ -327,8 +344,7 @@ namespace Techless
 					{"Num4", Input::KeyCode::Num4}
 				});
 
-			AccessibleLibraries.push_back("MouseCode");
-			LuaVM.new_enum<Input::MouseCode>("MouseCode", 
+			Enum.new_enum<Input::MouseCode>("MouseCode",
 				{
 					{ "Button6", Input::MouseCode::Button6 },
 					{ "Button3", Input::MouseCode::Button3 },
@@ -355,7 +371,9 @@ namespace Techless
 
 			AccessibleLibraries.push_back("LightApplication");
 			LuaVM.new_usertype<Application>("LightApplication",
-					sol::no_constructor
+					sol::no_constructor,
+
+					"SimulationRatio", sol::property( &Application::GetSimulationRatio )
 				);
 
 			AccessibleLibraries.push_back("InputEvent");
@@ -380,10 +398,18 @@ namespace Techless
 					"Focused", sol::readonly(&WindowEvent::Focused)
 				);
 
+			LuaVM.new_usertype<ZPlane>("ZPlane",
+					sol::no_constructor,
+					
+					"Near", &ZPlane::Near,
+					"Far", &ZPlane::Far
+				);
+
 		}
 
 		{
 			// #### Integral Types / Constructable ####
+
 
 			AccessibleLibraries.push_back("Vector2");
 			LuaVM.new_usertype<Vector2>("Vector2",
@@ -391,6 +417,9 @@ namespace Techless
 
 					"X", & Vector2::x,
 					"Y", & Vector2::y,
+
+					"Magnitude", [](Vector2& vec) { return glm::length(vec); },
+					"Abs", [](Vector2& vec) { return glm::abs(vec); },
 
 					sol::meta_function::addition, sol::overload(
 						[](Vector2 A, Vector2 B) -> Vector2 { return A + B; },
@@ -419,11 +448,14 @@ namespace Techless
 
 			AccessibleLibraries.push_back("Vector3");
 			LuaVM.new_usertype<Vector3>("Vector3",
-					sol::constructors<Vector3(), Vector3(float, float, float), Vector3(Vector2, float)>(),
+					sol::constructors<Vector3(), Vector3(float, float, float)>(),
 
 					"X", &Vector3::x,
 					"Y", &Vector3::y,
 					"Z", &Vector3::z,
+
+					"Magnitude", [](Vector3& vec) { return glm::length(vec); },
+					"Abs", [](Vector3& vec) { return glm::abs(vec); },
 
 					sol::meta_function::addition, sol::overload(
 						[](Vector3 A, Vector3 B) -> Vector3 { return A + B; },
@@ -451,12 +483,43 @@ namespace Techless
 
 			AccessibleLibraries.push_back("Vector4");
 			LuaVM.new_usertype<Vector4>("Vector4",
-					sol::constructors<Colour(), Colour(float, float, float, float)>(),
+					sol::constructors<Vector4(), Vector4(float, float, float, float)>(),
 					
-					"R", &Colour::r,
-					"G", &Colour::g,
-					"B", &Colour::b,
-					"A", &Colour::a
+					"X", &Vector4::x,
+					"Y", &Vector4::y,
+					"Z", &Vector4::z,
+					"W", &Vector4::w,
+
+					"R", &Vector4::r,
+					"G", &Vector4::g,
+					"B", &Vector4::b,
+					"A", &Vector4::a,
+
+					"Magnitude", [](Vector4& vec) { return glm::length(vec); },
+					"Abs", [](Vector4& vec) { return glm::abs(vec); },
+					
+					sol::meta_function::addition, sol::overload(
+						[](Vector4 A, Vector4 B) -> Vector4 { return A + B; },
+						[](Vector4 A, float B) -> Vector4 { return A + B; },
+						[](float A, Vector4 B) -> Vector4 { return A + B; }
+					),
+					sol::meta_function::subtraction, sol::overload(
+						[](Vector4 A, Vector4 B) -> Vector4 { return A - B; },
+						[](Vector4 A, float B) -> Vector4 { return A - B; },
+						[](float A, Vector4 B) -> Vector4 { return A - B; }
+					),
+					sol::meta_function::multiplication, sol::overload(
+						[](Vector4 A, Vector4 B) -> Vector4 { return A * B; },
+						[](Vector4 A, float B) -> Vector4 { return A * B; },
+						[](float A, Vector4 B) -> Vector4 { return A * B; }
+					),
+					sol::meta_function::division, sol::overload(
+						[](Vector4 A, Vector4 B) -> Vector4 { return A / B; },
+						[](Vector4 A, float B) -> Vector4 { return A / B; },
+						[](float A, Vector4 B) -> Vector4 { return A / B; }
+					),
+
+					sol::meta_function::unary_minus, [](Vector4 A) -> Vector4 { return -A; }
 				);
 
 			AccessibleLibraries.push_back("Prefab");
@@ -604,9 +667,10 @@ namespace Techless
 			AccessibleLibraries.push_back("SpriteComponent");
 			LuaVM.new_usertype<SpriteComponent>("SpriteComponent",
 				sol::no_constructor,
-				"TintColour", &SpriteComponent::SpriteColour,
-				"SetSprite", &SpriteComponent::SetSprite,
-				"GetSprite", &SpriteComponent::GetSprite
+
+				"Visible", &SpriteComponent::Visible,
+				"Colour", &SpriteComponent::SpriteColour,
+				"Sprite", sol::property(&SpriteComponent::GetSprite, &SpriteComponent::SetSprite)
 			);
 			
 			AccessibleLibraries.push_back("SpriteAnimatorComponent");
@@ -616,6 +680,8 @@ namespace Techless
 				"Frame", &SpriteAnimatorComponent::Frame,
 				"Paused", &SpriteAnimatorComponent::Paused,
 				"Play", &SpriteAnimatorComponent::Play,
+
+				"IsPlaying", &SpriteAnimatorComponent::IsPlaying,
 				
 				"AnimationSet", sol::property( &SpriteAnimatorComponent::GetAnimationSet , &SpriteAnimatorComponent::SetAnimationSet ),
 				"CurrentAnimation", sol::property( &SpriteAnimatorComponent::GetCurrentAnimation )
@@ -624,8 +690,16 @@ namespace Techless
 			AccessibleLibraries.push_back("CameraComponent");
 			LuaVM.new_usertype<CameraComponent>("CameraComponent",
 				sol::no_constructor,
-				"SetProjection", &CameraComponent::SetProjection,
-				"GetViewportResolution", &CameraComponent::GetViewportResolution
+
+				"ViewportPosition", sol::property( [](CameraComponent& comp) { return comp.GetViewport().Position; }, &CameraComponent::SetViewportPosition ),
+				"ViewportSize", sol::property( [](CameraComponent& comp) { return comp.GetViewport().Size; }, & CameraComponent::SetViewportSize ),
+
+				"Size", sol::property( &CameraComponent::GetOrthoSize, &CameraComponent::SetOrthoSize ),
+				"ZPlane", sol::property( &CameraComponent::GetOrthoZPlane, &CameraComponent::SetOrthoZPlane ),
+
+				"FramebufferEnabled", sol::property( &CameraComponent::IsFramebufferMode, &CameraComponent::SetFramebufferEnabled ),
+
+				"ScreenToWorldCoordinates", &CameraComponent::ScreenToWorldCoordinates
 			);
 
 			AccessibleLibraries.push_back("LuaScriptComponent");
@@ -639,6 +713,11 @@ namespace Techless
 				sol::no_constructor
 			);
 		}
+
+		AccessibleLibraries.push_back("Application");
+		LuaVM["Application"] = &Application::GetActiveApplication();
+		AccessibleLibraries.push_back("Window");
+		LuaVM["Window"] = Application::GetActiveApplication().GetActiveWindow();
 
 		LoadGlobalEnvironment();
 		
@@ -664,10 +743,7 @@ namespace Techless
 				Debug::Log("Loaded " + sPath + " to " + Name, "ScriptEnvironment");
 			});
 
-		AccessibleLibraries.push_back("Application");
-		LuaVM["Application"] = Application::GetActiveApplication();
-		AccessibleLibraries.push_back("Window");
-		LuaVM["Window"] = Application::GetActiveApplication().GetActiveWindow();
+
 
 		Debug::Log("Initialised Lua!", "ScriptEnvironment");
 	}

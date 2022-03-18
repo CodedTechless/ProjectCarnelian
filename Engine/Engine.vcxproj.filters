@@ -129,6 +129,9 @@
     <ClCompile Include="src\engine\application\resource_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\application\watchdog\imgui\panel\debug_panel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\dependencies\glm\detail\func_common.inl">
@@ -1535,6 +1538,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\engine\application\resource_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\application\watchdog\imgui\panel\debug_panel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

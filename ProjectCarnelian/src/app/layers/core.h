@@ -15,8 +15,8 @@ namespace Carnelian {
 		void OnUpdateFixed(const float Delta);
 		void OnUpdateEnd(const float Delta);
 
-		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
-		void OnWindowEvent(const WindowEvent& windowEvent);
+		Input::Filter OnInputEvent(InputEvent inputEvent, bool Processed);
+		void OnWindowEvent(WindowEvent windowEvent);
 
 	private:
 		Ptr<Scene> ActiveScene = nullptr;
@@ -26,6 +26,8 @@ namespace Carnelian {
 		
 		float UpdateRate;
 		float FixedUpdateRate;
+
+//		float SimRatio = 0.f;
 
 	private:
 		void BuildEnvironment();

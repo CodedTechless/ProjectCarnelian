@@ -30,7 +30,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\glew-2.1.0\lib\Release\x64;$(SolutionDir)Dependencies\GLFW\lib-vc2019</AdditionalLibraryDirectories>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\glew-2.1.0\lib\Release\x64;$(SolutionDir)Dependencies\GLFW\lib-vc2019;$(SolutionDir)Dependencies\lua-5.4.2;$(SolutionDir)lib\Debug</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>

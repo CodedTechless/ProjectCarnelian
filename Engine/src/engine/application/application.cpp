@@ -19,25 +19,26 @@ namespace Techless {
     RuntimeInfo Application::RuntimeData = {};
 
 
-    void Application::Init() 
+    void Application::Init(const std::string& ImGuiIniFileName)
     {
-
-
         assert(CurrentApplication == nullptr);
         CurrentApplication = this;
 
         Debug::Log("Starting engine...", "Application");
 
         aWindow = new Window(ApplicationTitle.c_str(), { 1280, 720 });
-        aWindow->SetVsyncEnabled(false);
+        aWindow->SetVsyncEnabled(true);
 
         Renderer::Init();
-        SpriteAtlas::Init();
         ScriptEnvironment::Init();
-        AnimationAtlas::Init();
+        SpriteAtlas::Init();
 
-        a_ImGuiLayer = new ImGuiLayer();
+        SpriteAtlas::Load("assets");
+        AnimationAtlas::Load("assets");
+
+        a_ImGuiLayer = new ImGuiLayer(ImGuiIniFileName);
         Layers.PushOverlay(a_ImGuiLayer);
+
     }
 
     void Application::End()
@@ -95,48 +96,40 @@ namespace Techless {
     {
         Running = true;
 
-        float StartTime = (float)glfwGetTime();
+        SimulationSpeed = 1.f / SimulationTickRate;
 
-        float Delta = 0.f;
         float Time = 0.f;
+        float CurrentTime = (float)glfwGetTime();
+        float Accumulator = 0.f;
 
-        float LastTime = StartTime;
-        float LastFixedTime = StartTime;
-        float Timer = LastTime;
-
-        unsigned int Frames = 0, Updates = 0;
+        size_t Frames = 0, Updates = 0;
 
         while (Running)
         {
-            Time = (float)glfwGetTime();
+            float NewTime = (float)glfwGetTime();
+            float FrameTime = std::min(NewTime - CurrentTime, 0.25f);
+            CurrentTime = NewTime;
 
-            float SimulationTime = (Time - LastFixedTime);
-            float FrameTime = (Time - LastTime);
+            Time += FrameTime;
+            Accumulator += FrameTime;
 
-            float FrameDelta = FrameTime / SimulationSpeed;
-            Delta += FrameDelta;
-
-
-            while (Delta >= 1.0)
+            while (Accumulator >= SimulationSpeed)
             {
-                RuntimeData.SimulationDelta = SimulationTime * 1000.f;
-
-                for (auto* Layer : Layers)
-                {
-                    Layer->OnUpdateFixed(SimulationTime);
-                }
-
-                for (auto* Layer : Layers) {
-                    Layer->OnUpdateFixedEnd(SimulationTime);
-                }
-
+                RuntimeData.SimulationDelta = Accumulator * 1000.f;
                 Updates++;
-                Delta -= 1;
 
-                LastFixedTime = Time;
+                for (Layer* a_Layer : Layers) {
+                    a_Layer->OnUpdateFixed(Accumulator);
+                }
+
+                for (Layer* a_Layer : Layers) {
+                    a_Layer->OnUpdateFixedEnd(Accumulator);
+                }
+
+                Accumulator -= SimulationSpeed;
             }
 
-            SimulationRatio = std::clamp(Delta, 0.f, 1.f);
+            SimulationRatio = Accumulator / SimulationSpeed;
 
             {
                 aWindow->Clear();
@@ -154,25 +147,24 @@ namespace Techless {
                 a_ImGuiLayer->End();
                 aWindow->Update();
             }
+                
+            size_t MemUsage = ScriptEnvironment::GetMemoryUsage();
+            RuntimeData.LuaMemoryUsage = MemUsage;
 
-            if (Time - Timer > 1.f)
+            if (Time > 1.f)
             {
-                ScriptEnvironment::Clean();
+                Time--;
 
-                Timer++;
+                if (MemUsage > 10000000)
+                    ScriptEnvironment::Clean();
 
                 RuntimeData.Framerate = Frames;
                 RuntimeData.SimulationRate = Updates;
-                
-                Frames = 0;
-                Updates = 0;
+
+                Frames = 0; Updates = 0;
             }
 
-            RuntimeData.LuaMemoryUsage = ScriptEnvironment::GetMemoryUsage();
-            
             RuntimeData.FrameDelta = FrameTime * 1000.f;
-
-            LastTime = Time;
         }
 
         

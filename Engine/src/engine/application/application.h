@@ -42,7 +42,7 @@ namespace Techless {
 		static RuntimeInfo& GetRuntimeData() { return RuntimeData; };
 
 	protected:
-		void Init();
+		void Init(const std::string& ImGuiIniFileName = "imgui.ini");
 		void Run();
 		void End();
 
@@ -54,8 +54,9 @@ namespace Techless {
 
 		ImGuiLayer* a_ImGuiLayer = nullptr;
 
+		uint SimulationTickRate = 30;
 		float SimulationRatio = 0.f;
-		float SimulationSpeed = 1.f / 60.f;
+		float SimulationSpeed = 1.f;
 
 	private:
 		static Application* CurrentApplication;

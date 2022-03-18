@@ -33,6 +33,9 @@ namespace Techless
 
 		static void RegisterEntity(int EnvironmentID, Entity* entity);
 		static void DeregisterEntity(int EnvironmentID, const std::string& entityID) { LuaVM.get<sol::protected_function>("DeregisterEntity")(EnvironmentID, entityID); };
+		
+		static void RegisterChild(int EnvironmentID, const std::string& ParentID, const std::string& ChildID) { LuaVM.get<sol::protected_function>("RegisterChild")(EnvironmentID, ParentID, ChildID); };
+		static void DeregisterChild(int EnvironmentID, const std::string& ParentID, const std::string& ChildID) { LuaVM.get<sol::protected_function>("DeregisterChild")(EnvironmentID, ParentID, ChildID); };
 
 		template<typename T>
 		static void RegisterComponent(int EnvironmentID, const std::string& EntityID, T* LinkedComponent) 
@@ -63,6 +66,9 @@ namespace Techless
 		{
 			return LuaVM.get<sol::protected_function>("GetSceneBinding")(EnvironmentID);
 		}
+
+		static inline LuaFunction GetCachedScript(const std::string& Name) { return CachedScripts[Name]; };
+		static sol::state& GetGlobalEnvironment() { return LuaVM; };
 
 	private:
 		static void LoadGlobalEnvironment();

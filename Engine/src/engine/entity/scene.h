@@ -24,7 +24,7 @@ namespace Techless
 		void Update(const float Delta);
 		void FixedUpdate(const float Delta);
 
-		Input::Filter OnInputEvent(const InputEvent& inputEvent, bool Processed);
+		Input::Filter OnInputEvent(InputEvent inputEvent, bool Processed);
 		void OnWindowEvent(const WindowEvent& windowEvent);
 
 

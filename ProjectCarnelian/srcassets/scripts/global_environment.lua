@@ -35,10 +35,10 @@ function print(...)
 end
 ]]
 
-_G.Scenes = {};
-_G.CurrentSceneAddress = 0;
+Scenes = {};
+CurrentSceneAddress = 0;
 
-_G.ComponentTypes = {};
+ComponentTypes = {};
 
 function RegisterScene(LightScene)
 	CurrentSceneAddress = CurrentSceneAddress + 1;
@@ -93,6 +93,32 @@ function DeregisterEntity(SceneID, LinkedEntityID)
 			break;
 		end
 	end
+end
+
+function RegisterChild(SceneID, ParentID, ChildID)
+	local BindedScene = Scenes[SceneID];
+
+	local Parent = BindedScene:GetEntityByID(ParentID);
+	local Child = BindedScene:GetEntityByID(ChildID);
+	table.insert(Parent.Children, Child);
+
+	Child.Parent = Parent;
+end
+
+function DeregisterChild(SceneID, ParentID, ChildID)
+	local BindedScene = Scenes[SceneID];
+
+	local Parent = BindedScene:GetEntityByID(ParentID);
+	local Child = BindedScene:GetEntityByID(ChildID);
+
+	for i, v in next, Parent.Children do
+		if v.ID == ChildID then
+			table.remove(Parent.Children, i);
+			break;
+		end
+	end
+
+	Child.Parent = nil;
 end
 
 function ResetEntity(SceneID, LightEntity)
