@@ -27,6 +27,8 @@ namespace Carnelian {
 		float UpdateRate;
 		float FixedUpdateRate;
 
+		bool DebugMode = false;
+
 //		float SimRatio = 0.f;
 
 	private:

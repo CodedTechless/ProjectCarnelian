@@ -11,8 +11,8 @@ namespace Techless {
 		VertexArray();
 		~VertexArray();
 
-		void SetIndexBuffer(const std::shared_ptr<IndexBuffer> iBuffer);
-		void PushVertexBuffer(const std::shared_ptr<VertexBuffer> vBuffer);
+		void SetIndexBuffer(const Ptr<IndexBuffer> iBuffer);
+		void PushVertexBuffer(const Ptr<VertexBuffer> vBuffer);
 
 //		void SetBufferLayout(const VertexBuffer& vBuffer, const VertexBufferLayout& Layout);
 //		VertexBufferLayout SetBufferLayout(const VertexBuffer& vBuffer, std::initializer_list<LayoutElement> LayoutInit);
@@ -21,8 +21,8 @@ namespace Techless {
 		void Unbind() const;
 
 	private:
-		std::shared_ptr<IndexBuffer> CurrentIndexBuffer;
-		std::vector<std::shared_ptr<VertexBuffer>> VertexBuffers;
+		Ptr<IndexBuffer> CurrentIndexBuffer;
+		std::vector<Ptr<VertexBuffer>> VertexBuffers;
 
 	private:
 		unsigned int CurrentBufferIndex = 0;

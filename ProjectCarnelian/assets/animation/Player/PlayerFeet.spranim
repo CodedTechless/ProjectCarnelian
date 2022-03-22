@@ -12,7 +12,7 @@
             ]
         },
         "Walking" : {
-            "FrameRate" : 3,
+            "FrameRate" : 4,
             "Looped" : true,
             "Frames" : [
                 {

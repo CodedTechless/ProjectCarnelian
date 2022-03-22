@@ -73,6 +73,8 @@ namespace Techless
 		Vector2 Size = { 0.f, 0.f };
 	};
 
+	using FLAGSET = std::unordered_map<std::string, bool>;
+
 	// json util
 
 	namespace JSONUtil

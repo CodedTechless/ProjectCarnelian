@@ -1,9 +1,7 @@
 
 
 #include <Engine.h>
-
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
+#include <scripts/world/world.hpp>
 
 #include "core.h"
 
@@ -36,7 +34,13 @@ namespace Carnelian
         SceneExplorer.SetSceneContext(ActiveScene);
         BuildEnvironment();
 
-        Renderer::SetClearColour(glm::vec4(0.1f, 0.1f, 0.1f, 1.f));
+        Renderer::SetClearColour({ 0.1f, 0.1f, 0.1f, 1.f });
+
+        auto& WorldObj = ActiveScene->CreateEntity("World");
+        WorldObj.Archivable = false;
+
+        auto& WorldScr = WorldObj.AddComponent<ScriptComponent>();
+        WorldScr.Bind<NativeScript::World>(WorldObj);
 	}
 
     void Core::OnUpdateFixed(const float Delta)
@@ -81,22 +85,25 @@ namespace Carnelian
     {
         GetFunction("OnUpdateEnd");
 
-        SceneExplorer.RenderImGuiElements();
-        SceneConsole.RenderImGuiElements();
+        if (DebugMode)
+        {
+            SceneExplorer.RenderImGuiElements();
+            SceneConsole.RenderImGuiElements();
 
-        /*ImGui::Begin("test");
-
-        SimRatio = Application::GetActiveApplication().GetSimulationRatio();
-
-        ImGui::Text(std::to_string(SimRatio).c_str()); 
-
-        ImGui::End();*/
-
-        Renderer::ShowRuntimeStatsWindow();
+            Renderer::ShowRuntimeStatsWindow();
+        }
     }
 
     Input::Filter Core::OnInputEvent(InputEvent inputEvent, bool Processed)
     {
+        if (inputEvent.InputType == Input::Type::Keyboard && inputEvent.InputState == Input::State::Begin)
+        {
+            if (inputEvent.KeyCode == Input::KeyCode::F3)
+            {
+                DebugMode = !DebugMode;
+            }
+        }
+
         Input::Filter res = GetFunction("OnInputEvent")(inputEvent, Processed);
 
         if (res == Input::Filter::Stop)

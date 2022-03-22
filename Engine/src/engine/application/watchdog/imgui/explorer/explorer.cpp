@@ -64,11 +64,6 @@ namespace Techless
                     Entity& DeliveryEntity = SceneContext->GetInstanceByID<Entity>(DeliveryEntityID);
                     DeliveryEntity.SetParent(entity);
 
-                    if (DeliveryEntity.GetParent() == entity)
-                        Debug::Log("Set parent of " + DeliveryEntity.GetID() + " to " + entity->GetID(), "PrefabEditor");
-                    else
-                        Debug::Log("Unable to set parent.", "PrefabEditor");
-
                     RequiresRefresh = true;
                 }
             }
@@ -287,6 +282,12 @@ namespace Techless
 
             });
 
+        RenderComponentProperties<YSortComponent>("Y-Sort", SelectedEntity,
+            [](YSortComponent& Component)
+            {
+
+            });
+
         RenderComponentProperties<SpriteComponent>("Sprite", SelectedEntity,
             [](SpriteComponent& Component)
             {
@@ -475,8 +476,9 @@ namespace Techless
 
         if (ImGui::BeginPopup("CreateComponent"))
         {
-            CreateMenuEntry<TransformComponent>("Transform");
             CreateMenuEntry<TagComponent>("Tag");
+            CreateMenuEntry<TransformComponent>("Transform");
+            CreateMenuEntry<YSortComponent>("Y-Sort");
 
             ImGui::Separator();
 
@@ -487,7 +489,7 @@ namespace Techless
 
             ImGui::Separator();
 
-            CreateMenuEntry<RigidBodyComponent>("Rigid Body");
+ //           CreateMenuEntry<RigidBodyComponent>("Rigid Body");
             //CreateMenuEntry<BoxColliderComponent>("Box Collider");
 
             ImGui::Separator();

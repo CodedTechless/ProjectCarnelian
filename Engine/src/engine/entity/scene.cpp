@@ -108,7 +108,8 @@ namespace Techless
 		// Assign all of the relevant components!
 		AssignComponents<TagComponent>				(*this, Entities, prefab);
 		AssignComponents<TransformComponent>		(*this, Entities, prefab);
-		AssignComponents<RigidBodyComponent>		(*this, Entities, prefab);
+		AssignComponents<YSortComponent>			(*this, Entities, prefab);
+//		AssignComponents<RigidBodyComponent>		(*this, Entities, prefab);
 		AssignComponents<SpriteComponent>			(*this, Entities, prefab);
 		AssignComponents<SpriteAnimatorComponent>	(*this, Entities, prefab);
 		AssignComponents<CameraComponent>			(*this, Entities, prefab);
@@ -148,9 +149,9 @@ namespace Techless
 		{
 			auto& c_Camera = ActiveCamera->GetComponent<CameraComponent>();
 
-			Viewport viewport = c_Camera.GetViewport();
-			inputEvent.Position -= Vector3(c_Camera.GetViewport().Position, 0.f);
+			inputEvent.Position = c_Camera.ScreenToViewportCoordinates(inputEvent.Position);
 
+			Viewport viewport = c_Camera.GetViewport();
 			if (inputEvent.Position.x > viewport.Size.x || inputEvent.Position.y > viewport.Size.y || inputEvent.Position.x < 0 || inputEvent.Position.y < 0)
 			{
 				return Input::Filter::Ignore;
@@ -227,12 +228,6 @@ namespace Techless
 				Transform.ForceInterpolationUpdate();
 			});
 
-		SceneRegistry.View<RigidBodyComponent>(
-			[](RigidBodyComponent& RigidBody)
-			{
-
-			});
-
 		if (FLAG_ScriptExecutionEnabled)
 		{
 
@@ -256,18 +251,6 @@ namespace Techless
 
 	void Scene::Update(float Delta)
 	{
-
-		if (FLAG_ScriptExecutionEnabled)
-		{
-			SceneRegistry.View<ScriptComponent>(
-				[&](ScriptComponent& Script)
-				{
-					Script.Instance->OnUpdate(Delta);
-				});
-
-			ScriptEnvironment::CallScene(SceneLuaID, "OnUpdate", Delta);
-		}
-
 		// Sprite Rendering
 		
 		if (!ActiveCamera) return;
@@ -294,6 +277,17 @@ namespace Techless
 		
 		Renderer::Begin(cam_Camera.GetProjection(), cam_Camera.GetTransform(cam_Transform.GetGlobalPosition()));
 
+		if (FLAG_ScriptExecutionEnabled)
+		{
+			SceneRegistry.View<ScriptComponent>(
+				[&](ScriptComponent& Script)
+				{
+					Script.Instance->OnUpdate(Delta);
+				});
+
+			ScriptEnvironment::CallScene(SceneLuaID, "OnUpdate", Delta);
+		}
+
 		{
 			std::vector<SceneRenderInfo> SceneSprites{};
 
@@ -318,7 +312,7 @@ namespace Techless
 
 			for (SceneRenderInfo& renderInfo : SceneSprites)
 			{
-				Renderer::DrawSprite(renderInfo.SpritePtr->GetSprite(), renderInfo.TransformPtr->GetGlobalTransform(), renderInfo.SpritePtr->SpriteColour);
+				Renderer::DrawSpriteExt(renderInfo.SpritePtr->GetSprite(), renderInfo.TransformPtr->GetGlobalTransform(), renderInfo.SpritePtr->SpriteColour);
 			}
 		}
 

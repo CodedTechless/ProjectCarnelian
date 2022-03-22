@@ -38,7 +38,7 @@ namespace Techless
 
 	void ImGuiLayer::OnRemoved()
 	{
-		Debug::Log("Cleaned up ImGuiLayer");
+//		Debug::Log("Cleaned up ImGuiLayer");
 		ImGui::SaveIniSettingsToDisk(IniFileName.c_str());
 
 		ImGui_ImplOpenGL3_Shutdown();

@@ -273,6 +273,10 @@
   <ItemGroup>
     <ClInclude Include="src\engine\application\resource_loader.h" />
     <ClInclude Include="src\engine\application\watchdog\imgui\panel\debug_panel.h" />
+    <ClInclude Include="src\engine\entity\types\components_base.h" />
+    <ClInclude Include="src\engine\entity\types\components_phys.h" />
+    <ClInclude Include="src\engine\entity\types\components_script.h" />
+    <ClInclude Include="src\engine\entity\types\components_visual.h" />
     <ClInclude Include="src\engine\entity\serialiser\serialiser.h" />
     <ClInclude Include="src\engine\lua\scriptable_lua_entity.hpp" />
     <ClInclude Include="src\engine\lua\script_environment.h" />

@@ -12,7 +12,7 @@ namespace Techless {
 		glDeleteVertexArrays(1, &RendererID);
 	}
 
-	void VertexArray::SetIndexBuffer(const std::shared_ptr<IndexBuffer> iBuffer)
+	void VertexArray::SetIndexBuffer(const Ptr<IndexBuffer> iBuffer)
 	{
 		Bind();
 		iBuffer->Bind();
@@ -20,7 +20,7 @@ namespace Techless {
 		CurrentIndexBuffer = iBuffer;
 	}
 
-	void VertexArray::PushVertexBuffer(const std::shared_ptr<VertexBuffer> vBuffer)
+	void VertexArray::PushVertexBuffer(const Ptr<VertexBuffer> vBuffer)
 	{
 		Bind();
 		vBuffer->Bind(); // the arrays are now linked. apply the attributes and stuff

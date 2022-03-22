@@ -1543,5 +1543,17 @@
     <ClInclude Include="src\engine\application\watchdog\imgui\panel\debug_panel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\engine\entity\types\components_phys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\entity\types\components_visual.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\entity\types\components_script.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\engine\entity\types\components_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -52,13 +52,14 @@ namespace Techless
 
 			// [COMPONENT ASSIGNMENT]
 
-			s.AssignComponent <TagComponent>("Tag");
-			s.AssignComponent <TransformComponent>("Transform");
-			s.AssignComponent <RigidBodyComponent>("RigidBody");
-			s.AssignComponent <SpriteComponent>("Sprite");
-			s.AssignComponent <SpriteAnimatorComponent>("SpriteAnimator");
-			s.AssignComponent <CameraComponent>("Camera");
-			s.AssignComponent <LuaScriptComponent>("LuaScript");
+			s.AssignComponent <TagComponent>			("Tag");
+			s.AssignComponent <TransformComponent>		("Transform");
+			s.AssignComponent <YSortComponent>			("YSort");
+//			s.AssignComponent <RigidBodyComponent>		("RigidBody");
+			s.AssignComponent <SpriteComponent>			("Sprite");
+			s.AssignComponent <SpriteAnimatorComponent>	("SpriteAnimator");
+			s.AssignComponent <CameraComponent>			("Camera");
+			s.AssignComponent <LuaScriptComponent>		("LuaScript");
 		}
 
 		// serialise all children
@@ -140,7 +141,8 @@ namespace Techless
 
 			s.AssignComponent <TagComponent>("Tag");
 			s.AssignComponent <TransformComponent>("Transform");
-			s.AssignComponent <RigidBodyComponent>("RigidBody");
+			s.AssignComponent <YSortComponent>("YSort");
+//			s.AssignComponent <RigidBodyComponent>("RigidBody");
 			s.AssignComponent <SpriteComponent>("Sprite");
 			s.AssignComponent <SpriteAnimatorComponent>("SpriteAnimator");
 			s.AssignComponent <CameraComponent>("Camera");

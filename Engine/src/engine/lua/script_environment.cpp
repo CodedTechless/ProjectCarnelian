@@ -46,7 +46,7 @@ namespace Techless
 		"math", "coroutine", "string", 
 		"require", "assert", "tostring", 
 		"tonumber", "pcall", "inspect",
-		"bool_tonumber", "sign"
+		"bool_tonumber", "sign", "type"
 	};
 
 	std::unordered_map<std::string, LuaFunction> ScriptEnvironment::CachedScripts{};
@@ -130,7 +130,8 @@ namespace Techless
 		// [COMPONENT ASSIGNMENT] LUA
 		RegisterComponentType(TYPEID_STRING(TagComponent), "TagComponent");
 		RegisterComponentType(TYPEID_STRING(TransformComponent), "TransformComponent");
-		RegisterComponentType(TYPEID_STRING(RigidBodyComponent), "RigidBodyComponent");
+		RegisterComponentType(TYPEID_STRING(YSortComponent), "TransformComponent");
+//		RegisterComponentType(TYPEID_STRING(RigidBodyComponent), "RigidBodyComponent");
 		RegisterComponentType(TYPEID_STRING(SpriteComponent), "SpriteComponent");
 		RegisterComponentType(TYPEID_STRING(SpriteAnimatorComponent), "SpriteAnimatorComponent");
 		RegisterComponentType(TYPEID_STRING(CameraComponent), "CameraComponent");
@@ -151,17 +152,13 @@ namespace Techless
 		}
 		*/
 
-		Debug::Log("Loaded global environment!", "ScriptEnvironment");
+		//Debug::Log("Loaded global environment!", "ScriptEnvironment");
 	}
 
 	void ScriptEnvironment::Init()
 	{
-		Debug::Log("Initialising Lua...", "ScriptEnvironment");
-
 		LuaVM.open_libraries(sol::lib::base, sol::lib::coroutine, sol::lib::string, sol::lib::math, sol::lib::table, sol::lib::utf8);
 		LuaVM.set_exception_handler(ScriptEnvironmentUtil::LuaException);
-
-		Debug::Log(LuaVM.get<std::string>("e"));
 
 		LuaVM.script(R"(
 			function ErrorHandler(string)
@@ -418,8 +415,8 @@ namespace Techless
 					"X", & Vector2::x,
 					"Y", & Vector2::y,
 
-					"Magnitude", [](Vector2& vec) { return glm::length(vec); },
-					"Abs", [](Vector2& vec) { return glm::abs(vec); },
+					"Magnitude", sol::property([](Vector2& vec) { return glm::length(vec); }),
+					"Abs", sol::property([](Vector2& vec) { return glm::abs(vec); }),
 
 					sol::meta_function::addition, sol::overload(
 						[](Vector2 A, Vector2 B) -> Vector2 { return A + B; },
@@ -454,8 +451,8 @@ namespace Techless
 					"Y", &Vector3::y,
 					"Z", &Vector3::z,
 
-					"Magnitude", [](Vector3& vec) { return glm::length(vec); },
-					"Abs", [](Vector3& vec) { return glm::abs(vec); },
+					"Magnitude", sol::property([](Vector3& vec) { return glm::length(vec); }),
+					"Abs", sol::property([](Vector3& vec) { return glm::abs(vec); }),
 
 					sol::meta_function::addition, sol::overload(
 						[](Vector3 A, Vector3 B) -> Vector3 { return A + B; },
@@ -495,8 +492,8 @@ namespace Techless
 					"B", &Vector4::b,
 					"A", &Vector4::a,
 
-					"Magnitude", [](Vector4& vec) { return glm::length(vec); },
-					"Abs", [](Vector4& vec) { return glm::abs(vec); },
+					"Magnitude", sol::property( [](Vector4& vec) { return glm::length(vec); } ),
+					"Abs", sol::property( [](Vector4& vec) { return glm::abs(vec); } ),
 					
 					sol::meta_function::addition, sol::overload(
 						[](Vector4 A, Vector4 B) -> Vector4 { return A + B; },
@@ -656,13 +653,13 @@ namespace Techless
 				"SetEngineInterpolationEnabled", &TransformComponent::SetEngineInterpolation
 			);
 
-			AccessibleLibraries.push_back("RigidBodyComponent");
+/*			AccessibleLibraries.push_back("RigidBodyComponent");
 			LuaVM.new_usertype<RigidBodyComponent>("RigidBodyComponent",
 				sol::no_constructor,
 				"Velocity", &RigidBodyComponent::Velocity,
 				"GroundFriction", &RigidBodyComponent::GroundFriction,
 				"AirFriction", &RigidBodyComponent::AirFriction
-			);
+			);*/
 
 			AccessibleLibraries.push_back("SpriteComponent");
 			LuaVM.new_usertype<SpriteComponent>("SpriteComponent",
@@ -699,7 +696,7 @@ namespace Techless
 
 				"FramebufferEnabled", sol::property( &CameraComponent::IsFramebufferMode, &CameraComponent::SetFramebufferEnabled ),
 
-				"ScreenToWorldCoordinates", &CameraComponent::ScreenToWorldCoordinates
+				"ScreenToViewportCoordinates", &CameraComponent::ScreenToViewportCoordinates
 			);
 
 			AccessibleLibraries.push_back("LuaScriptComponent");
@@ -710,6 +707,11 @@ namespace Techless
 
 			AccessibleLibraries.push_back("ScriptComponent");
 			LuaVM.new_usertype<ScriptComponent>("ScriptComponent", 
+				sol::no_constructor
+			);
+
+			AccessibleLibraries.push_back("YSortComponent");
+			LuaVM.new_usertype<YSortComponent>("YSortComponent",
 				sol::no_constructor
 			);
 		}
@@ -740,7 +742,7 @@ namespace Techless
 					return;
 				}
 
-				Debug::Log("Loaded " + sPath + " to " + Name, "ScriptEnvironment");
+				//Debug::Log("Loaded " + sPath + " to " + Name, "ScriptEnvironment");
 			});
 
 

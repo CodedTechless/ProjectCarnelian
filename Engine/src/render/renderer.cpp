@@ -67,7 +67,6 @@ namespace Techless
 
 	void Renderer::InitOpenGL()
 	{
-		Debug::Log("Initialising OpenGL...", "Renderer");
 
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -85,12 +84,12 @@ namespace Techless
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glMaxTextureSize);
 		MaxTextureSize = std::min((int)glMaxTextureSize, 2048);
 
-		Debug::Log("MaxTextureSize: " + std::to_string(MaxTextureSize) + " (" + std::to_string(glMaxTextureSize) + ")", "Renderer");
+//		Debug::Log("MaxTextureSize: " + std::to_string(MaxTextureSize) + " (" + std::to_string(glMaxTextureSize) + ")", "Renderer");
 	}
 
 	void Renderer::Init()
 	{
-		Debug::Log("Initialising renderer...", "Renderer");
+		Debug::Log("Initialising Renderer (Profile: OpenGL)", "Renderer");
 		InitOpenGL();
 
 		// Create the vertex array which will hold attribute information for our batch vertex buffer and index buffer.
@@ -166,18 +165,28 @@ namespace Techless
 	// Quad Rendering //
 	////////////////////
 
-	void Renderer::DrawQuad(const Vector3& Position, const Vector2& Size, float Orientation, const Colour& colour)
+	void Renderer::DrawQuad(const Vector3& Position, const Vector2& Scale, float Orientation, const Colour& colour)
 	{
 		Mat4x4 Transform = 
 			glm::translate(Mat4x4(1.0f), Position)
 			* glm::rotate(Mat4x4(1.0f), glm::radians(Orientation), Vector3(0.f, 0.f, 1.f))
-			* glm::scale(Mat4x4(1.0f), Vector3(Size.x, Size.y, 1.f));
+			* glm::scale(Mat4x4(1.0f), Vector3(Scale.x, Scale.y, 1.f));
 
 		Vector2 TexCoords[] = { { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f } };
 		DrawTexturedQuad(RendererData.ActiveTextures[0], TexCoords, Transform, colour);
 	}
 
-	void Renderer::DrawSprite(Ptr<Sprite> sprite, const Mat4x4& Transform, const Colour& colour)
+	void Renderer::DrawSprite(Ptr<Sprite> sprite, const Vector3& Position, const Vector2& Scale, float Orientation, const Colour& colour)
+	{
+		Mat4x4 Transform =
+			glm::translate(Mat4x4(1.0f), Position)
+			* glm::rotate(Mat4x4(1.0f), glm::radians(Orientation), Vector3(0.f, 0.f, 1.f))
+			* glm::scale(Mat4x4(1.0f), Vector3(Scale.x, Scale.y, 1.f));
+
+		DrawSpriteExt(sprite, Transform, colour);
+	}
+
+	void Renderer::DrawSpriteExt(Ptr<Sprite> sprite, const Mat4x4& Transform, const Colour& colour)
 	{
 		auto texture = sprite->GetTexture();
 		auto SpriteBounds = sprite->GetAbsoluteBounds();

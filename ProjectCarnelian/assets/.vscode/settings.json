@@ -1,9 +1,28 @@
 {
     "Lua.diagnostics.globals": [
         "bool_tonumber",
-        "QueryMode"
+        "QueryMode",
+        "GetChildByTag",
+        "Vector3",
+        "GetComponent",
+        "Scene",
+        "self",
+        "Vector2",
+        "Enum",
+        "Input",
+        "sign",
+        "Window",
+        "cprint",
+        "PrefabAtlas",
+        "Vector4",
+        "inspect",
+        "ID",
+        "AddComponent",
+        "SpriteAtlas",
+        "Application",
+        "table.copy"
     ],
     "Lua.diagnostics.disable": [
-        "undefined-global"
-    ]
+        "lowercase-global"
+    ],
 }

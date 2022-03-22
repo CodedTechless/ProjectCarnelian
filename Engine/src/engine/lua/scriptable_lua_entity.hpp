@@ -66,7 +66,8 @@ namespace Techless
 
 			DefineQuery(TagComponent);
 			DefineQuery(TransformComponent);
-			DefineQuery(RigidBodyComponent);
+			DefineQuery(YSortComponent);
+//			DefineQuery(RigidBodyComponent);
 			DefineQuery(SpriteComponent);
 			DefineQuery(SpriteAnimatorComponent);
 			DefineQuery(CameraComponent);

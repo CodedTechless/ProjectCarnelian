@@ -24,7 +24,7 @@ namespace Techless
 		Deserialiser deserialiser = { FilePath, Name };
 		Prefabs[Name] = deserialiser.Deserialise();
 
-		Debug::Log("Loaded prefab " + Name, "PrefabAtlas");
+//		Debug::Log("Loaded prefab " + Name, "PrefabAtlas");
 
 		return Prefabs[Name];
 	}

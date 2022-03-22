@@ -71,6 +71,15 @@ namespace PrefabEditor {
         ActiveEditorScene->LinkedScene->Update(Delta);
         
         UpdateRate = Delta;
+
+        if (ActiveEditorScene->SelectedEntity && ActiveEditorScene->SelectedEntity->HasComponent<TransformComponent>())
+        {
+            auto& entity = ActiveEditorScene->SelectedEntity;
+            auto& Transform = entity->GetComponent<TransformComponent>();
+            
+            Renderer::DrawQuad(Transform.GetGlobalPosition(), { 5.f, 5.f }, 0.f, { 1.f, 1.f, 1.f, 0.5f });
+        }
+
     }
 
     void Editor::OnUpdateEnd(const float Delta)
@@ -238,12 +247,10 @@ namespace PrefabEditor {
         {
             if (inputEvent.InputType == Input::Type::Mouse)
             {
-                auto& Camera = ActiveEditorScene->LinkedScene->GetActiveCamera();
-                auto& c_Camera = Camera.GetComponent<CameraComponent>();
+                auto& c_Camera = ActiveEditorScene->LinkedScene->GetActiveCamera().GetComponent<CameraComponent>();
+                inputEvent.Position = c_Camera.ScreenToViewportCoordinates(inputEvent.Position);
 
                 Viewport viewport = c_Camera.GetViewport();
-                inputEvent.Position -= Vector3(viewport.Position, 0.f);
-
                 if (inputEvent.Position.x > viewport.Size.x || inputEvent.Position.y > viewport.Size.y || inputEvent.Position.x < 0 || inputEvent.Position.y < 0)
                 {
                     return Input::Filter::Ignore;

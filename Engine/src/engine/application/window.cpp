@@ -49,7 +49,7 @@ namespace Techless
         if (glewInit() != GLEW_OK)
             assert(false);
 
-        Debug::Log("Created window context (" + std::to_string(aSize.x) + ", " + std::to_string(aSize.y) + ")", "Window");
+        Debug::Log("Created window (" + std::to_string(aSize.x) + ", " + std::to_string(aSize.y) + ")", "Application");
 
         // Set up all the input callbacks.
         UserPointerInfo* userPointerInfo = new UserPointerInfo({ &Application::GetActiveApplication(), this });

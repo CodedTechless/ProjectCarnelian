@@ -32,8 +32,9 @@ namespace Techless {
 		static void Init();
 		static void InitOpenGL();
 
-		static void DrawQuad(const Vector3& Position, const Vector2& Scale, float Orientation = 1.f, const Colour& colour = { 1.f, 1.f, 1.f, 1.f });
-		static void DrawSprite(Ptr<Sprite> sprite, const Mat4x4& Transform, const Colour& colour = { 1.f, 1.f, 1.f, 1.f });
+		static void DrawQuad(const Vector3& Position, const Vector2& Scale, float Orientation = 0.f, const Colour& colour = { 1.f, 1.f, 1.f, 1.f });
+		static void DrawSprite(Ptr<Sprite> sprite, const Vector3& Transform, const Vector2& Scale = { 1.f , 1.f }, float Orientation = 0.f, const Colour& colour = { 1.f, 1.f, 1.f, 1.f });
+		static void DrawSpriteExt(Ptr<Sprite> sprite, const Mat4x4& Transform, const Colour& colour = { 1.f, 1.f, 1.f, 1.f });
 		static void DrawTexturedQuad(Ptr<Texture> Tex, const Vector2 TexCoords[4], const Mat4x4& Transform, const Colour& colour = { 1.f, 1.f, 1.f, 1.f });
 
 		static void DrawQuadArray(Ptr<Texture> Tex, const Vector2 TexCoords[4], Quad* QuadArray, unsigned int Count);

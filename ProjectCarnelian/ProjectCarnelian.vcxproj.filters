@@ -27,6 +27,9 @@
     <ClInclude Include="src\app\native_scripts\scriptindex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\scripts\world\world.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app\layers\core.cpp">
@@ -48,5 +51,11 @@
     <None Include="assets\scripts\Modules\HumanoidPoses.lua" />
     <None Include="assets\scripts\InterpolationTest.lua" />
     <None Include="assets\shaders\circle.shader" />
+    <None Include="assets\scripts\Modules\Containers\Container.lua" />
+    <None Include="assets\scripts\Modules\Items\Item.lua" />
+    <None Include="assets\scripts\Modules\Poses\EyePoses.lua" />
+    <None Include="assets\scripts\NPC\Eli.lua" />
+    <None Include="assets\scripts\Modules\Items\ItemIndex.lua" />
+    <None Include="assets\scripts\Modules\Containers\ContainerItem.lua" />
   </ItemGroup>
 </Project>

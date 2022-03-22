@@ -54,10 +54,9 @@ namespace Techless
 		}
 
 	public:
-
 		void SetScriptExecutionEnabled(bool Mode) { FLAG_ScriptExecutionEnabled = Mode; };
-
 		inline bool IsScriptExecutionEnabled() const { return FLAG_ScriptExecutionEnabled; };
+		
 		inline int GetLuaID() const { return SceneLuaID; };
 
 	private:

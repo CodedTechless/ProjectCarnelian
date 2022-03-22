@@ -82,7 +82,7 @@ namespace Techless
 		while (!Success)
 		{
 			auto* PageBuffer = AllocateBuffer(MaxTextureSize);
-			Debug::Log("Allocated a " + std::to_string(MaxTextureSize) + "x" + std::to_string(MaxTextureSize) + " texture page (" + std::to_string(MaxTextureSize * MaxTextureSize * 4) + " bytes)", "SpriteAtlas/" + Directory);
+//			Debug::Log("Allocated a " + std::to_string(MaxTextureSize) + "x" + std::to_string(MaxTextureSize) + " texture page (" + std::to_string(MaxTextureSize * MaxTextureSize * 4) + " bytes)", "SpriteAtlas/" + Directory);
 
 			size_t TextureCount = Textures.size();
 

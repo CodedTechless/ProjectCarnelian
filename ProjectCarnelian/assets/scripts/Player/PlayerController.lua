@@ -1,8 +1,31 @@
 
+local Container = require("Container");
+local Item = require("Item");
 
-WalkSpeedMax = 125;
-WalkAccel = WalkSpeedMax * 12;
-WalkFriction = WalkAccel * 1.2;
+-- Player
+
+LinkedEli = nil
+Inventory = Container.new(5);
+
+Inventory:Add(Item.new("TestItem"), 9);
+Inventory:Add(Item.new("TestItem"), 5);
+Inventory:Add(Item.new("TestItem2"), 20);
+Inventory:Add(Item.new("TestItem"), 15);
+
+Inventory:ForEach(function(ContainerItemObject, index)
+    if (type(ContainerItemObject) == "table") then
+        print(index, ContainerItemObject.Item.ID, ContainerItemObject.Quantity);
+    else
+        print(index, "Empty");
+    end
+end)
+
+
+-- Movement
+
+MoveMaxVelocity = 125;
+MoveAcceleration = MoveMaxVelocity * 8;
+MoveDeceleration = MoveAcceleration * 1.3;
 
 Velocity = Vector2.new();
 
@@ -25,14 +48,17 @@ local function Approach(Value, Approach, Amount)
 	end
 end
 
-local function CalculateFriction(Direction, OldComponent, MaxSpeed)
+local function CalculateFriction(Delta, Direction, DirectionNormal, Component, ComponentNormalised)
+    local NormalisedMaxSpeed = MoveMaxVelocity * math.abs(DirectionNormal);
+    local NormalisedDeceleration = MoveDeceleration * math.abs(ComponentNormalised);
+    
 	if Direction == 0 then
-		OldComponent = Approach(OldComponent, 0, WalkFriction);
-	elseif math.abs(OldComponent) > math.abs(MaxSpeed) then
-		OldComponent = Approach(OldComponent, MaxSpeed * sign(OldComponent), WalkFriction * 3);
+		Component = Approach(Component, 0, NormalisedDeceleration * Delta);
+	elseif math.abs(Component) > NormalisedMaxSpeed then
+		Component = Approach(Component, NormalisedMaxSpeed * sign(Component), NormalisedDeceleration * 3 * Delta);
 	end
 
-	return OldComponent;
+	return Component;
 end
 
 -- Inputs --
@@ -50,11 +76,14 @@ end
 
 -- Visuals --
 
+local EyePoses = require("EyePoses");
+
 local function UpdatePose()
-	local Legs = GetChildByTag("Legs");
+	local Model = GetChildByTag("Model")
+	local Legs = Model.GetChildByTag("Legs");
 	local LegsAnim = Legs.GetComponent("SpriteAnimatorComponent");
 
-	if MoveDirection:Magnitude() > 0 then
+	if MoveDirection.Magnitude > 0 then
 		if not LegsAnim:IsPlaying("Walking") then
 			LegsAnim:Play("Walking");
 
@@ -68,44 +97,13 @@ local function UpdatePose()
 		end
 	end
 	
-	local Body = GetChildByTag("Body")
-	local BodyAnim = Body.GetComponent("SpriteAnimatorComponent")
-
+	local Body = Model.GetChildByTag("Body")
 	local Face = Body.GetChildByTag("FaceAttachment");
-	local Transform = Face.GetComponent("TransformComponent");
-
-	local RightEye = Face.GetChildByTag("RightEye");
-	local LeftEye = Face.GetChildByTag("LeftEye");
-
-	local RightEyeSprite = RightEye.GetComponent("SpriteComponent");
-	local LeftEyeSprite = LeftEye.GetComponent("SpriteComponent");
-
-	LeftEyeSprite.Visible = true;
-	RightEyeSprite.Visible = true;
 	
-	local FinalEyePosition = Vector2.new();
-
-	if MoveInputAngleLast > -math.pi * 0.125 and MoveInputAngleLast <= math.pi * 0.125 then
-		FinalEyePosition = Vector2.new(2, -2);
-	elseif MoveInputAngleLast > math.pi * 0.125 and MoveInputAngleLast <= math.pi * 0.375 then
-		FinalEyePosition = Vector2.new(1.5, -1);
-	elseif MoveInputAngleLast > math.pi * 0.375 and MoveInputAngleLast <= math.pi * 0.625 then
-		FinalEyePosition = Vector2.new();
-	elseif MoveInputAngleLast > math.pi * 0.625 and MoveInputAngleLast <= math.pi * 0.875 then
-		FinalEyePosition = Vector2.new(-1.5, -1);
-	elseif MoveInputAngleLast > math.pi * 0.875 or MoveInputAngleLast <= -math.pi * 0.875 then
-		FinalEyePosition = Vector2.new(-2, -2);
-	elseif MoveInputAngleLast > -math.pi * 0.875 and MoveInputAngleLast <= -math.pi * 0.625 then
-		FinalEyePosition = Vector2.new(-10, -3);
-		RightEyeSprite.Visible = false;
-	elseif MoveInputAngleLast > -math.pi * 0.625 and MoveInputAngleLast <= -math.pi * 0.375 then
-		LeftEyeSprite.Visible = false;
-		RightEyeSprite.Visible = false;
-	elseif MoveInputAngleLast > -math.pi * 0.375 and MoveInputAngleLast <= -math.pi * 0.125 then
-		FinalEyePosition = Vector2.new(10, -3);
-		LeftEyeSprite.Visible = false;
-	end
-
+	local FinalEyePosition = EyePoses(Face, MoveInputAngleLast);
+    
+	local BodyAnim = Body.GetComponent("SpriteAnimatorComponent");
+	local Transform = Face.GetComponent("TransformComponent");
 	Transform.Position = Vector3.new(FinalEyePosition.X, FinalEyePosition.Y + ((BodyAnim.Frame == 1) and 1 or 0), Transform.Position.Z);
 end
 
@@ -114,10 +112,14 @@ end
 function OnCreated()
 	local Transform = GetComponent("TransformComponent");
 	Transform:SetEngineInterpolationEnabled(true);
-	Transform.Position = Vector3.new(0, 0, 50);
 
 	local Camera = Scene:GetEntityByTag("Camera");
 	Camera.SetSubject(true, self, Vector2.new(0, -16));
+
+	local EliPrefab = PrefabAtlas.Get("assets/prefabs/Eli.prefab");
+	LinkedEli = Scene:Instantiate(EliPrefab);
+
+	LinkedEli.SetPlayerOwner(self);
 end
 
 function OnUpdate(Delta)
@@ -128,28 +130,31 @@ function OnFixedUpdate(Delta)
 	ProcessMovementInputs();
 
 	if MoveDirectionLast.X ~= MoveDirection.X or MoveDirectionLast.Y ~= MoveDirection.Y then
-		MoveInputAngle = math.atan2(MoveDirection.Y, MoveDirection.X);
+		MoveInputAngle = math.atan(MoveDirection.Y, MoveDirection.X);
 
 		if MoveDirection.X ~= 0 or MoveDirection.Y ~= 0 then
 			MoveInputAngleLast = MoveInputAngle;
 		end
 
-		MoveDirectionVector = Vector2.new(math.cos(MoveInputAngle), math.sin(MoveInputAngle)):Abs() * MoveDirection;
+		MoveDirectionVector = Vector2.new(math.cos(MoveInputAngle), math.sin(MoveInputAngle)).Abs * MoveDirection;
 		MoveDirectionLast = MoveDirection;
 	end
 
-	Velocity = Velocity + WalkAccel * MoveDirectionVector;
+    local Acceleration = MoveAcceleration * MoveDirectionVector * Delta;
+	Velocity = Velocity + Acceleration;
 
-	Velocity.X = CalculateFriction(MoveDirection.X, Velocity.X, WalkSpeedMax * math.abs(MoveDirectionVector.X));
-	Velocity.Y = CalculateFriction(MoveDirection.Y, Velocity.Y, WalkSpeedMax * math.abs(MoveDirectionVector.Y));
+    local NormalisedVelocity = math.atan(Velocity.Y, Velocity.X);
+    local NormalisedVelocityVector = Vector2.new(math.cos(NormalisedVelocity), math.sin(NormalisedVelocity));
 
-	if math.abs(Velocity.X) > 0 or math.abs(Velocity.Y) > 0 then
-		local Transform = GetComponent("TransformComponent");
-		Transform.Position = Transform.Position + Vector3.new(Velocity.X, Velocity.Y, 0) * Delta;
-	end
+	Velocity.X = CalculateFriction(Delta, MoveDirection.X, MoveDirectionVector.X, Velocity.X, NormalisedVelocityVector.X);
+	Velocity.Y = CalculateFriction(Delta, MoveDirection.Y, MoveDirectionVector.Y, Velocity.Y, NormalisedVelocityVector.Y);
+
+    local Transform = GetComponent("TransformComponent");
+    Transform.Position = Vector3.new(Transform.Position.X, Transform.Position.Y, Transform.Position.Y * 0.0001) + Vector3.new(Velocity.X, Velocity.Y, 0) * Delta;
 end
 
 function OnInputEvent(InputEvent)
+--[[
 	if InputEvent.InputType == Enum.InputType.Mouse and InputEvent.MouseCode == Enum.MouseCode.Button0 and InputEvent.InputState == Enum.InputState.Begin then
 		local Camera = Scene:GetEntityByTag("Camera");
 		local CameraComp = Camera.GetComponent("CameraComponent");
@@ -157,5 +162,5 @@ function OnInputEvent(InputEvent)
 		print(InputEvent.Position.X, InputEvent.Position.Y);
 		local pos = CameraComp:ScreenToWorldCoordinates(InputEvent.Position);
 		print(pos.X, pos.Y);
-	end
+	end]]
 end
