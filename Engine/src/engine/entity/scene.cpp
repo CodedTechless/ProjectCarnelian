@@ -1,3 +1,5 @@
+
+
 #include "scene.h"
 
 #include <engine/application/application.h>
@@ -28,27 +30,37 @@ namespace Techless
 		return newScene;
 	}
 
-	Entity& Scene::CreateBlankEntity()
+	Ptr<Entity> Scene::GetEntityByID(const std::string& EntityID)
+	{
+		for (Ptr<Entity> entity : Entities)
+		{
+			if (entity->GetID() == EntityID)
+			{
+				return entity;
+			}
+		}
+	}
+
+	Ptr<Entity> Scene::CreateBlankEntity()
 	{
 		std::string NewUUID = UUID::Generate();
 
-		Entity& Ent = SceneRegistry.Add<Entity>(NewUUID, this, NewUUID);
-		ScriptEnvironment::RegisterEntity(SceneLuaID, &Ent);
+		Ptr<Entity> Ent = CreatePtr<Entity>(this, NewUUID);
+		ScriptEnvironment::RegisterEntity(SceneLuaID, Ent);
 
 		return Ent;
 	}
 
-	Entity& Scene::CreateEntity(const std::string& TagName)
+	Ptr<Entity> Scene::CreateEntity(const std::string& TagName)
 	{
-
 		std::string NewUUID = UUID::Generate();
 
-		Entity& Ent = SceneRegistry.Add<Entity>(NewUUID, this, NewUUID);
-		ScriptEnvironment::RegisterEntity(SceneLuaID, &Ent);
+		Ptr<Entity> Ent = CreatePtr<Entity>(this, NewUUID);
+		ScriptEnvironment::RegisterEntity(SceneLuaID, Ent);
 
-		Ent.AddComponent<TransformComponent>();
+		Ent->AddComponent<TransformComponent>();
 
-		auto& Tag = Ent.AddComponent<TagComponent>();
+		auto& Tag = Ent->AddComponent<TagComponent>();
 		Tag.Name = TagName;
 
 		return Ent;
@@ -80,17 +92,17 @@ namespace Techless
 	}*/
 
 	template <typename ComponentType>
-	static void AssignComponents(Scene& scene, std::unordered_map<uint16_t, Entity*>& CreatedEntities, Prefab& prefab)
+	static void AssignComponents(Scene& scene, std::unordered_map<uint16_t, Ptr<Entity>>& CreatedEntities, Prefab& prefab)
 	{
 		auto Components = prefab.GetComponents<ComponentType>();
 
 		for (auto& [ID, Component] : *Components)
 		{
-			Entity* entity = nullptr;
+			Ptr<Entity> entity = nullptr;
 
 			if (CreatedEntities.find(ID) == CreatedEntities.end())
 			{
-				entity = &scene.CreateBlankEntity();
+				entity = scene.CreateBlankEntity();
 				CreatedEntities[ID] = entity;
 			}
 			else
@@ -100,19 +112,22 @@ namespace Techless
 		}
 	}
 
-	Entity& Scene::Instantiate(Prefab& prefab)
+	Ptr<Entity> Scene::Instantiate(Prefab& prefab)
 	{
-		std::unordered_map<uint16_t, Entity*> Entities = {};
+		std::unordered_map<uint16_t, Ptr<Entity>> Entities = {};
 
 		// [COMPONENT ASSIGNMENT]
 		// Assign all of the relevant components!
 		AssignComponents<TagComponent>				(*this, Entities, prefab);
 		AssignComponents<TransformComponent>		(*this, Entities, prefab);
+		AssignComponents<BoxColliderComponent>		(*this, Entities, prefab);
 		AssignComponents<YSortComponent>			(*this, Entities, prefab);
 //		AssignComponents<RigidBodyComponent>		(*this, Entities, prefab);
+
 		AssignComponents<SpriteComponent>			(*this, Entities, prefab);
 		AssignComponents<SpriteAnimatorComponent>	(*this, Entities, prefab);
 		AssignComponents<CameraComponent>			(*this, Entities, prefab);
+		
 		AssignComponents<LuaScriptComponent>		(*this, Entities, prefab);
 
 		for (int i = 0; i < prefab.ParentalIndex.size(); ++i)
@@ -140,7 +155,7 @@ namespace Techless
 
 		// there should ALWAYS be an Entities[0]. it should always be the root entity.
 		// if it's not, then it's undefined behaviour!!!!!!!!
-		return *Entities[0];
+		return Entities[0];
 	}
 
 	Input::Filter Scene::OnInputEvent(InputEvent inputEvent, bool Processed)
@@ -252,14 +267,20 @@ namespace Techless
 	void Scene::Update(float Delta)
 	{
 		// Sprite Rendering
-		
-		if (!ActiveCamera) return;
 
+		SceneRegistry.View<TransformComponent>(
+			[](TransformComponent& Transform)
+			{
+				Transform.MarkInterpolationDirty();
+			});
+		
 		SceneRegistry.View<SpriteAnimatorComponent>(
 			[&](SpriteAnimatorComponent& c_SpriteAnimator)
 			{
 				c_SpriteAnimator.Update(Delta);
 			});
+
+		if (!ActiveCamera) return;
 
 		CameraComponent& cam_Camera = ActiveCamera->GetComponent<CameraComponent>();
 		TransformComponent& cam_Transform = ActiveCamera->GetComponent<TransformComponent>();
@@ -274,67 +295,83 @@ namespace Techless
 		{
 			Renderer::SetViewport(cam_Camera.GetViewport());
 		}
+
+		Mat4x4 projection = cam_Camera.GetProjection();
 		
-		Renderer::Begin(cam_Camera.GetProjection(), cam_Camera.GetTransform(cam_Transform.GetGlobalPosition()));
-
-		if (FLAG_ScriptExecutionEnabled)
 		{
-			SceneRegistry.View<ScriptComponent>(
-				[&](ScriptComponent& Script)
-				{
-					Script.Instance->OnUpdate(Delta);
-				});
+			Renderer::Begin(projection, cam_Camera.GetTransform(cam_Transform.GetGlobalPosition()));
 
-			ScriptEnvironment::CallScene(SceneLuaID, "OnUpdate", Delta);
-		}
-
-		{
-			std::vector<SceneRenderInfo> SceneSprites{};
-
-			SceneRegistry.View<SpriteComponent, TransformComponent>(
-				[&](SpriteComponent& c_Sprite, TransformComponent& c_Transform)
-				{
-					if (c_Sprite.Visible == false || c_Sprite.SpriteColour.a == 0.f)
-						return; // don't bother rendering it if it's not visible
-
-
-
-					Ptr<Sprite> aSprite = c_Sprite.GetSprite();
-					if (aSprite)
-						SceneSprites.push_back({ &c_Sprite, &c_Transform});
-
-				});
-
-			std::sort(SceneSprites.begin(), SceneSprites.end(), [](SceneRenderInfo& a, SceneRenderInfo& b)
-				{
-					return a.TransformPtr->GetGlobalPosition().z < b.TransformPtr->GetGlobalPosition().z;
-				});
-
-			for (SceneRenderInfo& renderInfo : SceneSprites)
+			if (FLAG_ScriptExecutionEnabled)
 			{
-				Renderer::DrawSpriteExt(renderInfo.SpritePtr->GetSprite(), renderInfo.TransformPtr->GetGlobalTransform(), renderInfo.SpritePtr->SpriteColour);
+				SceneRegistry.View<ScriptComponent>(
+					[&](ScriptComponent& Script)
+					{
+						Script.Instance->OnUpdate(Delta);
+					});
+
+				ScriptEnvironment::CallScene(SceneLuaID, "OnUpdate", Delta);
 			}
+
+			{
+				std::vector<SceneRenderInfo> SceneSprites{};
+
+				SceneRegistry.View<SpriteComponent, TransformComponent>(
+					[&](SpriteComponent& c_Sprite, TransformComponent& c_Transform)
+					{
+						if (c_Sprite.Visible == false || c_Sprite.SpriteColour.a == 0.f)
+							return; // don't bother rendering it if it's not visible
+
+
+
+						Ptr<Sprite> aSprite = c_Sprite.GetSprite();
+						if (aSprite)
+							SceneSprites.push_back({ &c_Sprite, &c_Transform });
+
+					});
+
+				std::sort(SceneSprites.begin(), SceneSprites.end(), [](SceneRenderInfo& a, SceneRenderInfo& b)
+					{
+						return a.TransformPtr->GetGlobalPosition().z < b.TransformPtr->GetGlobalPosition().z;
+					});
+
+				for (SceneRenderInfo& renderInfo : SceneSprites)
+				{
+					Renderer::DrawSpriteExt(renderInfo.SpritePtr->GetSprite(), renderInfo.TransformPtr->GetGlobalTransform(), renderInfo.SpritePtr->SpriteColour);
+				}
+			}
+
+			/*
+			SceneRegistry.View<TransformComponent>(
+				[&](TransformComponent& c_Transform)
+				{
+					Renderer::DrawQuad({ glm::vec2(c_Transform.GetGlobalTransformState().Position), 80.f }, { 1.f, 1.f }, 0.f, { 0.f, 1.f, 0.f, 0.5f });
+					Renderer::DrawQuad({ glm::vec2(c_Transform.GetPreviousState().Position), 80.f }, { 1.f, 1.f }, 0.f, { 0.f, 0.f, 1.f, 0.5f });
+					Renderer::DrawQuad({ glm::vec2(c_Transform.GetCurrentState().Position), 80.f }, { 1.f, 1.f }, 0.f, { 1.f, 0.f, 0.f, 0.5f });
+				});
+			*/
+
+			Renderer::End();
 		}
 
-		/*
-		SceneRegistry.View<TransformComponent>(
-			[&](TransformComponent& c_Transform)
-			{
-				Renderer::DrawQuad({ glm::vec2(c_Transform.GetGlobalTransformState().Position), 80.f }, { 1.f, 1.f }, 0.f, { 0.f, 1.f, 0.f, 0.5f });
-				Renderer::DrawQuad({ glm::vec2(c_Transform.GetPreviousState().Position), 80.f }, { 1.f, 1.f }, 0.f, { 0.f, 0.f, 1.f, 0.5f });
-				Renderer::DrawQuad({ glm::vec2(c_Transform.GetCurrentState().Position), 80.f }, { 1.f, 1.f }, 0.f, { 1.f, 0.f, 0.f, 0.5f });
-			});
-		*/
+		{
+			Renderer::Begin(projection, Mat4x4(1.f));
 
-		Renderer::End();
+			SceneRegistry.View<UITransformComponent>(
+				[](UITransformComponent& UITransform)
+				{
 
+				});
+
+			Renderer::End();
+		}
+		
 		if (cam_Camera.IsFramebufferMode())
 		{
 			cam_Camera.m_FrameBuffer->Unbind();
 		}
 	}
 
-	void Scene::Serialise(const std::string& FilePath, Entity& RootEntity)
+	void Scene::Serialise(const std::string& FilePath, Ptr<Entity> RootEntity)
 	{
 		Serialiser l_Serialiser = { RootEntity };
 		l_Serialiser.SaveToFile(FilePath);

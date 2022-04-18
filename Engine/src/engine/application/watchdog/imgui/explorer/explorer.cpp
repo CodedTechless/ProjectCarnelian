@@ -11,14 +11,14 @@ namespace Techless
         SceneContext = sceneContext;
     }
 
-    void ExplorerPanel::SetSelectedEntity(Entity* entity)
+    void ExplorerPanel::SetSelectedEntity(Ptr<Entity> entity)
     {
         SelectedEntity = entity;
     }
 
-    bool ExplorerPanel::RenderExplorerEntity(Entity* entity)
+    bool ExplorerPanel::RenderExplorerEntity(Ptr<Entity> entity)
     {
-        if (!entity->Archivable)
+        if (!entity->Archivable && HideNonArchivable)
         {
             return false;
         }
@@ -61,8 +61,8 @@ namespace Techless
 
                 if (DeliveryEntityID != entity->GetID())
                 {
-                    Entity& DeliveryEntity = SceneContext->GetInstanceByID<Entity>(DeliveryEntityID);
-                    DeliveryEntity.SetParent(entity);
+                    Ptr<Entity> DeliveryEntity = SceneContext->GetEntityByID(DeliveryEntityID);
+                    DeliveryEntity->SetParent(entity);
 
                     RequiresRefresh = true;
                 }
@@ -80,7 +80,7 @@ namespace Techless
         {
             if (HasChildren)
             {
-                for (Entity* f_Entity : entity->GetChildren())
+                for (Ptr<Entity> f_Entity : entity->GetChildren())
                 {
                     bool NextRequiresRefresh = RenderExplorerEntity(f_Entity);
 
@@ -97,18 +97,33 @@ namespace Techless
 
 	void ExplorerPanel::RenderImGuiElements()
 	{
+        ImGui::Begin("Explorer", nullptr, ImGuiWindowFlags_MenuBar);
 
-        ImGui::Begin("Explorer");
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::BeginMenu("View"))
+            {
+
+                if (ImGui::MenuItem(HideNonArchivable ? "Show Non-Archivable Items" : "Hide Non-Archivable Items"))
+                {
+                    HideNonArchivable = !HideNonArchivable;
+                }
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMenuBar();
+        }
 
         if (SceneContext)
         {
             bool FullRefresh = false;
 
-            for (Entity& entity : *SceneContext->GetInstances<Entity>())
+            for (Ptr<Entity> entity : SceneContext->GetEntities())
             {
-                if (entity.GetParent() == nullptr)
+                if (entity->GetParent() == nullptr)
                 {
-                    RenderExplorerEntity(&entity);
+                    RenderExplorerEntity(entity);
                 }
             }
             
@@ -116,8 +131,8 @@ namespace Techless
             {
                 if (ImGui::MenuItem("Create Child"))
                 {
-                    Entity& ent = SceneContext->CreateEntity();
-                    ent.SetParent(SelectedEntity);
+                    Ptr<Entity> ent = SceneContext->CreateEntity();
+                    ent->SetParent(SelectedEntity);
                 }
 
                 if (ImGui::MenuItem("Duplicate", nullptr, nullptr, false))
@@ -146,7 +161,7 @@ namespace Techless
 	}
 
     template<typename Component, typename PropertyFunction>
-    static void RenderComponentProperties(const char* Title, Entity* entity, PropertyFunction propertyFunction)
+    static void RenderComponentProperties(const char* Title, Ptr<Entity> entity, PropertyFunction propertyFunction)
     {
         if (entity->HasComponent<Component>())
         {
@@ -187,6 +202,16 @@ namespace Techless
 
         Base = glm::vec2(BaseArray[0], BaseArray[1]);
     }
+    
+    static void DrawFloat(const char* Title, float& Base, float Width = 55.f)
+    {
+        ImGui::PushItemWidth(Width);
+        ImGui::InputFloat(("##" + std::string(Title)).c_str(), &Base);
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+        ImGui::Text(Title);
+    }
 
     static void DrawReadOnly(const std::string& Name, const std::string& Text = "")
     {
@@ -213,11 +238,14 @@ namespace Techless
         ImGui::Text(SelectedEntity->GetID().c_str());
         ImGui::PopStyleColor();
 
-        Entity* Parent = SelectedEntity->GetParent();
+        Ptr<Entity> Parent = SelectedEntity->GetParent();
         std::string Text = Parent ? Parent->GetComponent<TagComponent>().Name.c_str() : "None";
 
         DrawReadOnly("##parent", Text);
         DrawTextLabel("Parent");
+
+        ImGui::Checkbox("##archivable", &SelectedEntity->Archivable);
+        DrawTextLabel("Archivable");
 
         ImGui::Separator();
 
@@ -286,6 +314,12 @@ namespace Techless
             [](YSortComponent& Component)
             {
 
+            });
+        
+        RenderComponentProperties<BoxColliderComponent>("Box Collider", SelectedEntity,
+            [](BoxColliderComponent& Component)
+            {
+                DrawVec2("Bounds", Component.Bounds);
             });
 
         RenderComponentProperties<SpriteComponent>("Sprite", SelectedEntity,

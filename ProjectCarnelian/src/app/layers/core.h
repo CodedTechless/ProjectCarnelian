@@ -28,6 +28,7 @@ namespace Carnelian {
 		float FixedUpdateRate;
 
 		bool DebugMode = false;
+		bool DebugExplorer = false;
 
 //		float SimRatio = 0.f;
 

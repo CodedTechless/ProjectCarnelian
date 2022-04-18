@@ -7,18 +7,13 @@ local Item = require("Item");
 LinkedEli = nil
 Inventory = Container.new(5);
 
+--[[
 Inventory:Add(Item.new("TestItem"), 9);
 Inventory:Add(Item.new("TestItem"), 5);
 Inventory:Add(Item.new("TestItem2"), 20);
 Inventory:Add(Item.new("TestItem"), 15);
+]]
 
-Inventory:ForEach(function(ContainerItemObject, index)
-    if (type(ContainerItemObject) == "table") then
-        print(index, ContainerItemObject.Item.ID, ContainerItemObject.Quantity);
-    else
-        print(index, "Empty");
-    end
-end)
 
 
 -- Movement
@@ -29,8 +24,8 @@ MoveDeceleration = MoveAcceleration * 1.3;
 
 Velocity = Vector2.new();
 
-local MoveDirectionLast = Vector2.new();
 MoveDirection = Vector2.new();
+local MoveDirectionLast = Vector2.new();
 
 local MoveInputAngle = 0;
 local MoveInputAngleLast = 0;
@@ -151,6 +146,20 @@ function OnFixedUpdate(Delta)
 
     local Transform = GetComponent("TransformComponent");
     Transform.Position = Vector3.new(Transform.Position.X, Transform.Position.Y, Transform.Position.Y * 0.0001) + Vector3.new(Velocity.X, Velocity.Y, 0) * Delta;
+
+    for _, FloorItem in pairs(Scene.Items) do
+        local FloorItemTransform = FloorItem.GetComponent("TransformComponent");
+
+        if (Transform.Position - FloorItemTransform.GlobalPosition).Magnitude < 32 then
+            local Quantity = Inventory:Add(FloorItem.ContainingItem.Item, FloorItem.ContainingItem.Quantity)
+            
+            if Quantity == 0 then
+                FloorItem.Destroy();
+            else
+                FloorItem.ContainingItem.Quantity = Quantity;
+            end
+        end
+    end
 end
 
 function OnInputEvent(InputEvent)

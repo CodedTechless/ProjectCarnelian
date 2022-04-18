@@ -78,7 +78,8 @@ namespace Techless
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		glEnable(GL_DEPTH_TEST); //we don't need depth for a 2d game ya doofus!
+		//glEnable(GL_DEPTH_TEST);
+		//glEnable(GL_STENCIL_TEST);
 
 		GLint glMaxTextureSize;
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glMaxTextureSize);
@@ -379,7 +380,7 @@ namespace Techless
 
 	void Renderer::Clear()
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT /*| GL_DEPTH_BUFFER_BIT*/ | GL_STENCIL_BUFFER_BIT);
 	}
 
 	void Renderer::ShowRuntimeStatsWindow()

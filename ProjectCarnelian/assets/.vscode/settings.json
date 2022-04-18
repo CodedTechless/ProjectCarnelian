@@ -20,9 +20,11 @@
         "AddComponent",
         "SpriteAtlas",
         "Application",
-        "table.copy"
+        "table.copy",
+        "LinkedEntity"
     ],
     "Lua.diagnostics.disable": [
-        "lowercase-global"
+        "lowercase-global",
+        "undefined-field"
     ],
 }

@@ -8,7 +8,6 @@ function SceneBinding.new(LinkedScene)
 
 	self.Entities = {};
 	self.Components = {};
-	self.Registry = {};
 
 	self.LinkedScene = LinkedScene;
 
@@ -79,17 +78,20 @@ end
 
 function SceneBinding:RegisterEntity(LightEntity)
 	local ExistingEntity = self:GetEntityByID(LightEntity.ID)
+
 	if ExistingEntity then
-		--cprint("found an existing entity for " .. LightEntity.ID .. " so returned that instead");
-		return ExistingEntity;
+		--cprint("found an existing entity for " .. LightEntity.ID .. "! maybe it's getting updated with a new location?");
+		return self.Entities[LightEntity.ID];
 	end	
 
 	local NewEntity = EntityBinding.new(self, LuaScriptableEntity.new(LightEntity));
-	table.insert(self.Entities, NewEntity);
-
-	--cprint("Registered " .. LightEntity.ID .. "!");
+	self.Entities[LightEntity.ID] = NewEntity
 
 	return NewEntity;
+end
+
+function SceneBinding:DeregisterEnttiy(EntityID)
+	self.Entities[EntityID] = nil;
 end
 
 function SceneBinding:CreateEntity(Tag)
@@ -106,11 +108,7 @@ function SceneBinding:GetEntityByTag(String)
 end
 
 function SceneBinding:GetEntityByID(ID)
-	for i, Ent in next, self.Entities do
-		if Ent.ID == ID then
-			return Ent, i;
-		end
-	end
+	return self.Entities[ID];
 end
 
 function SceneBinding:SetActiveCamera(BindedEntity)

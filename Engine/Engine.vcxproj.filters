@@ -1555,5 +1555,8 @@
     <ClInclude Include="src\engine\entity\types\components_base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\engine\entity\types\components_ui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

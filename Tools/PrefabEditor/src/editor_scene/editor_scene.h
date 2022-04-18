@@ -21,7 +21,7 @@ namespace PrefabEditor
 		Ptr<Scene> LinkedScene = nullptr;
 		Ptr<NativeScript::Core::Camera> ActiveCameraScript = nullptr;
 
-		Entity* SceneRoot = nullptr;
-		Entity* SelectedEntity = nullptr;
+		Ptr<Entity> SceneRoot = nullptr;
+		Ptr<Entity> SelectedEntity = nullptr;
 	};
 }

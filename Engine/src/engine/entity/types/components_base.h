@@ -11,10 +11,10 @@ namespace Techless
 		BaseComponent() = default;
 		virtual ~BaseComponent() = default;
 
-		inline Entity* GetLinkedEntity() const { return LinkedEntity; };
+		inline Ptr<Entity> GetLinkedEntity() const { return LinkedEntity; };
 
 	protected:
-		Entity* LinkedEntity = nullptr;
+		Ptr<Entity> LinkedEntity = nullptr;
 
 		friend class Entity;
 	};

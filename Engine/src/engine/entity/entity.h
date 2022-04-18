@@ -14,21 +14,21 @@ namespace Techless
 		Entity(Scene* CurrentScene);
 		Entity(Scene* CurrentScene, std::string newID);
 
-		void SetParent(Entity* entity);
+		void SetParent(Ptr<Entity> entity);
 		void Destroy();
 
 		inline std::string GetID() const { return EntityID; };
-		inline Scene* GetScene() const { return ActiveScene; };
+		inline Ptr<Scene> GetScene() const { return ActiveScene; };
 
-		inline Entity* GetParent() const { return Parent; };
-		inline std::vector<Entity*> GetChildren() const { return Children; };
+		inline Ptr<Entity> GetParent() const { return Parent; };
+		inline std::vector<Ptr<Entity>>& GetChildren() { return Children; };
 		
 	public:
 		template <typename ComponentType, typename... Args>
 		ComponentType& AddComponent(Args&&... args)
 		{
 			ComponentType& component = ActiveScene->SceneRegistry.Add<ComponentType>(EntityID, std::forward<Args>(args)...);
-			component.LinkedEntity = this;
+			component.LinkedEntity = ActiveScene->GetEntityByID(EntityID);
 			
 			ScriptEnvironment::RegisterComponent<ComponentType>(ActiveScene->GetLuaID(), EntityID, &component);
 
@@ -57,34 +57,19 @@ namespace Techless
 
 	private:
 		std::string EntityID;
-		Scene* ActiveScene = nullptr;
+		Ptr<Scene> ActiveScene = nullptr;
 
-		void AddChild(Entity* entity);
-		void RemoveChild(Entity* entity);
+		void AddChild(const std::string& ChildID);
+		void RemoveChild(const std::string& ChildID);
+		bool IsParentOfSelf(Ptr<Entity> PossibleChildEntity);
 
-		Entity* Parent = nullptr;
-		std::vector<Entity*> Children{};
+		Ptr<Entity> Parent = nullptr;
+		std::vector<Ptr<Entity>> Children = {};
 
-	public: // json serialisation
+		friend class Scene;
+
+	public:
 		bool Archivable = true;
-
-		/*
-		inline friend void to_json(JSON& json, const Entity& entity)
-		{
-			json = JSON{
-				{"EntityID", entity.EntityID}
-			};
-
-			if (entity.Parent)
-				json["ParentEntityID"] = entity.Parent->EntityID;
-			else
-				json["ParentEntityID"] = nullptr;
-		}
-
-		inline friend void from_json(const JSON& json, Entity& entity)
-		{
-			json.at("EntityID").get_to(entity.EntityID);
-		}*/
 
 	};
 }

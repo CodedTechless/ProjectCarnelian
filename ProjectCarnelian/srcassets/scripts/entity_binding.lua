@@ -15,6 +15,10 @@ function EntityBinding.new(Scene, LinkedEntity) -- LightEntity is a C++ through-
 
 	self.self = self;
 
+	function self.Destroy()
+		self.LinkedEntity:GetLightEntity():Destroy();
+	end
+
 	function self.AddComponent(ComponentName)
 		return self.Scene:ChangeComponent(self.LinkedEntity, ComponentName, Enum.QueryMode.Add);
 	end

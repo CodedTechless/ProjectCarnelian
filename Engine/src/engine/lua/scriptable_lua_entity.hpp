@@ -33,7 +33,7 @@ namespace Techless
 	class LuaScriptableEntity
 	{
 	public:
-		LuaScriptableEntity(Entity* entity)
+		LuaScriptableEntity(Ptr<Entity> entity)
 			: LinkedEntity(entity) {};
 
 		template<typename T>
@@ -67,10 +67,13 @@ namespace Techless
 			DefineQuery(TagComponent);
 			DefineQuery(TransformComponent);
 			DefineQuery(YSortComponent);
+			DefineQuery(BoxColliderComponent);
 //			DefineQuery(RigidBodyComponent);
+
 			DefineQuery(SpriteComponent);
 			DefineQuery(SpriteAnimatorComponent);
 			DefineQuery(CameraComponent);
+
 			DefineQuery(LuaScriptComponent);
 
 			return sol::lua_nil;
@@ -78,15 +81,15 @@ namespace Techless
 
 		std::string GetID() const { return LinkedEntity->GetID(); };
 
-		void SetParent(Entity* entity) { return LinkedEntity->SetParent(entity); };
-		Entity* GetParent() const { return LinkedEntity->GetParent(); };
-		std::vector<Entity*> GetChildren() const { return LinkedEntity->GetChildren(); };
+		void SetParent(Ptr<Entity> entity) { return LinkedEntity->SetParent(entity); };
+		Ptr<Entity> GetParent() const { return LinkedEntity->GetParent(); };
+		std::vector<Ptr<Entity>> GetChildren() const { return LinkedEntity->GetChildren(); };
 
-		Entity* GetLinkedEntity() { return LinkedEntity; };
-		Scene* GetLinkedScene() { return LinkedEntity->GetScene(); };
+		Ptr<Entity> GetLinkedEntity() { return LinkedEntity; };
+		Ptr<Scene> GetLinkedScene() { return LinkedEntity->GetScene(); };
 
 	private:
-		Entity* LinkedEntity;
+		Ptr<Entity> LinkedEntity;
 
 	};
 

@@ -9,19 +9,15 @@ namespace Techless
 {
 	struct TransformState
 	{
-		Vector3 Position{ 0.f };
-		Vector2 Scale{ 0.f };
+		Vector3 Position = { 0.f, 0.f, 0.f };
+		Vector2 Scale = { 1.f, 1.f };
 		float Orientation = 0.f;
 
-		glm::mat4 Transform{ 1.f };
-	};
+		glm::mat4 Transform { 1.f };
 
-	struct TransformRecalculateResult
-	{
-		TransformState GlobalState{};
-		TransformState InterpState{};
+		inline bool operator==(const TransformState& t) { return t.Position == Position && t.Scale == Scale && t.Orientation == Orientation; };
+		inline bool operator!=(const TransformState& t) { return t.Position != Position || t.Scale != Scale || t.Orientation != Orientation; };
 	};
-
 
 	struct TransformComponent : public BaseComponent
 	{
@@ -29,47 +25,26 @@ namespace Techless
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent& component) = default;
 
-		inline Vector3 GetLocalPosition() const { return LocalPosition; };
-		inline Vector2 GetLocalScale() const { return LocalScale; };
-		inline float GetLocalOrientation() const { return LocalOrientation; };
+		inline Vector3 GetLocalPosition() const { return Position; };
+		inline Vector2 GetLocalScale() const { return Scale; };
+		inline float GetLocalOrientation() const { return Orientation; };
 
-		inline Vector3 GetGlobalPosition() { if (FLAG_DoInterpolation) return RecalculateBase().InterpState.Position; else return RecalculateBase().GlobalState.Position; };
-		inline Vector2 GetGlobalScale() { if (FLAG_DoInterpolation) return RecalculateBase().InterpState.Scale; else return RecalculateBase().GlobalState.Scale; };
-		inline float GetGlobalOrientation() { if (FLAG_DoInterpolation) return RecalculateBase().InterpState.Orientation; else return RecalculateBase().GlobalState.Orientation; };
+		Vector3 GetGlobalPosition() { RecalculateBase(); if (FLAG_DoInterpolation) return InterpState.Position; else return CurrentState.Position; };
+		Vector2 GetGlobalScale() { RecalculateBase(); if (FLAG_DoInterpolation) return InterpState.Scale; else return CurrentState.Scale; };
+		float GetGlobalOrientation() { RecalculateBase(); if (FLAG_DoInterpolation) return InterpState.Orientation; else return CurrentState.Orientation; };
+		Mat4x4 GetGlobalTransform() { RecalculateBase(); if (FLAG_DoInterpolation) return InterpState.Transform; else return CurrentState.Transform; };
 
-		glm::mat4 GetGlobalTransform()
-		{
-			auto Base = RecalculateBase();
-
-			if (FLAG_DoInterpolation)
-				return Base.InterpState.Transform;
-			else
-				return Base.GlobalState.Transform;
-		};
-
-		void SetLocalPosition(Vector3 Position) { if (LocalPosition == Position) { return; }; LocalPosition = Position; MarkAsDirty(); };
-		void SetLocalScale(Vector2 Scale) { if (LocalScale == Scale) { return; } LocalScale = Scale; MarkAsDirty(); };
-		void SetLocalOrientation(float Orientation) { if (LocalOrientation == Orientation) { return; } LocalOrientation = Orientation; MarkAsDirty(); };
+		void SetLocalPosition(Vector3 position) { if (position == Position) { return; }; Position = position; MarkTransformationDirty(); };
+		void SetLocalScale(Vector2 scale) { if (scale == Scale) { return; } Scale = scale; MarkTransformationDirty(); };
+		void SetLocalOrientation(float orientation) { if (orientation == Orientation) { return; } Orientation = orientation; MarkTransformationDirty(); };
 
 		TransformState GetLocalTransformState()
 		{
-			return { LocalPosition, LocalScale, LocalOrientation };
+			return { Position, Scale, Orientation};
 		}
 
-		TransformState GetGlobalTransformState()
-		{
-			return { GlobalPosition, GlobalScale, GlobalOrientation, GlobalTransform };
-		}
-
-		TransformState GetPreviousState()
-		{
-			return PreviousState;
-		}
-
-		TransformState GetCurrentState() // grabs the latest calculated interp/global state WITHOUT forcing an update. mainly used for debug ops
-		{
-			return CurrentState;
-		}
+		TransformState GetPreviousState() { return PreviousState; }
+		TransformState GetCurrentState() { return CurrentState; }
 
 		void SetEngineInterpolation(bool Mode)
 		{
@@ -78,7 +53,7 @@ namespace Techless
 
 			FLAG_DoInterpolation = Mode;
 
-			for (Entity* LinkedChild : LinkedEntity->GetChildren())
+			for (Ptr<Entity> LinkedChild : LinkedEntity->GetChildren())
 			{
 				LinkedChild->GetComponent<TransformComponent>().SetEngineInterpolation(Mode);
 			}
@@ -89,58 +64,54 @@ namespace Techless
 		void ForceInterpolationUpdate()
 		{
 			if (FLAG_DoInterpolation)
-			{
 				PreviousState = CurrentState;
+		}
+
+		void MarkInterpolationDirty()
+		{
+			if (!FLAG_DoInterpolation || FLAG_InterpolationDirty)
+				return;
+
+			FLAG_InterpolationDirty = true;
+
+			for (Ptr<Entity> LinkedChild : LinkedEntity->GetChildren())
+			{
+				LinkedChild->GetComponent<TransformComponent>().MarkInterpolationDirty();
 			}
 		}
 
-		//uint InterpolatedFrames = 0;
-
-
 	private:
 
-		TransformRecalculateResult RecalculateBase()
+		void RecalculateBase()
 		{
 			/*
-				to-do: optimise this system [UPDATE 19/02/22: optimised a bit but could probably be better!]
+				to-do: optimise this system [UPDATE 31/03/22: optimised a lot more but needs review!]
 			*/
-
-			TransformRecalculateResult Result{ GetGlobalTransformState() };
-			TransformRecalculateResult ParentTransformState{};
-			bool FetchedBase = false;
 
 			if (FLAG_TransformDirty)
 			{
-				Entity* Parent = LinkedEntity->GetParent();
+				Ptr<Entity> Parent = LinkedEntity->GetParent();
 
 				if (Parent)
 				{
 					TransformComponent& ParentTransform = Parent->GetComponent<TransformComponent>();
-					ParentTransformState = ParentTransform.RecalculateBase();
-					FetchedBase = true;
+					ParentTransform.RecalculateBase();
 
-					Result.GlobalState = BuildTransformState(GetLocalTransformState(), ParentTransformState.GlobalState);
+					BuildTransformState(CurrentState, GetLocalTransformState(), ParentTransform.CurrentState);
 				}
 				else
 				{
-					Result.GlobalState = GetLocalTransformState();
+					CurrentState = GetLocalTransformState();
 				}
 
-				BuildTransform(Result.GlobalState);
-
-				GlobalTransform = Result.GlobalState.Transform;
-				GlobalPosition = Result.GlobalState.Position;
-				GlobalScale = Result.GlobalState.Scale;
-				GlobalOrientation = Result.GlobalState.Orientation;
+				BuildTransform(CurrentState);
 
 				FLAG_TransformDirty = false;
-
-				CurrentState = Result.GlobalState;
 			}
 
-			if (FLAG_DoInterpolation && !MatchesState(this, PreviousState))
+			if (FLAG_DoInterpolation && FLAG_InterpolationDirty && CurrentState != PreviousState)
 			{
-				Entity* Parent = LinkedEntity->GetParent();
+				Ptr<Entity> Parent = LinkedEntity->GetParent();
 
 				if (Parent)
 				{
@@ -149,44 +120,31 @@ namespace Techless
 					// if the parent transform is an interpolation transform, build my interpolation state based of its interpolation state instead of the global state
 					if (ParentTransform.FLAG_DoInterpolation)
 					{
-						if (!FetchedBase)
-							ParentTransformState = ParentTransform.RecalculateBase();
+						if (ParentTransform.FLAG_TransformDirty || ParentTransform.FLAG_InterpolationDirty)
+							ParentTransform.RecalculateBase();
 
-						Result.InterpState = BuildTransformState(GetLocalTransformState(), ParentTransformState.InterpState);
+						BuildTransformState(InterpState, GetLocalTransformState(), ParentTransform.InterpState);
 					}
-					// if the parent transform is not interpolated (or there is no parent), then use my previous state and current global state to build an interpolated value!
+					// if the parent transform is not interpolated (or there is no parent), then use my previous state and current global state to build an interpolated value
 					else
 					{
-						Result.InterpState = Interpolate(Result.GlobalState, PreviousState);
+						Interpolate(InterpState, CurrentState, PreviousState);
 					}
 				}
 				else
 				{
-					Result.InterpState = Interpolate(Result.GlobalState, PreviousState);
+					Interpolate(InterpState, CurrentState, PreviousState);
 				}
 
-				BuildTransform(Result.InterpState);
+				BuildTransform(InterpState);
 
-				//InterpolatedFrames++;
+				FLAG_InterpolationDirty = false;
 			}
-			else
-			{
-				Result.InterpState = Result.GlobalState;
-			}
-
-			return Result;
-		}
-
-		static bool MatchesState(TransformComponent* Component, const TransformState& StateToMatch)
-		{
-			return Component->GlobalPosition == StateToMatch.Position && Component->GlobalScale == StateToMatch.Scale && Component->GlobalOrientation == StateToMatch.Orientation;
 		}
 
 		// builds a state where LocalState is relative to ParentState's coordinate space. does not build the state for you.
-		static TransformState BuildTransformState(const TransformState& LocalState, const TransformState& ParentState)
+		static void BuildTransformState(TransformState& State, const TransformState& LocalState, const TransformState& ParentState)
 		{
-			TransformState State{};
-
 			State.Scale = LocalState.Scale * ParentState.Scale;
 			State.Orientation = LocalState.Orientation + ParentState.Orientation;
 
@@ -201,10 +159,6 @@ namespace Techless
 			auto ScaledPosition = LocalState.Position * Vector3(ParentState.Scale, 0.f);
 
 			State.Position = ParentPosition + Vector3(ScaledPosition.x * C - ScaledPosition.y * S, ScaledPosition.x * S + ScaledPosition.y * C, LocalState.Position.z);
-
-			BuildTransform(State);
-
-			return State;
 		}
 
 		// builds the transform of any State passed to it
@@ -224,52 +178,70 @@ namespace Techless
 		}
 
 		// interpolates Last towards Next and returns the result as a TransformState.
-		static TransformState Interpolate(const TransformState& Next, const TransformState& Last)
+		static void Interpolate(TransformState& State, const TransformState& Next, const TransformState& Last)
 		{
 			float Ratio = Application::GetActiveApplication().GetSimulationRatio();
 
-			TransformState State = Last;
-			if (Last.Position != Next.Position) State.Position = glm::mix(Last.Position, Next.Position, Ratio); else State.Position = Last.Position;
-			if (Last.Scale != Next.Scale) State.Scale = glm::mix(Last.Scale, Next.Scale, Ratio); else State.Scale = Last.Scale;
-			if (Last.Orientation != Next.Orientation) State.Orientation = Last.Orientation + Ratio * std::fmodf(Next.Orientation - Last.Orientation, 2.f * M_PI); else State.Orientation = Last.Orientation;
+			State = Last;
+			if (Last.Position != Next.Position)
+			{
+				State.Position = glm::mix(Last.Position, Next.Position, Ratio);
+			}
+			else
+			{
+				State.Position = Last.Position;
+			}
 
-			return State;
+			if (Last.Scale != Next.Scale)
+			{
+				State.Scale = glm::mix(Last.Scale, Next.Scale, Ratio);
+			}
+			else
+			{
+				State.Scale = Last.Scale;
+			}
+
+			if (Last.Orientation != Next.Orientation)
+			{
+				State.Orientation = Last.Orientation + Ratio * std::fmodf(Next.Orientation - Last.Orientation, 2.f * M_PI);
+			}
+			else
+			{
+				State.Orientation = Last.Orientation;
+			}
 		}
 
 
 		// using a dirty flag to signify when a global position/scale/orientation does not match up with its parents position or with its own local position.
-		void MarkAsDirty()
+		void MarkTransformationDirty()
 		{
 			if (FLAG_TransformDirty)
 				return;
 
 			FLAG_TransformDirty = true;
 
-			for (Entity* LinkedChild : LinkedEntity->GetChildren())
+			for (Ptr<Entity> LinkedChild : LinkedEntity->GetChildren())
 			{
-				LinkedChild->GetComponent<TransformComponent>().MarkAsDirty();
+				LinkedChild->GetComponent<TransformComponent>().MarkTransformationDirty();
 			}
 		}
 
 
-		Vector3 LocalPosition{ 0.f, 0.f, 0.f };
-		Vector2 LocalScale{ 1.f, 1.f };
-		float LocalOrientation = 0.f;
 
-		// The final calculated global position, scale and orientation.
-		Vector3 GlobalPosition{ 0.f, 0.f, 0.f };
-		Vector2 GlobalScale{ 1.f, 1.f };
-		float GlobalOrientation = 0.f;
+	private:
 
-		// A TransformState storing the previous state of the transform. This will be the value before it was last updated.
-		TransformState CurrentState{};
-		TransformState PreviousState{};
+		Vector3 Position = { 0.f, 0.f, 0.f };	// Local position
+		Vector2 Scale = { 1.f, 1.f };			// Local scale
+		float Orientation = 0.f;				// Local orientation
 
-		// The final global transform to be used by the renderer.
-		glm::mat4 GlobalTransform{ 1.f };
+		TransformState CurrentState = {};		// Current GLOBAL state of the transformation (in world coordinates)
+		TransformState PreviousState = {};		// Previous GLOBAL state of the transformation, on the previous simulation tick
+		TransformState InterpState = {};		// Current interpolated state between PreviousState and CurrentState
 
-		bool FLAG_TransformDirty = true; // Signifies whether or not the transformation is dirty. If FLAG_DoInterpolation is TRUE, this isn't used and is instead replaced by Last == Next
-		bool FLAG_DoInterpolation = false; // Signifies whether or not to use state interplotation.
+		bool FLAG_TransformDirty = true;		// Signifies whether or not the transformation is dirty. If FLAG_DoInterpolation is TRUE, this isn't used and is instead replaced by Last == Next
+		
+		bool FLAG_DoInterpolation = false;		// Signifies whether or not to use state interplotation.
+		bool FLAG_InterpolationDirty = false;	// Signifies whether or not the cached interpolation transformation is dirty.
 
 		friend class Entity;
 		friend class Scene;
@@ -278,27 +250,20 @@ namespace Techless
 
 		inline friend void to_json(JSON& json, const TransformComponent& component)
 		{
-			auto& p = component.LocalPosition;
-			auto& s = component.LocalScale;
-
 			json = JSON{
-				{"LocalPosition", { {"X", p.x}, {"Y", p.y}, {"Z", p.z} }},
-				{"LocalScale", { {"X", s.x}, {"Y", s.y} }},
-				{"LocalOrientation", component.LocalOrientation}
+				{"LocalPosition", JSONUtil::Vec3ToJSON(component.Position) },
+				{"LocalScale", JSONUtil::Vec2ToJSON(component.Scale) },
+				{"LocalOrientation", component.Orientation }
 			};
 		}
 
 		inline friend void from_json(const JSON& json, TransformComponent& component)
 		{
-			const JSON& Position = json.at("LocalPosition");
-			component.LocalPosition = { Position.at("X").get<float>(), Position.at("Y").get<float>(), Position.at("Z").get<float>() };
+			component.Position = JSONUtil::JSONToVec3(json.at("LocalPosition"));
+			component.Scale = JSONUtil::JSONToVec2(json.at("LocalScale"));
+			json.at("LocalOrientation").get_to(component.Orientation);
 
-			const JSON& Scale = json.at("LocalScale");
-			component.LocalScale = { Scale.at("X").get<float>(), Scale.at("Y").get<float>() };
-
-			json.at("LocalOrientation").get_to(component.LocalOrientation);
-
-			component.MarkAsDirty();
+			component.MarkTransformationDirty();
 		}
 	};
 
@@ -350,6 +315,13 @@ namespace Techless
 		}
 	};
 	*/
+
+	struct Rectangle
+	{
+		Vector2 Position;
+		Vector2 Size;
+	};
+
 	struct BoxColliderComponent : public BaseComponent
 	{
 	public:
@@ -357,6 +329,44 @@ namespace Techless
 		BoxColliderComponent(const BoxColliderComponent& component) = default;
 
 		Vector2 Bounds = { 100.f, 100.f };
+
+		bool CollideSimple(Entity& B)
+		{
+			auto& TransformA = LinkedEntity->GetComponent<TransformComponent>();
+			
+			auto& BoxColliderB = B.GetComponent<BoxColliderComponent>();
+			auto& TransformB = B.GetComponent<TransformComponent>();
+
+			Rectangle RectA = {
+				TransformA.GetGlobalPosition(),
+				Bounds * TransformA.GetGlobalScale()
+			};
+
+			Rectangle RectB = {
+				TransformB.GetGlobalPosition(),
+				Bounds * TransformB.GetGlobalScale()
+			};
+
+			return (
+				RectA.Position.x < RectB.Position.x + RectB.Size.x &&
+				RectA.Position.y < RectB.Position.y + RectB.Size.y &&
+				RectA.Position.x + RectA.Size.x > RectB.Position.x &&
+				RectA.Size.x + RectA.Position.y > RectB.Position.y
+			);
+		}
+
+	public:
+		inline friend void to_json(JSON& json, const BoxColliderComponent& component)
+		{
+			json = JSON{
+				{"Bounds", JSONUtil::Vec2ToJSON(component.Bounds) }
+			};
+		}
+
+		inline friend void from_json(const JSON& json, BoxColliderComponent& component)
+		{
+			component.Bounds = JSONUtil::JSONToVec2(json.at("Bounds"));
+		}
 
 	};
 }

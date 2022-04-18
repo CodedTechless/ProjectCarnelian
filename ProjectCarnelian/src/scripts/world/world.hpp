@@ -22,7 +22,7 @@ namespace NativeScript
 		{
 			Mat4x4 Transform{ 1.f };
 
-			Transform *= glm::translate(Mat4x4(1.f), Vector3(0.f, 0.f, -99.f));
+			Transform *= glm::translate(Mat4x4(1.f), Vector3(-24.f, -24.f, -99.f));
 
 			for (int iY = 0; iY < 32; iY++)
 			{

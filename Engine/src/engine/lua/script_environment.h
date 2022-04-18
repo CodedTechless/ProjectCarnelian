@@ -23,7 +23,7 @@ namespace Techless
 		static size_t GetMemoryUsage();
 
 	public:
-		static void RegisterEntityScript(const std::string& ScriptName, Entity* entity);
+		static void RegisterEntityScript(const std::string& ScriptName, Ptr<Entity> entity);
 		static UPtr<LuaEnv> RegisterGenericScript(const std::string& ScriptName);
 
 		static bool Has(const std::string& Name);
@@ -31,7 +31,7 @@ namespace Techless
 		static int RegisterScene(Ptr<Scene> scene);
 		static void DeregisterScene(int EnvironmentID) { LuaVM.get<sol::protected_function>("DeregisterScene")(EnvironmentID); };
 
-		static void RegisterEntity(int EnvironmentID, Entity* entity);
+		static void RegisterEntity(int EnvironmentID, Ptr<Entity> entity);
 		static void DeregisterEntity(int EnvironmentID, const std::string& entityID) { LuaVM.get<sol::protected_function>("DeregisterEntity")(EnvironmentID, entityID); };
 		
 		static void RegisterChild(int EnvironmentID, const std::string& ParentID, const std::string& ChildID) { LuaVM.get<sol::protected_function>("RegisterChild")(EnvironmentID, ParentID, ChildID); };
@@ -49,7 +49,7 @@ namespace Techless
 			LuaVM.get<sol::protected_function>("DeregisterComponent")(SceneID, EntityID, TYPEID_STRING(T));
 		};
 
-		static void ResetEntity(int EnvironmentID, Entity* entity);
+		static void ResetEntity(int EnvironmentID, Ptr<Entity> entity);
 
 		template<typename... Args>
 		static sol::object CallScene(int SceneID, const std::string& Name, Args&&... args)

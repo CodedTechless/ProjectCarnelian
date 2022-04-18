@@ -2,6 +2,8 @@
 
 #include "registry.h"
 
+#include <engine/entity/entity.h>
+
 namespace Techless 
 {
 	
@@ -9,8 +11,13 @@ namespace Techless
 	{
 		for (auto Set : InstanceSets)
 		{
-			Set.second->Clear(ID);
+			if (std::string(Set.first) != TYPEID_STRING(Entity))
+			{
+				Set.second->Clear(ID);
+			}
 		}
+
+		GetRegistrySet<Entity>()->Clear(ID);
 	}
 
 }

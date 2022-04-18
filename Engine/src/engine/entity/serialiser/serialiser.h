@@ -9,19 +9,19 @@ namespace Techless
 	{
 	public: // Serialiser
 		Serialiser() = default;
-		Serialiser(Entity& RootEntity);
+		Serialiser(Ptr<Entity> RootEntity);
 
-		void Serialise(Entity& RootEntity);
+		void Serialise(Ptr<Entity> RootEntity);
 		void SaveToFile(const std::string& FilePath);
 
 	private:
-		JSON SerialiseEntity(Entity& a_Entity);
+		JSON SerialiseEntity(Ptr<Entity> a_Entity);
 
 	private:
 		JSON p_JSON;
 
-		Entity* RootEntity = nullptr;
-		Scene* RootScene = nullptr;
+		Ptr<Entity> RootEntity = nullptr;
+		Ptr<Scene> RootScene = nullptr;
 
 	};
 

@@ -95,13 +95,10 @@ function ContainerClass:Add(ItemObject, Quantity)
         return 0;
     end
 
-    print(ItemObject.ID);
-
     local Items = self:GetIndexesOf(ItemObject);
 
     while #Items > 0 do
         local CurrentIndex = Items[1];
-        print(CurrentIndex, ItemObject, Quantity)
 
         Quantity = self:Insert(CurrentIndex, ItemObject, Quantity);
         table.remove(Items, 1);

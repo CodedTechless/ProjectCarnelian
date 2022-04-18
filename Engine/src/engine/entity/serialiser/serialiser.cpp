@@ -7,8 +7,8 @@ namespace Techless
 
 	struct EntitySerialiser
 	{
-		EntitySerialiser(Entity& a_Entity, JSON& a_Components)
-			: p_Entity(&a_Entity), p_Components(&a_Components) {};
+		EntitySerialiser(Ptr<Entity> a_Entity, JSON& a_Components)
+			: p_Entity(a_Entity), p_Components(&a_Components) {};
 
 		template <typename Component>
 		void AssignComponent(const std::string& EntryName)
@@ -20,25 +20,25 @@ namespace Techless
 		}
 
 	private:
-		Entity* p_Entity;
+		Ptr<Entity> p_Entity;
 		JSON* p_Components;
 
 	};
 
-	Serialiser::Serialiser(Entity& a_RootEntity)
+	Serialiser::Serialiser(Ptr<Entity> a_RootEntity)
 	{
 		Serialise(a_RootEntity);
 	}
 
-	void Serialiser::Serialise(Entity& a_RootEntity)
+	void Serialiser::Serialise(Ptr<Entity> a_RootEntity)
 	{
-		RootEntity = &a_RootEntity;
+		RootEntity = a_RootEntity;
 		RootScene = RootEntity->GetScene();
 
 		p_JSON = SerialiseEntity(a_RootEntity);
 	}
 
-	JSON Serialiser::SerialiseEntity(Entity& a_Entity)
+	JSON Serialiser::SerialiseEntity(Ptr<Entity> a_Entity)
 	{
 		// create the element array
 		JSON EntityElement = {
@@ -54,20 +54,23 @@ namespace Techless
 
 			s.AssignComponent <TagComponent>			("Tag");
 			s.AssignComponent <TransformComponent>		("Transform");
+			s.AssignComponent <BoxColliderComponent>	("BoxCollider");
 			s.AssignComponent <YSortComponent>			("YSort");
 //			s.AssignComponent <RigidBodyComponent>		("RigidBody");
+
 			s.AssignComponent <SpriteComponent>			("Sprite");
 			s.AssignComponent <SpriteAnimatorComponent>	("SpriteAnimator");
 			s.AssignComponent <CameraComponent>			("Camera");
+
 			s.AssignComponent <LuaScriptComponent>		("LuaScript");
 		}
 
 		// serialise all children
 
-		for (Entity* c_Entity : a_Entity.GetChildren())
+		for (Ptr<Entity> c_Entity : a_Entity->GetChildren())
 		{
 			if (c_Entity->Archivable)
-				EntityElement["Children"] += SerialiseEntity(*c_Entity);
+				EntityElement["Children"] += SerialiseEntity(c_Entity);
 		}
 
 		return EntityElement;
@@ -141,11 +144,14 @@ namespace Techless
 
 			s.AssignComponent <TagComponent>("Tag");
 			s.AssignComponent <TransformComponent>("Transform");
+			s.AssignComponent <BoxColliderComponent>("BoxCollider");
 			s.AssignComponent <YSortComponent>("YSort");
-//			s.AssignComponent <RigidBodyComponent>("RigidBody");
+//			s.AssignComponent <RigidBodyComponent>		("RigidBody");
+
 			s.AssignComponent <SpriteComponent>("Sprite");
 			s.AssignComponent <SpriteAnimatorComponent>("SpriteAnimator");
 			s.AssignComponent <CameraComponent>("Camera");
+
 			s.AssignComponent <LuaScriptComponent>("LuaScript");
 		}
 

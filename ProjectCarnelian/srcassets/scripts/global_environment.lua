@@ -109,8 +109,7 @@ end
 function DeregisterEntity(SceneID, LinkedEntityID)
 	local BindedScene = Scenes[SceneID]
 
-	local _, i = BindedScene:GetEntityByID(LinkedEntityID)
-	if i then table.remove(BindedScene.Entities, i); end
+	BindedScene.Entities[LinkedEntityID] = nil;
 
 	for _, ComponentSet in ipairs(BindedScene.Components) do
 		if ComponentSet[LinkedEntityID] then
@@ -126,8 +125,8 @@ function RegisterChild(SceneID, ParentID, ChildID)
 
 	local Parent = BindedScene:GetEntityByID(ParentID);
 	local Child = BindedScene:GetEntityByID(ChildID);
-	table.insert(Parent.Children, Child);
 
+	Parent.Children[ChildID] = Child;
 	Child.Parent = Parent;
 end
 
@@ -137,22 +136,14 @@ function DeregisterChild(SceneID, ParentID, ChildID)
 	local Parent = BindedScene:GetEntityByID(ParentID);
 	local Child = BindedScene:GetEntityByID(ChildID);
 
-	for i, v in next, Parent.Children do
-		if v.ID == ChildID then
-			table.remove(Parent.Children, i);
-			break;
-		end
-	end
-
+	Parent.Children[ChildID] = nil;
 	Child.Parent = nil;
 end
 
 function ResetEntity(SceneID, LightEntity)
 	local BindedScene = Scenes[SceneID]
 
-	local _, i = BindedScene:GetEntityByID(LightEntity)
-	if i then table.remove(BindedScene.Entities, i); end
-
+	BindedScene:DeregisterEntity(LightEntity.ID);
     BindedScene:RegisterEntity(LightEntity);
 end
 

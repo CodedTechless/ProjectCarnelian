@@ -7,15 +7,13 @@
 
 namespace Techless
 {
-	typedef std::unordered_map<Entity*, std::vector<Entity*>> ExplorerIndex;
-
 	class ExplorerPanel
 	{
 	public:
 		ExplorerPanel() = default;
 		
 		void SetSceneContext(Ptr<Scene> sceneContext);
-		void SetSelectedEntity(Entity* entity);
+		void SetSelectedEntity(Ptr<Entity> entity);
 
 		inline Ptr<Scene> GetSceneContext() const { return SceneContext; };
 
@@ -42,11 +40,14 @@ namespace Techless
 			}
 		}
 
-		bool RenderExplorerEntity(Entity* entity);
+		bool RenderExplorerEntity(Ptr<Entity> entity);
 	
 	private:
 		Ptr<Scene> SceneContext = nullptr;
-		Entity* SelectedEntity = nullptr;
+		Ptr<Entity> SelectedEntity = nullptr;
+
+	private:
+		bool HideNonArchivable = true;
 
 	};
 

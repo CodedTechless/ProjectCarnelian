@@ -37,12 +37,12 @@ namespace Techless
 			return LinkedEntity->HasComponent<Component>();
 		}
 
-		inline Scene* GetScene() const
+		inline Ptr<Scene> GetScene() const
 		{
 			return LinkedEntity->GetScene();
 		}
 
-		inline Entity* GetSelf() const 
+		inline Ptr<Entity> GetSelf() const 
 		{
 			return LinkedEntity;
 		}
@@ -59,7 +59,7 @@ namespace Techless
 		virtual void OnWindowEvent(const WindowEvent& inputEvent) {};
 
 	private:
-		Entity* LinkedEntity = nullptr;
+		Ptr<Entity> LinkedEntity = nullptr;
 
 		friend struct ScriptComponent;
 		friend class Scene;

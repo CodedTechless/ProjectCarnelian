@@ -36,10 +36,11 @@ namespace Carnelian
 
         Renderer::SetClearColour({ 0.1f, 0.1f, 0.1f, 1.f });
 
-        auto& WorldObj = ActiveScene->CreateEntity("World");
-        WorldObj.Archivable = false;
+        Ptr<Entity> WorldObj = ActiveScene->CreateEntity("World");
+        WorldObj->Archivable = false;
 
-        auto& WorldScr = WorldObj.AddComponent<ScriptComponent>();
+
+        auto& WorldScr = WorldObj->AddComponent<ScriptComponent>();
         WorldScr.Bind<NativeScript::World>(WorldObj);
 	}
 
@@ -87,11 +88,12 @@ namespace Carnelian
 
         if (DebugMode)
         {
-            SceneExplorer.RenderImGuiElements();
             SceneConsole.RenderImGuiElements();
-
             Renderer::ShowRuntimeStatsWindow();
         }
+
+        if (DebugExplorer)
+            SceneExplorer.RenderImGuiElements();
     }
 
     Input::Filter Core::OnInputEvent(InputEvent inputEvent, bool Processed)
@@ -101,6 +103,14 @@ namespace Carnelian
             if (inputEvent.KeyCode == Input::KeyCode::F3)
             {
                 DebugMode = !DebugMode;
+
+                if (DebugMode == false)
+                    DebugExplorer = false;
+            }
+
+            if (inputEvent.KeyCode == Input::KeyCode::F4 && DebugMode)
+            {
+                DebugExplorer = !DebugExplorer;
             }
         }
 

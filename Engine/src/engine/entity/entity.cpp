@@ -17,61 +17,68 @@ namespace Techless
 
 	void Entity::Destroy()
 	{
-		for (Entity* entity : Children)
-			entity->Destroy();
+		for (Ptr<Entity> Child : Children)
+			Child->Destroy();
 
 		if (Parent)
-			Parent->RemoveChild(this);
+			Parent->RemoveChild(EntityID);
 
 		ActiveScene->DestroyEntity(EntityID);
 	}
 
-	void Entity::AddChild(Entity* entity)
+	void Entity::AddChild(const std::string& ChildID)
 	{
-		ScriptEnvironment::RegisterChild(ActiveScene->GetLuaID(), EntityID, entity->EntityID);
+		Ptr<Entity> Child = ActiveScene->GetEntityByID(ChildID);
+		ScriptEnvironment::RegisterChild(ActiveScene->GetLuaID(), EntityID, ChildID);
 
-		Children.push_back(entity);
+		Children.push_back(Child);
 	}
 
-	void Entity::RemoveChild(Entity* entity)
+	void Entity::RemoveChild(const std::string& ChildID)
 	{
-		ScriptEnvironment::DeregisterChild(ActiveScene->GetLuaID(), EntityID, entity->EntityID);
+		ScriptEnvironment::DeregisterChild(ActiveScene->GetLuaID(), EntityID, ChildID);
 
-		auto it = std::find(Children.begin(), Children.end(), entity);
+		auto it = std::find_if(Children.begin(), Children.end(), 
+			[&](Ptr<Entity> ent) 
+			{ 
+				return ent->GetID() == ChildID;
+			}
+		);
+
 		if (it != Children.end())
 		{
 			Children.erase(it);
 		}
 	}
 
-	bool IsParentOfSelf(Entity* entityOriginal, Entity* entity)
+	bool Entity::IsParentOfSelf(Ptr<Entity> PossibleChildEntity)
 	{
-		if (entity == nullptr)
+		if (PossibleChildEntity == nullptr)
 			return false;
 
-		if (entityOriginal == entity)
+		if (EntityID == PossibleChildEntity->EntityID)
 			return true;
 
-		return IsParentOfSelf(entityOriginal, entity->GetParent());
+		return IsParentOfSelf(PossibleChildEntity->Parent);
 	}
 
-	void Entity::SetParent(Entity* entity)
+	void Entity::SetParent(Ptr<Entity> NewParent)
 	{
-		if (entity && IsParentOfSelf(this, entity))
+		if (NewParent && IsParentOfSelf(NewParent))
 			return;
 
 		if (Parent != nullptr)
-			Parent->RemoveChild(this);
+			Parent->RemoveChild(EntityID);
 
-		Parent = entity;
+		Parent = NewParent;
 
-		if (entity != nullptr)
-			entity->AddChild(this);
+		if (NewParent != nullptr)
+			NewParent->AddChild(EntityID);
 
 		if (HasComponent<TransformComponent>())
 		{
 			auto& Transform = GetComponent<TransformComponent>();
-			Transform.MarkAsDirty();
+			Transform.MarkTransformationDirty();
 		}
 	}
 }

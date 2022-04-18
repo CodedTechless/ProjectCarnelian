@@ -16,12 +16,12 @@ namespace Techless
 		Ptr<ScriptableEntity> Instance = nullptr;
 
 		template<typename Script>
-		Ptr<Script> Bind(Entity& Owner)
+		Ptr<Script> Bind(Ptr<Entity> Owner)
 		{
 			Ptr<Script> newScript = CreatePtr<Script>();
 
 			Instance = std::static_pointer_cast<ScriptableEntity>(newScript);
-			Instance->LinkedEntity = &Owner;
+			Instance->LinkedEntity = Owner;
 			Instance->OnCreate();
 
 			return newScript;

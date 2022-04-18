@@ -8,8 +8,6 @@
 namespace Techless 
 {
 	
-
-	
 	class Entity;
 
 	class Scene
@@ -27,19 +25,20 @@ namespace Techless
 		Input::Filter OnInputEvent(InputEvent inputEvent, bool Processed);
 		void OnWindowEvent(const WindowEvent& windowEvent);
 
-
 	public:
-		void Serialise(const std::string& FilePath, Entity& RootEntity);
+		void Serialise(const std::string& FilePath, Ptr<Entity> RootEntity);
 
-		Entity& CreateBlankEntity();
-		Entity& CreateEntity(const std::string& TagName = "Entity");
+		Ptr<Entity> CreateBlankEntity();
+		Ptr<Entity> CreateEntity(const std::string& TagName = "Entity");
 
 //		Entity& DuplicateEntity(Entity& entity, Entity* parent);
-		Entity& Instantiate(Prefab& prefab);
+		Ptr<Entity> Instantiate(Prefab& prefab);
 
-		void SetActiveCamera(Entity& entity) { ActiveCamera = &entity; };
-		Entity& GetActiveCamera() const { return *ActiveCamera; };
+		Ptr<Entity> GetEntityByID(const std::string& EntityID);
+		std::vector<Ptr<Entity>>& GetEntities() { return Entities; };
 
+		void SetActiveCamera(Ptr<Entity> entity) { ActiveCamera = entity; };
+		Ptr<Entity> GetActiveCamera() const { return ActiveCamera; };
 
 		template<typename Type>
 		Ptr<TypedRegistrySet<Type>> GetInstances()
@@ -60,17 +59,17 @@ namespace Techless
 		inline int GetLuaID() const { return SceneLuaID; };
 
 	private:
-		Entity* ActiveCamera = nullptr;
-		Registry SceneRegistry;
+		Ptr<Entity> ActiveCamera = nullptr;
 
-		int SceneLuaID = 0;
+		Registry SceneRegistry;
+		std::vector<Ptr<Entity>> Entities = {};
 
 		void DestroyEntity(const std::string& EntityID);
 
-		friend class Entity;
-
 	private:
+		int SceneLuaID = 0;
 		bool FLAG_ScriptExecutionEnabled = true;
 
+		friend class Entity;
 	};
 }

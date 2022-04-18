@@ -46,7 +46,8 @@ namespace Techless
 		"math", "coroutine", "string", 
 		"require", "assert", "tostring", 
 		"tonumber", "pcall", "inspect",
-		"bool_tonumber", "sign", "type"
+		"bool_tonumber", "sign", "type",
+		"table", "next", "pairs", "ipairs"
 	};
 
 	std::unordered_map<std::string, LuaFunction> ScriptEnvironment::CachedScripts{};
@@ -130,11 +131,14 @@ namespace Techless
 		// [COMPONENT ASSIGNMENT] LUA
 		RegisterComponentType(TYPEID_STRING(TagComponent), "TagComponent");
 		RegisterComponentType(TYPEID_STRING(TransformComponent), "TransformComponent");
-		RegisterComponentType(TYPEID_STRING(YSortComponent), "TransformComponent");
+		RegisterComponentType(TYPEID_STRING(BoxColliderComponent), "BoxColliderComponent");
+		RegisterComponentType(TYPEID_STRING(YSortComponent), "YSortComponent");
 //		RegisterComponentType(TYPEID_STRING(RigidBodyComponent), "RigidBodyComponent");
+
 		RegisterComponentType(TYPEID_STRING(SpriteComponent), "SpriteComponent");
 		RegisterComponentType(TYPEID_STRING(SpriteAnimatorComponent), "SpriteAnimatorComponent");
 		RegisterComponentType(TYPEID_STRING(CameraComponent), "CameraComponent");
+		
 		RegisterComponentType(TYPEID_STRING(LuaScriptComponent), "LuaScriptComponent");
 		RegisterComponentType(TYPEID_STRING(ScriptComponent), "ScriptComponent");
 
@@ -588,7 +592,6 @@ namespace Techless
 			AccessibleLibraries.push_back("AnimationAtlas");
 			LuaVM.new_usertype<AnimationAtlas>("AnimationAtlas",
 					sol::no_constructor,
-					
 					"Get", &AnimationAtlas::Get
 				);
 		}
@@ -598,11 +601,9 @@ namespace Techless
 
 
 			LuaVM.new_usertype<LuaScriptableEntity>("LuaScriptableEntity",
-					sol::constructors<LuaScriptableEntity(Entity*)>(),
+					sol::constructors<LuaScriptableEntity(Ptr<Entity>)>(),
 
 					"ID", sol::property(&LuaScriptableEntity::GetID),
-					"Parent", sol::property(&LuaScriptableEntity::GetParent, &LuaScriptableEntity::SetParent),
-					"GetChildren", &LuaScriptableEntity::GetChildren,
 
 					"GetLightScene", &LuaScriptableEntity::GetLinkedScene,
 					"GetLightEntity", &LuaScriptableEntity::GetLinkedEntity,
@@ -612,7 +613,10 @@ namespace Techless
 
 			LuaVM.new_usertype<Entity>("LightEntity",
 					sol::no_constructor,
+
 					"ID", sol::property(&Entity::GetID),
+					"Destroy", &Entity::Destroy,
+				
 					"GetLightScene", &Entity::GetScene
 				);
 
@@ -623,7 +627,7 @@ namespace Techless
 					
 					"GetActiveCamera", &Scene::GetActiveCamera,
 					"SetActiveCamera", &Scene::SetActiveCamera,
-					
+
 					"ScriptRuntimeEnabled", sol::property( &Scene::IsScriptExecutionEnabled , &Scene::SetScriptExecutionEnabled )
 				);
 		}
@@ -636,12 +640,14 @@ namespace Techless
 			AccessibleLibraries.push_back("TagComponent");
 			LuaVM.new_usertype<TagComponent>("TagComponent",
 				sol::no_constructor,
+
 				"Name", &TagComponent::Name
 			);
 
 			AccessibleLibraries.push_back("TransformComponent");
 			LuaVM.new_usertype<TransformComponent>("TransformComponent",
 				sol::no_constructor,
+
 				"Position", sol::property(&TransformComponent::GetLocalPosition, &TransformComponent::SetLocalPosition),
 				"Scale", sol::property(&TransformComponent::GetLocalScale, &TransformComponent::SetLocalScale),
 				"Orientation", sol::property(&TransformComponent::GetLocalOrientation, &TransformComponent::SetLocalOrientation),
@@ -702,6 +708,7 @@ namespace Techless
 			AccessibleLibraries.push_back("LuaScriptComponent");
 			LuaVM.new_usertype<LuaScriptComponent>("LuaScriptComponent",
 				sol::no_constructor,
+
 				"Bind", &LuaScriptComponent::Bind
 			);
 
@@ -713,6 +720,13 @@ namespace Techless
 			AccessibleLibraries.push_back("YSortComponent");
 			LuaVM.new_usertype<YSortComponent>("YSortComponent",
 				sol::no_constructor
+			);
+			
+			AccessibleLibraries.push_back("BoxColliderComponent");
+			LuaVM.new_usertype<BoxColliderComponent>("BoxColliderComponent",
+				sol::no_constructor,
+
+				"CollideSimple", &BoxColliderComponent::CollideSimple
 			);
 		}
 
@@ -772,7 +786,7 @@ namespace Techless
 	}
 
 	// as entities scripts are managed by lua, nothing has to be returned (as there's no need to call an entities scripts from C++)
-	void ScriptEnvironment::RegisterEntityScript(const std::string& ScriptName, Entity* entity)
+	void ScriptEnvironment::RegisterEntityScript(const std::string& ScriptName, Ptr<Entity> entity)
 	{
 		sol::table EntityTable = GetEntityBinding(entity->GetScene()->GetLuaID(), entity->GetID());
 
@@ -811,7 +825,7 @@ namespace Techless
 		//LuaVM["inspect"](EntityTable);
 	}
 
-	void ScriptEnvironment::RegisterEntity(int EnvironmentID, Entity* entity) 
+	void ScriptEnvironment::RegisterEntity(int EnvironmentID, Ptr<Entity> entity) 
 	{ 
 		LuaVM.get<sol::protected_function>("RegisterEntity")(EnvironmentID, entity); 
 	};
@@ -821,7 +835,7 @@ namespace Techless
 		return LuaVM.get<sol::protected_function>("RegisterScene")(scene); 
 	};
 
-	void ScriptEnvironment::ResetEntity(int SceneID, Entity* entity)
+	void ScriptEnvironment::ResetEntity(int SceneID, Ptr<Entity> entity)
 	{
 		LuaVM.get<sol::protected_function>("ResetEntity")(SceneID, entity);
 	}

@@ -194,7 +194,7 @@ namespace Techless
 			if (Mode)
 			{
 				FrameBufferSpecification FSpec;
-				FSpec.Attachments = { FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth };
+				FSpec.Attachments = { FrameBufferTextureFormat::RGBA8 };
 				FSpec.Size = m_ViewportSize;
 
 				m_FrameBuffer = CreatePtr<FrameBuffer>(FSpec);
