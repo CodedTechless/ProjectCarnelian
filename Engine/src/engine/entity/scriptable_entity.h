@@ -37,7 +37,7 @@ namespace Techless
 			return LinkedEntity->HasComponent<Component>();
 		}
 
-		inline Ptr<Scene> GetScene() const
+		inline Scene* GetScene() const
 		{
 			return LinkedEntity->GetScene();
 		}

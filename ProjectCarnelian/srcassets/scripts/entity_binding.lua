@@ -20,19 +20,19 @@ function EntityBinding.new(Scene, LinkedEntity) -- LightEntity is a C++ through-
 	end
 
 	function self.AddComponent(ComponentName)
-		return self.Scene:ChangeComponent(self.LinkedEntity, ComponentName, Enum.QueryMode.Add);
+		return self.LinkedEntity:QueryComponent(ComponentName, Enum.QueryMode.Add);
 	end
 
 	function self.RemoveComponent(ComponentName)
-		self.Scene:ChangeComponent(self.LinkedEntity, ComponentName, Enum.QueryMode.Remove);
+		self.LinkedEntity:QueryComponent(ComponentName, Enum.QueryMode.Remove);
 	end
 
 	function self.GetComponent(ComponentName)
-		return self.Scene:GetComponent(self.ID, ComponentName);
+		return self.LinkedEntity:QueryComponent(ComponentName, Enum.QueryMode.Get);
 	end
 
 	function self.HasComponent(ComponentName)
-		return self.Scene:GetComponent(self.ID, ComponentName) ~= nil;
+		return self.GetComponent(ComponentName) ~= nil;
 	end
 
 	function self.HasLuaScript()

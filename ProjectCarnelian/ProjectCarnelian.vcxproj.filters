@@ -57,5 +57,10 @@
     <None Include="assets\scripts\NPC\Eli.lua" />
     <None Include="assets\scripts\Modules\Items\ItemIndex.lua" />
     <None Include="assets\scripts\Modules\Containers\ContainerItem.lua" />
+    <None Include="assets\scripts\Core\Modules\Connection.lua" />
+    <None Include="assets\scripts\Core\Modules\Signal.lua" />
+    <None Include="assets\scripts\Experiments\example.lua" />
+    <None Include="assets\scripts\Experiments\InterpolationTest.lua" />
+    <None Include="assets\scripts\Experiments\test.lua" />
   </ItemGroup>
 </Project>

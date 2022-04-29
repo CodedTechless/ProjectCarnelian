@@ -128,6 +128,7 @@ namespace Techless
 		LuaVM.safe_script_file("srcassets/scripts/global_environment.lua", &sol::script_throw_on_error);
 		sol::protected_function RegisterComponentType = LuaVM["RegisterComponentType"];
 
+		/*
 		// [COMPONENT ASSIGNMENT] LUA
 		RegisterComponentType(TYPEID_STRING(TagComponent), "TagComponent");
 		RegisterComponentType(TYPEID_STRING(TransformComponent), "TransformComponent");
@@ -141,7 +142,7 @@ namespace Techless
 		
 		RegisterComponentType(TYPEID_STRING(LuaScriptComponent), "LuaScriptComponent");
 		RegisterComponentType(TYPEID_STRING(ScriptComponent), "ScriptComponent");
-
+		*/
 		/*
 		const std::vector<std::string> CoreScriptNames = {
 			"RegisterScene", "DeregisterScene",
@@ -194,7 +195,8 @@ namespace Techless
 			Enum.new_enum<QueryMode>("QueryMode",
 				{
 					{ "Add", QueryMode::Add },
-					{ "Remove", QueryMode::Remove }
+					{ "Remove", QueryMode::Remove },
+					{ "Get", QueryMode::Get }
 				});
 
 			Enum.new_enum<Input::Filter>("InputFilter",
@@ -763,7 +765,7 @@ namespace Techless
 
 		Debug::Log("Initialised Lua!", "ScriptEnvironment");
 	}
-
+	
 	bool ScriptEnvironment::Has(const std::string& Name)
 	{
 		return CachedScripts.find(Name) != CachedScripts.end();

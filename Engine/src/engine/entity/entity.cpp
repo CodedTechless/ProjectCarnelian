@@ -17,8 +17,10 @@ namespace Techless
 
 	void Entity::Destroy()
 	{
-		for (Ptr<Entity> Child : Children)
-			Child->Destroy();
+		while (Children.size() != 0)
+		{
+			Children[0]->Destroy();
+		}
 
 		if (Parent)
 			Parent->RemoveChild(EntityID);

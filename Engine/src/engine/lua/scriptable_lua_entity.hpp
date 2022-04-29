@@ -27,7 +27,8 @@ namespace Techless
 	enum class QueryMode
 	{
 		Add,
-		Remove
+		Remove,
+		Get
 	};
 
 	class LuaScriptableEntity
@@ -41,17 +42,27 @@ namespace Techless
 		{
 			switch (Mode)
 			{
-			case QueryMode::Add:
-			{
-				if (!LinkedEntity->HasComponent<T>())
-					return &LinkedEntity->AddComponent<T>();
-				
-				break;
-			}
-			case QueryMode::Remove:
+				case QueryMode::Add:
+				{
+					if (!LinkedEntity->HasComponent<T>())
+						return &LinkedEntity->AddComponent<T>();
+
+					break;
+				}
+				case QueryMode::Remove:
 				{
 					if (LinkedEntity->HasComponent<T>())
 						LinkedEntity->RemoveComponent<T>();
+				
+					break;
+				}
+
+				case QueryMode::Get:
+				{
+					if (LinkedEntity->HasComponent<T>())
+						return &LinkedEntity->GetComponent<T>();
+
+					break;
 				}
 			}
 
@@ -86,7 +97,7 @@ namespace Techless
 		std::vector<Ptr<Entity>> GetChildren() const { return LinkedEntity->GetChildren(); };
 
 		Ptr<Entity> GetLinkedEntity() { return LinkedEntity; };
-		Ptr<Scene> GetLinkedScene() { return LinkedEntity->GetScene(); };
+		Scene* GetLinkedScene() { return LinkedEntity->GetScene(); };
 
 	private:
 		Ptr<Entity> LinkedEntity;

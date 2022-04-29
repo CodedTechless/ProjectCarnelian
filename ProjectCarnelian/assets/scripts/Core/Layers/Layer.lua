@@ -25,7 +25,7 @@ function OnCreated()
     local item = Scene:Instantiate(ItemPrefabTest);
 
     local Transform = item.GetComponent("TransformComponent");
-    Transform.Position = Vector2.new(200, 200);
+    Transform.Position = Vector3.new(200, 200, -10);
 
     item.SetContainingItem(Item.new("TestItem"), 5);
     item.AddComponent("BoxColliderComponent");

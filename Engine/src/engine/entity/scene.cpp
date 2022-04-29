@@ -39,6 +39,8 @@ namespace Techless
 				return entity;
 			}
 		}
+
+		return nullptr;
 	}
 
 	Ptr<Entity> Scene::CreateBlankEntity()
@@ -47,22 +49,19 @@ namespace Techless
 
 		Ptr<Entity> Ent = CreatePtr<Entity>(this, NewUUID);
 		ScriptEnvironment::RegisterEntity(SceneLuaID, Ent);
-
+		
+		Entities.push_back(Ent);
 		return Ent;
 	}
 
 	Ptr<Entity> Scene::CreateEntity(const std::string& TagName)
 	{
-		std::string NewUUID = UUID::Generate();
-
-		Ptr<Entity> Ent = CreatePtr<Entity>(this, NewUUID);
-		ScriptEnvironment::RegisterEntity(SceneLuaID, Ent);
-
+		Ptr<Entity> Ent = CreateBlankEntity();
 		Ent->AddComponent<TransformComponent>();
 
 		auto& Tag = Ent->AddComponent<TagComponent>();
 		Tag.Name = TagName;
-
+		
 		return Ent;
 	}
 
@@ -77,6 +76,18 @@ namespace Techless
 		}
 
 		SceneRegistry.Clear(EntityID);
+		
+		auto it = std::find_if(Entities.begin(), Entities.end(),
+			[&](Ptr<Entity> ent)
+			{
+				return ent->GetID() == EntityID;
+			}
+		);
+
+		if (it != Entities.end())
+		{
+			Entities.erase(it);
+		}
 	}
 
 	template <typename ComponentType>

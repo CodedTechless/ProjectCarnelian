@@ -21,7 +21,7 @@ namespace Techless
 		JSON p_JSON;
 
 		Ptr<Entity> RootEntity = nullptr;
-		Ptr<Scene> RootScene = nullptr;
+		Scene* RootScene = nullptr;
 
 	};
 

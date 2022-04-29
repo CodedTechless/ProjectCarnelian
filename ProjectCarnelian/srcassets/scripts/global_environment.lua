@@ -110,14 +110,6 @@ function DeregisterEntity(SceneID, LinkedEntityID)
 	local BindedScene = Scenes[SceneID]
 
 	BindedScene.Entities[LinkedEntityID] = nil;
-
-	for _, ComponentSet in ipairs(BindedScene.Components) do
-		if ComponentSet[LinkedEntityID] then
-			ComponentSet[LinkedEntityID] = nil;
-
-			break;
-		end
-	end
 end
 
 function RegisterChild(SceneID, ParentID, ChildID)
@@ -145,43 +137,4 @@ function ResetEntity(SceneID, LightEntity)
 
 	BindedScene:DeregisterEntity(LightEntity.ID);
     BindedScene:RegisterEntity(LightEntity);
-end
-
-
--- Components
-
-function RegisterComponent(SceneID, LinkedEntityID, InternalComponentName, LinkedComponent)
-	local BindedScene = Scenes[SceneID]
-
-	local ComponentName = GetComponentType(InternalComponentName);
-
-	if not BindedScene.Components[ComponentName] then
-		BindedScene.Components[ComponentName] = {};
-	end
-
-	BindedScene.Components[ComponentName][LinkedEntityID] = LinkedComponent;
-end
-
-function DeregisterComponent(SceneID, LinkedEntityID, InternalComponentName)
-	local BindedScene = Scenes[SceneID]
-
-	local ComponentName = GetComponentType(InternalComponentName);
-
-	if not BindedScene.Components[ComponentName] then
-		cerror("Entity " .. LinkedEntityID .. " with component of type " .. ComponentName .. " does not exist.");
-	end
-
-	BindedScene.Components[ComponentName][LinkedEntityID] = nil;
-end
-
-function RegisterComponentType(InternalTypeName, TypeName)
-	ComponentTypes[InternalTypeName] = TypeName; -- allows us to convert from c++ typeid(T).name() type-names to internal Lua type-names.
-end
-
-function GetComponentType(InternalTypeName)
-	if not ComponentTypes[InternalTypeName] then
-		cerror(InternalTypeName .. " is not a registered component type name");
-	end
-
-	return ComponentTypes[InternalTypeName];
 end

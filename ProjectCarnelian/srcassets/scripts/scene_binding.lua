@@ -7,7 +7,6 @@ function SceneBinding.new(LinkedScene)
 	local self = setmetatable({}, SceneBinding);
 
 	self.Entities = {};
-	self.Components = {};
 
 	self.LinkedScene = LinkedScene;
 
@@ -100,9 +99,11 @@ function SceneBinding:CreateEntity(Tag)
 end
 
 function SceneBinding:GetEntityByTag(String)
-	for i, v in next, self.Components["TagComponent"] do
-		if v.Name == String then
-			return self:GetEntityByID(i);
+	for _, Entity in next, self.Entities do
+		local Tag = Entity.GetComponent("TagComponent");
+	
+		if Tag and Tag.Name == String then
+			return Entity;
 		end
 	end
 end
@@ -122,12 +123,6 @@ end
 
 function SceneBinding:ChangeComponent(LinkedEntity, ComponentName, ChangeQueryMode)
 	return LinkedEntity:QueryComponent(ComponentName, ChangeQueryMode);
-end
-
-function SceneBinding:GetComponent(LinkedEntityID, ComponentName)
-	if self.Components[ComponentName] then
-		return self.Components[ComponentName][LinkedEntityID];
-	end
 end
 
 return SceneBinding;

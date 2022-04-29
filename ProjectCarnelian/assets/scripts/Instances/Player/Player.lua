@@ -147,7 +147,8 @@ function OnFixedUpdate(Delta)
     local Transform = GetComponent("TransformComponent");
     Transform.Position = Vector3.new(Transform.Position.X, Transform.Position.Y, Transform.Position.Y * 0.0001) + Vector3.new(Velocity.X, Velocity.Y, 0) * Delta;
 
-    for _, FloorItem in pairs(Scene.Items) do
+	--[[
+    for _, FloorItem in pairs(Scene.Entities) do
         local FloorItemTransform = FloorItem.GetComponent("TransformComponent");
 
         if (Transform.Position - FloorItemTransform.GlobalPosition).Magnitude < 32 then
@@ -159,7 +160,7 @@ function OnFixedUpdate(Delta)
                 FloorItem.ContainingItem.Quantity = Quantity;
             end
         end
-    end
+    end]]
 end
 
 function OnInputEvent(InputEvent)

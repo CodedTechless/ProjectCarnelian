@@ -37,6 +37,7 @@ namespace Techless
 		static void RegisterChild(int EnvironmentID, const std::string& ParentID, const std::string& ChildID) { LuaVM.get<sol::protected_function>("RegisterChild")(EnvironmentID, ParentID, ChildID); };
 		static void DeregisterChild(int EnvironmentID, const std::string& ParentID, const std::string& ChildID) { LuaVM.get<sol::protected_function>("DeregisterChild")(EnvironmentID, ParentID, ChildID); };
 
+		/*
 		template<typename T>
 		static void RegisterComponent(int EnvironmentID, const std::string& EntityID, T* LinkedComponent) 
 		{
@@ -44,10 +45,11 @@ namespace Techless
 		};
 
 		template<typename T>
-		static void DeregisterComponent(int SceneID, const std::string& EntityID) 
+		static void DeregisterComponent(int SceneID, const std::string& EntityID)
 		{
-			LuaVM.get<sol::protected_function>("DeregisterComponent")(SceneID, EntityID, TYPEID_STRING(T));
+			LuaVM.get<sol::protected_function>("DeregisterComponent")(SceneID, EntityID, TYPEID_STRING(T), ReplacementEntityID);
 		};
+		*/
 
 		static void ResetEntity(int EnvironmentID, Ptr<Entity> entity);
 

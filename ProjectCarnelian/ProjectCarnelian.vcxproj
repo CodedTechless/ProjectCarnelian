@@ -21,13 +21,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -92,6 +92,11 @@
     <ClCompile Include="src\app\layers\core.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\scripts\Core\Modules\Connection.lua" />
+    <None Include="assets\scripts\Core\Modules\Signal.lua" />
+    <None Include="assets\scripts\Experiments\example.lua" />
+    <None Include="assets\scripts\Experiments\InterpolationTest.lua" />
+    <None Include="assets\scripts\Experiments\test.lua" />
     <None Include="assets\scripts\InterpolationTest.lua" />
     <None Include="assets\scripts\Modules\Containers\Container.lua" />
     <None Include="assets\scripts\Modules\Containers\ContainerItem.lua" />
